@@ -1,6 +1,7 @@
 import Bar from "./components/Bar";
-import Content from "./components/Content";
 import "@/App.scss";
+import Sidebar from "./components/sidebar/Sidebar";
+import Page from "./components/page/Page";
 
 function App() {
     return (
@@ -8,7 +9,10 @@ function App() {
             {/* bar */}
             <Bar />
             {/* content */}
-            <Content />
+            <div className="content">
+                <Sidebar />
+                <Page />
+            </div>
         </div>
     );
 }
