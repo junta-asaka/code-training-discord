@@ -44,11 +44,11 @@ erDiagram
 
     channels {
         bigint id PK "ID"
-        bigint guild_id "サーバーID DMはNULL"
+        %% bigint guild_id "サーバーID DMはNULL: guilds.id"
         text type "タイプ"
         text name "チャネル名 DMはNULL"
-        bigint owner_user_id "管理者ユーザーID"
-        bigint last_message_id "最終メッセージID"
+        bigint owner_user_id "管理者ユーザーID: users.id"
+        bigint last_message_id "最終メッセージID: messages.id"
         timestamptz deleted_at "削除日時"
         timestamptz created_at "作成日時"
         timestamptz updated_at "更新日時"
@@ -60,7 +60,7 @@ erDiagram
         bigint author_user_id FK "作成者ユーザID: users.id"
         text type "タイプ"
         text content "内容"
-        bigint referenced_message_id "返信先メッセージID"
+        bigint referenced_message_id "返信先メッセージID: messages.id"
         timestamptz deleted_at "削除日時"
         timestamptz created_at "作成日時"
         timestamptz updated_at "更新日時"
