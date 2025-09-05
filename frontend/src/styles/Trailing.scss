@@ -1,0 +1,13 @@
+.trailing {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    position: fixed;
+    top: 0;
+    right: 0;
+    padding: 2px;
+
+    .MuiSvgIcon-root {
+        padding: 1px 10px;
+    }
+}

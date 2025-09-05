@@ -1,14 +1,22 @@
-// #root {
-//   max-width: 1280px;
-//   margin: 0 auto;
-//   padding: 2rem;
-//   text-align: center;
-// }
-
-// .App {
-//     display: flex;
-// }
+#root {
+    // max-width: 1280px;
+    margin: 0 auto;
+    //   padding: 2rem;
+    //   text-align: center;
+}
 
 .MuiSvgIcon-root {
     color: #aaaab1;
+}
+
+.App {
+    width: 100%;
+
+    .content {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+        background-color: #121214;
+    }
 }
