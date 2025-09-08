@@ -1,0 +1,17 @@
+.channel {
+    display: flex;
+    align-items: center;
+    margin-top: 15px;
+    margin-left: 10px;
+    list-style: none;
+
+    .channelAccount {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        .accountName {
+            margin-left: 10px;
+        }
+    }
+}

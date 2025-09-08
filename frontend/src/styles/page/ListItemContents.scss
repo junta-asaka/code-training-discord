@@ -1,0 +1,28 @@
+.listItemContents {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 10px;
+
+    .listItemAccount {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-left: 10px;
+
+        .accountName {
+            margin-left: 10px;
+        }
+    }
+
+    .listItemMenu {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        .MuiSvgIcon-root {
+            cursor: pointer;
+            margin-right: 10px;
+        }
+    }
+}
