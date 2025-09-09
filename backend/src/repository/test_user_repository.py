@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import async_sessionmaker
 from domains import User
 from repository.user_repository import UserRepository
 from sqlalchemy.ext.asyncio import create_async_engine
+from domains import Base
 
 
 class TestUserRepository(unittest.IsolatedAsyncioTestCase):
@@ -25,9 +26,18 @@ class TestUserRepository(unittest.IsolatedAsyncioTestCase):
         self.repository = UserRepository()
 
     async def asyncSetUp(self):
+        # テーブル作成
+        async with self.engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+
         # テーブルクリーンアップ処理を実行
         async with self.engine.begin() as conn:
-            await conn.execute(text("TRUNCATE TABLE users RESTART IDENTITY CASCADE"))
+            # 外部キー制約のため、子テーブルから削除
+            await conn.execute(text("DELETE FROM messages"))
+            await conn.execute(text("DELETE FROM channels"))
+            await conn.execute(text("DELETE FROM friends"))
+            await conn.execute(text("DELETE FROM sessions"))
+            await conn.execute(text("DELETE FROM users"))
 
     async def asyncTearDown(self):
         # エンジンを非同期に破棄
