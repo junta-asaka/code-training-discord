@@ -1,0 +1,149 @@
+import uuid
+
+from sqlalchemy import Column, DateTime, ForeignKey, String
+from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.orm import declarative_base
+from sqlalchemy.sql import func
+
+Base = declarative_base()
+
+
+# モデル: ユーザー
+class User(Base):
+    __tablename__ = "users"
+
+    # ID
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    # 表示名
+    name = Column(String, nullable=False)
+    # ユーザー名
+    username = Column(String, unique=True, nullable=False)
+    # メールアドレス
+    email = Column(String, unique=True, nullable=False)
+    # パスワードハッシュ
+    password_hash = Column(String, nullable=False)
+    # 説明
+    description = Column(String, nullable=True)
+    # 削除日時
+    deleted_at = Column(DateTime(timezone=True), nullable=True)
+    # 作成日時
+    created_at = Column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+    # 更新日時
+    updated_at = Column(
+        DateTime(timezone=True),
+        server_default=func.now(),  # デフォルト値を現在時刻に設定
+        onupdate=func.now(),  # レコード更新時に現在時刻に更新
+        nullable=False,
+    )
+
+
+# モデル: セッション
+class Session(Base):
+    __tablename__ = "sessions"
+
+    # ID
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    # ユーザーID
+    # 外部キー: users.id
+    user_id = Column(ForeignKey("users.id"), nullable=False)
+    # リフレッシュトークンハッシュ
+    refresh_token_hash = Column(String, unique=True, nullable=False)
+    # ユーザーエージェント
+    user_agent = Column(String, nullable=True)
+    # IPアドレス
+    ip_address = Column(String, nullable=True)
+    # 失効日時
+    revoked_at = Column(DateTime(timezone=True), nullable=True)
+    # 作成日時
+    created_at = Column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+
+
+# モデル: フレンド
+class Friend(Base):
+    __tablename__ = "friends"
+
+    # ID
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    # ユーザーID
+    # 外部キー: users.id
+    user_id = Column(ForeignKey("users.id"), nullable=False)
+    # 相手ユーザーID
+    # 外部キー: users.id
+    related_user_id = Column(ForeignKey("users.id"), nullable=False)
+    # タイプ
+    type = Column(String, nullable=False)
+    # 作成日時
+    created_at = Column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+
+
+# モデル: チャネル
+class Channel(Base):
+    __tablename__ = "channels"
+
+    # ID
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    # サーバーID
+    # guild_id = Column(ForeignKey("guilds.id"), nullable=True)
+    # タイプ
+    type = Column(String, nullable=False)
+    # チャネル名
+    name = Column(String, nullable=True)
+    # 管理者ユーザーID
+    # 外部キー: users.id
+    owner_user_id = Column(ForeignKey("users.id"), nullable=False)
+    # 最終メッセージID
+    # 外部キー: messages.id
+    last_message_id = Column(ForeignKey("messages.id"), nullable=True)
+    # 削除日時
+    deleted_at = Column(DateTime(timezone=True), nullable=True)
+    # 作成日時
+    created_at = Column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+    # 更新日時
+    updated_at = Column(
+        DateTime(timezone=True),
+        server_default=func.now(),  # デフォルト値を現在時刻に設定
+        onupdate=func.now(),  # レコード更新時に現在時刻に更新
+        nullable=False,
+    )
+
+
+# モデル: メッセージ
+class Message(Base):
+    __tablename__ = "messages"
+
+    # ID
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    # チャネルID
+    # 外部キー: channels.id
+    channel_id = Column(ForeignKey("channels.id", ondelete="CASCADE"), nullable=False)
+    # 作成者ユーザID
+    # 外部キー: users.id
+    author_user_id = Column(ForeignKey("users.id"), nullable=False)
+    # タイプ
+    type = Column(String, nullable=False)
+    # 内容
+    content = Column(String, nullable=True)
+    # 返信先メッセージID
+    # 外部キー: messages.id
+    referenced_message_id = Column(ForeignKey("messages.id"), nullable=True)
+    # 削除日時
+    deleted_at = Column(DateTime(timezone=True), nullable=True)
+    # 作成日時
+    created_at = Column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+    # 更新日時
+    updated_at = Column(
+        DateTime(timezone=True),
+        server_default=func.now(),  # デフォルト値を現在時刻に設定
+        onupdate=func.now(),  # レコード更新時に現在時刻に更新
+        nullable=False,
+    )
