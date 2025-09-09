@@ -1,9 +1,12 @@
 import os
 import unittest
+from typing import AsyncGenerator
 from dotenv import load_dotenv
 from httpx import AsyncClient, ASGITransport
 from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncSession
 from main import app
+from database import get_session
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
@@ -21,16 +24,37 @@ class TestUserAPI(unittest.IsolatedAsyncioTestCase):
         )
 
     async def asyncSetUp(self):
+        # テーブル作成
+        from domains import Base
+        async with type(self).engine.begin() as conn:
+            # SQLiteではFOREIGN KEY制約を無効化（循環参照を回避）
+            await conn.execute(text("PRAGMA foreign_keys=OFF"))
+            await conn.run_sync(Base.metadata.create_all)
+        
+        # テーブルクリーンアップ処理を実行（SQLite用）
+        async with type(self).engine.begin() as conn:
+            await conn.execute(text("DELETE FROM users"))
+            # SQLiteのautoincrement IDをリセット（テーブルが存在する場合のみ）
+            try:
+                await conn.execute(text("UPDATE sqlite_sequence SET seq = 0 WHERE name = 'users'"))
+            except Exception:
+                pass  # sqlite_sequenceテーブルが存在しない場合は無視
+
+        # テスト用のデータベースセッション依存関数をオーバーライド
+        async def override_get_session() -> AsyncGenerator[AsyncSession, None]:
+            async with type(self).AsyncSessionLocal() as session:
+                yield session
+        
+        app.dependency_overrides[get_session] = override_get_session
+        
         # 非同期でAsyncClientを初期化
         self.client = AsyncClient(
             transport=ASGITransport(app=app), base_url="http://testserver"
         )
 
-        # テーブルクリーンアップ処理を実行
-        async with type(self).engine.begin() as conn:
-            await conn.execute(text("TRUNCATE TABLE users RESTART IDENTITY CASCADE"))
-
     async def asyncTearDown(self):
+        # 依存関数のオーバーライドを削除
+        app.dependency_overrides.clear()
         # クライアントを非同期に破棄
         await self.client.aclose()
 

@@ -25,9 +25,21 @@ class TestUserRepository(unittest.IsolatedAsyncioTestCase):
         self.repository = UserRepository()
 
     async def asyncSetUp(self):
-        # テーブルクリーンアップ処理を実行
+        # テーブル作成
+        from domains import Base
         async with self.engine.begin() as conn:
-            await conn.execute(text("TRUNCATE TABLE users RESTART IDENTITY CASCADE"))
+            # SQLiteではFOREIGN KEY制約を無効化（循環参照を回避）
+            await conn.execute(text("PRAGMA foreign_keys=OFF"))
+            await conn.run_sync(Base.metadata.create_all)
+        
+        # テーブルクリーンアップ処理を実行（SQLite用）
+        async with self.engine.begin() as conn:
+            await conn.execute(text("DELETE FROM users"))
+            # SQLiteのautoincrement IDをリセット（テーブルが存在する場合のみ）
+            try:
+                await conn.execute(text("UPDATE sqlite_sequence SET seq = 0 WHERE name = 'users'"))
+            except Exception:
+                pass  # sqlite_sequenceテーブルが存在しない場合は無視
 
     async def asyncTearDown(self):
         # エンジンを非同期に破棄
