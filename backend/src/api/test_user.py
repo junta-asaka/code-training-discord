@@ -1,38 +1,59 @@
 import os
 import unittest
+from typing import AsyncGenerator
 from dotenv import load_dotenv
 from httpx import AsyncClient, ASGITransport
 from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncSession
 from main import app
+from database import get_session
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
 
 class TestUserAPI(unittest.IsolatedAsyncioTestCase):
-    @classmethod
-    def setUpClass(cls):
+    async def asyncSetUp(self):
         load_dotenv()
         DATABASE_URL = os.environ["DATABASE_URL"]
-        cls.engine = create_async_engine(DATABASE_URL, echo=True, future=True)
-        cls.AsyncSessionLocal = async_sessionmaker(
-            bind=cls.engine,
+        self.engine = create_async_engine(DATABASE_URL, echo=True, future=True)
+        self.AsyncSessionLocal = async_sessionmaker(
+            bind=self.engine,
             expire_on_commit=False,
             autoflush=False,
         )
+        # テーブル作成
+        from domains import Base
+        async with self.engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+        
+        # テーブルクリーンアップ処理を実行
+        async with self.engine.begin() as conn:
+            # 外部キー制約のため、子テーブルから削除
+            await conn.execute(text("DELETE FROM messages"))
+            await conn.execute(text("DELETE FROM channels"))
+            await conn.execute(text("DELETE FROM friends"))
+            await conn.execute(text("DELETE FROM sessions"))
+            await conn.execute(text("DELETE FROM users"))
 
-    async def asyncSetUp(self):
+        # テスト用のデータベースセッション依存関数をオーバーライド
+        async def override_get_session() -> AsyncGenerator[AsyncSession, None]:
+            async with self.AsyncSessionLocal() as session:
+                yield session
+        
+        app.dependency_overrides[get_session] = override_get_session
+        
         # 非同期でAsyncClientを初期化
         self.client = AsyncClient(
             transport=ASGITransport(app=app), base_url="http://testserver"
         )
 
-        # テーブルクリーンアップ処理を実行
-        async with type(self).engine.begin() as conn:
-            await conn.execute(text("TRUNCATE TABLE users RESTART IDENTITY CASCADE"))
-
     async def asyncTearDown(self):
+        # 依存関数のオーバーライドを削除
+        app.dependency_overrides.clear()
         # クライアントを非同期に破棄
         await self.client.aclose()
+        # エンジンを非同期に破棄
+        await self.engine.dispose()
 
     async def test_create_user_success(self):
         """
