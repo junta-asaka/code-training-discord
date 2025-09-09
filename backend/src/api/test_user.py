@@ -12,37 +12,32 @@ from sqlalchemy.ext.asyncio import async_sessionmaker
 
 
 class TestUserAPI(unittest.IsolatedAsyncioTestCase):
-    @classmethod
-    def setUpClass(cls):
+    async def asyncSetUp(self):
         load_dotenv()
         DATABASE_URL = os.environ["DATABASE_URL"]
-        cls.engine = create_async_engine(DATABASE_URL, echo=True, future=True)
-        cls.AsyncSessionLocal = async_sessionmaker(
-            bind=cls.engine,
+        self.engine = create_async_engine(DATABASE_URL, echo=True, future=True)
+        self.AsyncSessionLocal = async_sessionmaker(
+            bind=self.engine,
             expire_on_commit=False,
             autoflush=False,
         )
-
-    async def asyncSetUp(self):
         # テーブル作成
         from domains import Base
-        async with type(self).engine.begin() as conn:
-            # SQLiteではFOREIGN KEY制約を無効化（循環参照を回避）
-            await conn.execute(text("PRAGMA foreign_keys=OFF"))
+        async with self.engine.begin() as conn:
             await conn.run_sync(Base.metadata.create_all)
         
-        # テーブルクリーンアップ処理を実行（SQLite用）
-        async with type(self).engine.begin() as conn:
+        # テーブルクリーンアップ処理を実行
+        async with self.engine.begin() as conn:
+            # 外部キー制約のため、子テーブルから削除
+            await conn.execute(text("DELETE FROM messages"))
+            await conn.execute(text("DELETE FROM channels"))
+            await conn.execute(text("DELETE FROM friends"))
+            await conn.execute(text("DELETE FROM sessions"))
             await conn.execute(text("DELETE FROM users"))
-            # SQLiteのautoincrement IDをリセット（テーブルが存在する場合のみ）
-            try:
-                await conn.execute(text("UPDATE sqlite_sequence SET seq = 0 WHERE name = 'users'"))
-            except Exception:
-                pass  # sqlite_sequenceテーブルが存在しない場合は無視
 
         # テスト用のデータベースセッション依存関数をオーバーライド
         async def override_get_session() -> AsyncGenerator[AsyncSession, None]:
-            async with type(self).AsyncSessionLocal() as session:
+            async with self.AsyncSessionLocal() as session:
                 yield session
         
         app.dependency_overrides[get_session] = override_get_session
@@ -57,6 +52,8 @@ class TestUserAPI(unittest.IsolatedAsyncioTestCase):
         app.dependency_overrides.clear()
         # クライアントを非同期に破棄
         await self.client.aclose()
+        # エンジンを非同期に破棄
+        await self.engine.dispose()
 
     async def test_create_user_success(self):
         """

@@ -1,37 +1,9 @@
 import uuid
 
-from sqlalchemy import Column, DateTime, ForeignKey, String, TypeDecorator
+from sqlalchemy import Column, DateTime, ForeignKey, String
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.dialects import postgresql, sqlite
 from sqlalchemy.orm import declarative_base
 from sqlalchemy.sql import func
-
-
-class GUID(TypeDecorator):
-    impl = String
-    cache_ok = True
-
-    def load_dialect_impl(self, dialect):
-        if dialect.name == 'postgresql':
-            return dialect.type_descriptor(UUID(as_uuid=True))
-        else:
-            return dialect.type_descriptor(String(36))
-
-    def process_bind_param(self, value, dialect):
-        if value is None:
-            return value
-        elif dialect.name == 'postgresql':
-            return value
-        else:
-            return str(value)
-
-    def process_result_value(self, value, dialect):
-        if value is None:
-            return value
-        else:
-            if not isinstance(value, uuid.UUID):
-                return uuid.UUID(value)
-            return value
 
 Base = declarative_base()
 
@@ -41,7 +13,7 @@ class User(Base):
     __tablename__ = "users"
 
     # ID
-    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     # 表示名
     name = Column(String, nullable=False)
     # ユーザー名
@@ -72,7 +44,7 @@ class Session(Base):
     __tablename__ = "sessions"
 
     # ID
-    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     # ユーザーID
     # 外部キー: users.id
     user_id = Column(ForeignKey("users.id"), nullable=False)
@@ -95,7 +67,7 @@ class Friend(Base):
     __tablename__ = "friends"
 
     # ID
-    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     # ユーザーID
     # 外部キー: users.id
     user_id = Column(ForeignKey("users.id"), nullable=False)
@@ -115,7 +87,7 @@ class Channel(Base):
     __tablename__ = "channels"
 
     # ID
-    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     # サーバーID
     # guild_id = Column(ForeignKey("guilds.id"), nullable=True)
     # タイプ
@@ -148,7 +120,7 @@ class Message(Base):
     __tablename__ = "messages"
 
     # ID
-    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     # チャネルID
     # 外部キー: channels.id
     channel_id = Column(ForeignKey("channels.id", ondelete="CASCADE"), nullable=False)
