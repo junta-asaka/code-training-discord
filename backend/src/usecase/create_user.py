@@ -14,8 +14,8 @@ class CreateUserUseCaseIf(ABC):
 
 
 class CreateUserUseCaseImpl(CreateUserUseCaseIf):
-    def __init__(self, user_repository: UserRepository):
-        self.user_repository = user_repository
+    def __init__(self):
+        self.user_repository = UserRepository()
 
     @singleton
     async def execute(self, session: AsyncSession, req: UserCreateRequest) -> User:

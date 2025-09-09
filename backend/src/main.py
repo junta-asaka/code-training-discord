@@ -1,4 +1,3 @@
-from dotenv import load_dotenv
 import uvicorn
 
 from fastapi import FastAPI
@@ -6,9 +5,6 @@ from fastapi import FastAPI
 from api.index import router as index_router
 from api.user import router as user_router
 from database import create_tables
-
-# .envファイルの内容を読み込見込む
-load_dotenv()
 
 
 app = FastAPI()

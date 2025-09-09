@@ -1,6 +1,10 @@
 import os
+from dotenv import load_dotenv
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 from domains import Base
+
+# .envファイルの内容を読み込見込む
+load_dotenv()
 
 DATABASE_URL = os.environ["DATABASE_URL"]
 

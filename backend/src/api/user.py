@@ -1,12 +1,17 @@
 from fastapi import APIRouter, Depends, HTTPException, status
+
 from sqlalchemy.ext.asyncio import AsyncSession
+from dependencies import get_injector
 from database import AsyncSessionLocal
-from usecase.create_user import CreateUserUseCaseImpl
-from repository.user_repository import UserRepository
+from usecase.create_user import CreateUserUseCaseIf
 from schema.user_schema import UserCreateRequest, UserResponse
 from typing import AsyncGenerator
 
 router = APIRouter()
+
+
+def get_usecase(injector=Depends(get_injector)) -> CreateUserUseCaseIf:
+    return injector.get(CreateUserUseCaseIf)
 
 
 async def get_session() -> AsyncGenerator[AsyncSession, None]:
@@ -16,9 +21,10 @@ async def get_session() -> AsyncGenerator[AsyncSession, None]:
 
 @router.post("/user", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 async def create_user(
-    req: UserCreateRequest, session: AsyncSession = Depends(get_session)
+    req: UserCreateRequest,
+    session: AsyncSession = Depends(get_session),
+    usecase: CreateUserUseCaseIf = Depends(get_usecase),
 ):
-    usecase = CreateUserUseCaseImpl(UserRepository())
     try:
         user_db = await usecase.execute(session, req)
     except ValueError as e:
