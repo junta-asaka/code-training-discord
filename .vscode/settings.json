@@ -5,5 +5,14 @@
         "activityBarBadge.foreground": "#262626",
         "statusBar.background": "#9f5a51",
         "statusBar.foreground": "#e9dbb7"
-    }
+    },
+    "python.testing.unittestArgs": [
+        "-v",
+        "-s",
+        "./backend/src",
+        "-p",
+        "test_*.py"
+    ],
+    "python.testing.pytestEnabled": false,
+    "python.testing.unittestEnabled": true
 }

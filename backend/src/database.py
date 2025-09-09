@@ -1,6 +1,7 @@
 import os
+from typing import AsyncGenerator
 from dotenv import load_dotenv
-from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
+from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 from domains import Base
 
 # .envファイルの内容を読み込見込む
@@ -16,8 +17,7 @@ AsyncSessionLocal = async_sessionmaker(
 )
 
 
-# 依存関数
-async def get_session():
+async def get_session() -> AsyncGenerator[AsyncSession, None]:
     async with AsyncSessionLocal() as session:
         yield session
 
