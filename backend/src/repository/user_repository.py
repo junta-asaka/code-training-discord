@@ -1,11 +1,70 @@
-from sqlalchemy import select
+from abc import ABC, abstractmethod
+
 from domains import User
+from injector import singleton
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
-class UserRepository:
-    # ユーザ作成
+class UserRepositoryIf(ABC):
+    """ユーザーリポジトリインターフェース
+
+    Args:
+        ABC (_type_): 抽象クラス
+    """
+
+    @abstractmethod
     async def create_user(self, session: AsyncSession, user: User) -> User:
+        """ユーザーを作成する
+
+        Args:
+            session (AsyncSession): データベースセッション
+            user (User): 作成するユーザー情報
+
+        Returns:
+            User: 作成されたユーザー情報
+
+        Returns:
+            User: 作成されたユーザー情報
+        """
+
+        pass
+
+    @abstractmethod
+    async def get_user(self, session: AsyncSession, username: str, password_hash: str):
+        """ユーザーを取得する
+
+        Args:
+            session (AsyncSession): データベースセッション
+            username (str): ユーザー名
+            password_hash (str): パスワードハッシュ
+        """
+
+        pass
+
+
+@singleton
+class UserRepositoryImpl(UserRepositoryIf):
+    """ユーザーリポジトリ実装
+
+    Args:
+        UserRepositoryIf (_type_): ユーザーリポジトリインターフェース
+    """
+
+    async def create_user(self, session: AsyncSession, user: User) -> User:
+        """ユーザーを作成する
+
+        Args:
+            session (AsyncSession): データベースセッション
+            user (User): 作成するユーザー情報
+
+        Returns:
+            User: 作成されたユーザー情報
+
+        Returns:
+            User: 作成されたユーザー情報
+        """
+
         user_db = User(
             name=user.name,
             username=user.username,
@@ -20,13 +79,17 @@ class UserRepository:
 
         return user_db
 
-    # ユーザ参照 - 自ユーザのみ
-    async def get_user(
-        self, session: AsyncSession, username: str, email: str, password_hash: str
-    ):
+    async def get_user(self, session: AsyncSession, username: str, password_hash: str):
+        """ユーザーを取得する
+
+        Args:
+            session (AsyncSession): データベースセッション
+            username (str): ユーザー名
+            password_hash (str): パスワードハッシュ
+        """
+
         stmt = select(User).where(
             User.username == username,
-            User.email == email,
             User.password_hash == password_hash,
         )
         result = await session.execute(stmt)
