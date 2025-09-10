@@ -120,7 +120,7 @@ class TestUserRepository(unittest.IsolatedAsyncioTestCase):
 
         # When
         async with self.AsyncSessionLocal() as session:
-            result = await self.repository.get_user(session, "testuser", "hashed_password")
+            result = await self.repository.get_user_by_username(session, "testuser")
 
         # Then
         self.assertEqual(result.name, expected_user.name)  # type: ignore
@@ -144,7 +144,7 @@ class TestUserRepository(unittest.IsolatedAsyncioTestCase):
 
         # When
         async with self.AsyncSessionLocal() as session:
-            result = await self.repository.get_user(session, "nonexist", "hashed_password")
+            result = await self.repository.get_user_by_username(session, "nonexist")
 
         # Then
         self.assertIsNone(result)

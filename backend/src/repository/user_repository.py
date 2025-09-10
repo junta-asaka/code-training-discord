@@ -31,7 +31,7 @@ class UserRepositoryIf(ABC):
         pass
 
     @abstractmethod
-    async def get_user(self, session: AsyncSession, username: str, password_hash: str):
+    async def get_user_by_username(self, session: AsyncSession, username: str):
         """ユーザーを取得する
 
         Args:
@@ -79,18 +79,16 @@ class UserRepositoryImpl(UserRepositoryIf):
 
         return user_db
 
-    async def get_user(self, session: AsyncSession, username: str, password_hash: str):
+    async def get_user_by_username(self, session: AsyncSession, username: str):
         """ユーザーを取得する
 
         Args:
             session (AsyncSession): データベースセッション
             username (str): ユーザー名
-            password_hash (str): パスワードハッシュ
         """
 
         stmt = select(User).where(
             User.username == username,
-            User.password_hash == password_hash,
         )
         result = await session.execute(stmt)
 
