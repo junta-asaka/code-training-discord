@@ -31,4 +31,4 @@ class UserRepository:
         )
         result = await session.execute(stmt)
 
-        return result.scalars()
+        return result.scalars().first()

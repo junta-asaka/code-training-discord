@@ -122,7 +122,7 @@ class TestUserRepository(unittest.IsolatedAsyncioTestCase):
             )
 
         # Then
-        result_user: User = result.first()
+        result_user: User = result
         self.assertEqual(result_user.name, expected_user.name)  # type: ignore
         self.assertEqual(result_user.username, expected_user.username)  # type: ignore
         self.assertEqual(result_user.email, expected_user.email)  # type: ignore
@@ -149,7 +149,7 @@ class TestUserRepository(unittest.IsolatedAsyncioTestCase):
             )
 
         # Then
-        self.assertIsNone(result.first())
+        self.assertIsNone(result)
 
 
 if __name__ == "__main__":
