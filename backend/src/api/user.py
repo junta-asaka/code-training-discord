@@ -1,26 +1,32 @@
 from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.exc import IntegrityError
+
 from sqlalchemy.ext.asyncio import AsyncSession
-from database import AsyncSessionLocal
-from usecase.create_user import CreateUserUseCaseImpl
-from repository.user_repository import UserRepository
+from dependencies import get_injector
+from database import get_session
+from usecase.create_user import CreateUserUseCaseIf
 from schema.user_schema import UserCreateRequest, UserResponse
-from typing import AsyncGenerator
 
 router = APIRouter()
 
 
-async def get_session() -> AsyncGenerator[AsyncSession, None]:
-    async with AsyncSessionLocal() as session:
-        yield session
+def get_usecase(injector=Depends(get_injector)) -> CreateUserUseCaseIf:
+    return injector.get(CreateUserUseCaseIf)
 
 
 @router.post("/user", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 async def create_user(
-    req: UserCreateRequest, session: AsyncSession = Depends(get_session)
+    req: UserCreateRequest,
+    session: AsyncSession = Depends(get_session),
+    usecase: CreateUserUseCaseIf = Depends(get_usecase),
 ):
-    usecase = CreateUserUseCaseImpl(UserRepository())
     try:
         user_db = await usecase.execute(session, req)
+    except IntegrityError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e),
+        )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 

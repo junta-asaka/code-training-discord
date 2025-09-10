@@ -30,4 +30,5 @@ class UserRepository:
             User.password_hash == password_hash,
         )
         result = await session.execute(stmt)
+
         return result.scalars().first()
