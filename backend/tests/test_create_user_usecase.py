@@ -1,7 +1,12 @@
 import base64
+import os
+import sys
 import unittest
 from unittest.mock import AsyncMock, Mock, patch
 from sqlalchemy.ext.asyncio import AsyncSession
+
+# テストファイルのルートディレクトリからの相対パスでsrcフォルダを指定
+sys.path.append(os.path.join(os.path.dirname(__file__), "../src"))
 
 from utils import hash_password
 from usecase.create_user import CreateUserUseCaseImpl

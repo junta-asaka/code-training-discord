@@ -1,13 +1,18 @@
 import os
-from typing import AsyncGenerator
+import sys
 import unittest
+from typing import AsyncGenerator
 from dotenv import load_dotenv
 from httpx import AsyncClient, ASGITransport
 from sqlalchemy import text
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
+
+# テストファイルのルートディレクトリからの相対パスでsrcフォルダを指定
+sys.path.append(os.path.join(os.path.dirname(__file__), "../src"))
+
 from database import get_session
 from main import app
 from domains import Base
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 
 
 class TestUserAPI(unittest.IsolatedAsyncioTestCase):

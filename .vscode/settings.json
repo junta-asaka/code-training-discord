@@ -1,18 +1,21 @@
 {
-    "workbench.colorCustomizations": {
-        "editorCursor.foreground": "#ef857d",
-        "activityBarBadge.background": "#e9dbb7",
-        "activityBarBadge.foreground": "#262626",
-        "statusBar.background": "#9f5a51",
-        "statusBar.foreground": "#e9dbb7"
-    },
-    "python.testing.unittestArgs": [
-        "-v",
-        "-s",
-        "./backend/src",
-        "-p",
-        "test_*.py"
-    ],
-    "python.testing.pytestEnabled": false,
-    "python.testing.unittestEnabled": true
+  "workbench.colorCustomizations": {
+    "editorCursor.foreground": "#ef857d",
+    "activityBarBadge.background": "#e9dbb7",
+    "activityBarBadge.foreground": "#262626",
+    "statusBar.background": "#9f5a51",
+    "statusBar.foreground": "#e9dbb7"
+  },
+  "python.testing.unittestArgs": [
+    "-v",
+    "-s",
+    "./backend/tests",
+    "-p",
+    "test_*.py"
+  ],
+  "python.testing.pytestEnabled": false,
+  "python.testing.unittestEnabled": true,
+  "python.analysis.extraPaths": [
+    "./backend/src"
+  ]
 }

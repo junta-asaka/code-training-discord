@@ -1,13 +1,16 @@
 import os
+import sys
 import unittest
 from unittest.mock import AsyncMock
 from dotenv import load_dotenv
 from sqlalchemy import text
-from sqlalchemy.ext.asyncio import async_sessionmaker
-from domains import User
+from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+
+# テストファイルのルートディレクトリからの相対パスでsrcフォルダを指定
+sys.path.append(os.path.join(os.path.dirname(__file__), "../src"))
+
+from domains import Base, User
 from repository.user_repository import UserRepository
-from sqlalchemy.ext.asyncio import create_async_engine
-from domains import Base
 
 
 class TestUserRepository(unittest.IsolatedAsyncioTestCase):
