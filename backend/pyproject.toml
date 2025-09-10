@@ -10,6 +10,7 @@ dependencies = [
     "fastapi>=0.116.1",
     "httpx>=0.28.1",
     "injector>=0.22.0",
+    "pyjwt>=2.10.1",
     "pytest>=8.4.2",
     "python-dotenv>=1.1.1",
     "sqlalchemy>=2.0.43",
