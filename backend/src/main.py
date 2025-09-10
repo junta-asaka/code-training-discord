@@ -1,15 +1,14 @@
 import uvicorn
-
-from fastapi import FastAPI
-
 from api.index import router as index_router
+from api.login import router as login_router
 from api.user import router as user_router
 from database import create_tables
-
+from fastapi import FastAPI
 
 app = FastAPI()
 app.include_router(index_router)
 app.include_router(user_router)
+app.include_router(login_router)
 
 
 @app.on_event("startup")
