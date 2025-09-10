@@ -18,15 +18,19 @@ class LoginUseCaseIf(ABC):
         self.session_repo: SessionRepositoryIf = session_repo
 
     @abstractmethod
-    async def execute(
+    async def create_session(
         self, session: AsyncSession, req: Request, form_data: OAuth2PasswordRequestForm
     ) -> Session | None:
+        pass
+
+    @abstractmethod
+    async def auth_session(self, session: AsyncSession, req: Request) -> Session | None:
         pass
 
 
 @singleton
 class LoginUseCaseImpl(LoginUseCaseIf):
-    async def execute(
+    async def create_session(
         self, session: AsyncSession, req: Request, form_data: OAuth2PasswordRequestForm
     ) -> Session | None:
         # ユーザーの認証
@@ -47,3 +51,8 @@ class LoginUseCaseImpl(LoginUseCaseIf):
         )
 
         return await self.session_repo.create_session(session, session_db)
+
+    async def auth_session(self, session: AsyncSession, req: Request) -> Session | None:
+        token = req.cookies.get("session_token") or req.headers.get("Authorization", "").replace("Bearer ", "")
+
+        return await self.session_repo.get_session_by_token(session, token)

@@ -22,7 +22,7 @@ async def login(
     session=Depends(get_session),
     usecase: LoginUseCaseIf = Depends(get_usecase),
 ):
-    session_db: Session | None = await usecase.execute(session, req, form_data)
+    session_db: Session | None = await usecase.create_session(session, req, form_data)
 
     if not session_db:
         raise HTTPException(status_code=401, detail="Invalid credentials")
