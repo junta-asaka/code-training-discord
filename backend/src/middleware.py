@@ -1,30 +1,25 @@
 from database import get_session
-from dependencies import get_injector
-from fastapi import Depends, Request
-from fastapi.responses import RedirectResponse
-from main import app
-from sqlalchemy.ext.asyncio import AsyncSession
-from usecase.login import LoginUseCaseIf
+from fastapi import Request
+from repository.session_repository import SessionRepositoryImpl
+from repository.user_repository import UserRepositoryImpl
+from usecase.login import LoginUseCaseImpl
 
 
-def get_usecase(injector=Depends(get_injector)) -> LoginUseCaseIf:
-    return injector.get(LoginUseCaseIf)
-
-
-@app.middleware("http")
 async def auth_session(
     req: Request,
-    call_next,
-    session: AsyncSession = Depends(get_session),
-    usecase: LoginUseCaseIf = Depends(get_usecase),
 ):
-    if req.url.path in ["/login", "/register"]:
-        return await call_next(req)
+    """セッション認証を行う
 
-    if not session:
-        return RedirectResponse(url="/login")
+    Args:
+        req (Request): HTTPリクエスト
 
-    if not await usecase.auth_session(session, req):
-        return RedirectResponse(url="/login")
+    Returns:
+        bool: 認証に成功した場合はTrue、失敗した場合はFalse
+    """
 
-    return await call_next(req)
+    usecase = LoginUseCaseImpl(user_repo=UserRepositoryImpl(), session_repo=SessionRepositoryImpl())
+    async for session in get_session():
+        if not session or (not await usecase.auth_session(session, req)):
+            return False
+
+        return True

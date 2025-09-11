@@ -1,6 +1,5 @@
 from database import get_session
 from dependencies import get_injector
-from domains import Session
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from schema.login_schema import LoginResponse
@@ -15,6 +14,11 @@ def get_usecase(injector=Depends(get_injector)) -> LoginUseCaseIf:
     return injector.get(LoginUseCaseIf)
 
 
+@router.get("/login")
+async def get_login():
+    return {"response": "login"}
+
+
 @router.post("/login", response_model=LoginResponse)
 async def login(
     req: Request,
@@ -22,12 +26,39 @@ async def login(
     session=Depends(get_session),
     usecase: LoginUseCaseIf = Depends(get_usecase),
 ):
-    session_db: Session | None = await usecase.create_session(session, req, form_data)
+    """ログイン処理
 
-    if not session_db:
-        raise HTTPException(status_code=401, detail="Invalid credentials")
+    Args:
+        req (Request): HTTPリクエスト
+        form_data (OAuth2PasswordRequestForm, optional): フォームデータ
+        session (_type_, optional): セッション情報
+        usecase (LoginUseCaseIf, optional): ログインユースケース
+
+    Raises:
+        HTTPException: 認証に失敗した場合
+
+    Returns:
+        _type_: ログインレスポンス
+    """
+
+    # nextパラメータを取得
+    next_param = req.query_params.get("next")
+
+    result_usecase: dict | None = await usecase.create_session(session, req, form_data)
+    user = result_usecase.get("user")
+    session_obj = result_usecase.get("session")
+
+    if not user or not session_obj:
+        # 失敗時もnextパラメータを含めてエラーレスポンス
+        error_detail = {"message": "Unauthorized"}
+        if next_param:
+            error_detail["next"] = next_param
+        raise HTTPException(status_code=401, detail=error_detail)
 
     return LoginResponse(
-        access_token=str(session_db.refresh_token_hash),
+        name=user.name,
+        username=user.username,
+        access_token=str(session_obj.refresh_token_hash),
         token_type="bearer",
+        next=next_param,
     )
