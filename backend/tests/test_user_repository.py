@@ -4,13 +4,14 @@ import unittest
 from unittest.mock import AsyncMock
 
 from dotenv import load_dotenv
+from injector import Injector
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 # テストファイルのルートディレクトリからの相対パスでsrcフォルダを指定
 sys.path.append(os.path.join(os.path.dirname(__file__), "../src"))
 
-from dependencies_test import get_injector
+from dependencies import configure
 from domains import Base, User
 from repository.user_repository import UserRepositoryIf
 
@@ -42,7 +43,7 @@ class TestUserRepository(unittest.IsolatedAsyncioTestCase):
             await conn.execute(text("DELETE FROM users"))
 
         # テスト用DIコンテナからユースケースを取得
-        injector = get_injector()
+        injector = Injector([configure])
         self.repository = injector.get(UserRepositoryIf)
 
     async def asyncTearDown(self):

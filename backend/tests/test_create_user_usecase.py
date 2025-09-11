@@ -4,12 +4,13 @@ import sys
 import unittest
 from unittest.mock import AsyncMock, Mock, patch
 
+from injector import Injector
 from sqlalchemy.ext.asyncio import AsyncSession
 
 # テストファイルのルートディレクトリからの相対パスでsrcフォルダを指定
 sys.path.append(os.path.join(os.path.dirname(__file__), "../src"))
 
-from dependencies_test import get_injector
+from dependencies import configure
 from domains import User
 from schema.user_schema import UserCreateRequest
 from usecase.create_user import CreateUserUseCaseIf
@@ -19,7 +20,7 @@ from utils import hash_password
 class TestCreateUserUseCaseImpl(unittest.IsolatedAsyncioTestCase):
     async def asyncSetUp(self):
         # テスト用DIコンテナからユースケースを取得
-        injector = get_injector()
+        injector = Injector([configure])
         self.use_case = injector.get(CreateUserUseCaseIf)
         self.mock_session = Mock(spec=AsyncSession)
 
