@@ -1,4 +1,3 @@
-import React from "react";
 import Avatar from "@mui/material/Avatar";
 import MapsUgcIcon from "@mui/icons-material/MapsUgc";
 import MoreVertIcon from "@mui/icons-material/MoreVert";

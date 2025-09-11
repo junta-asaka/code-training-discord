@@ -1,4 +1,3 @@
-import React from "react";
 import "@/styles/sidebar/Guilds.scss";
 import Server from "./Server";
 
