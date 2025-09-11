@@ -1,20 +1,18 @@
-import Bar from "./components/Bar";
-import "@/App.scss";
-import Sidebar from "./components/sidebar/Sidebar";
-import Page from "./components/page/Page";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import Top from "./views/Top";
+import Login from "./views/Login";
+import NotFound from "./views/NotFound";
 
 function App() {
-    return (
-        <div className="App">
-            {/* bar */}
-            <Bar />
-            {/* content */}
-            <div className="content">
-                <Sidebar />
-                <Page />
-            </div>
-        </div>
-    );
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Top />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </BrowserRouter>
+  );
 }
 
 export default App;
