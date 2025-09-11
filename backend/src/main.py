@@ -25,7 +25,6 @@ async def startup_event():
     print("Creating tables...")
 
 
-@app.middleware("http")
 async def middleware(req: Request, call_next):
     """HTTPリクエストのミドルウェア
 
