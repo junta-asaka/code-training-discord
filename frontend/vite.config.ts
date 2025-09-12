@@ -9,4 +9,10 @@ export default defineConfig({
             "@": "/src",
         },
     },
+    server: {
+        cors: {
+            origin: ["http://localhost:8000", "http://localhost:5173"],
+            credentials: true,
+        },
+    },
 });
