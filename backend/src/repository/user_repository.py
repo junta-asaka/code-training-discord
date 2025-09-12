@@ -23,21 +23,17 @@ class UserRepositoryIf(ABC):
 
         Returns:
             User: 作成されたユーザー情報
-
-        Returns:
-            User: 作成されたユーザー情報
         """
 
         pass
 
     @abstractmethod
-    async def get_user_by_username(self, session: AsyncSession, username: str):
+    async def get_user_by_username(self, session: AsyncSession, username: str) -> User:
         """ユーザーを取得する
 
         Args:
             session (AsyncSession): データベースセッション
             username (str): ユーザー名
-            password_hash (str): パスワードハッシュ
         """
 
         pass
@@ -60,9 +56,6 @@ class UserRepositoryImpl(UserRepositoryIf):
 
         Returns:
             User: 作成されたユーザー情報
-
-        Returns:
-            User: 作成されたユーザー情報
         """
 
         user_db = User(
@@ -79,7 +72,7 @@ class UserRepositoryImpl(UserRepositoryIf):
 
         return user_db
 
-    async def get_user_by_username(self, session: AsyncSession, username: str):
+    async def get_user_by_username(self, session: AsyncSession, username: str) -> User:
         """ユーザーを取得する
 
         Args:
