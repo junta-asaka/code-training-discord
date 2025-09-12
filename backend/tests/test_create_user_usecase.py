@@ -3,25 +3,29 @@ import os
 import sys
 import unittest
 from unittest.mock import AsyncMock, Mock, patch
+
+from injector import Injector
 from sqlalchemy.ext.asyncio import AsyncSession
 
 # テストファイルのルートディレクトリからの相対パスでsrcフォルダを指定
 sys.path.append(os.path.join(os.path.dirname(__file__), "../src"))
 
-from utils import hash_password
-from usecase.create_user import CreateUserUseCaseImpl
+from dependencies import configure
 from domains import User
 from schema.user_schema import UserCreateRequest
+from usecase.create_user import CreateUserUseCaseIf
+from utils import hash_password
 
 
 class TestCreateUserUseCaseImpl(unittest.IsolatedAsyncioTestCase):
-    def setUp(self):
-        # ユースケースのインスタンス化とモックセッションの作成
-        self.use_case = CreateUserUseCaseImpl()
+    async def asyncSetUp(self):
+        # テスト用DIコンテナからユースケースを取得
+        injector = Injector([configure])
+        self.use_case = injector.get(CreateUserUseCaseIf)
         self.mock_session = Mock(spec=AsyncSession)
 
     # リポジトリのみモックをパッチ
-    @patch("usecase.create_user.UserRepository")
+    @patch("usecase.create_user.UserRepositoryIf")
     async def test_execute_success(self, mock_user_repository_class):
         """
         Given: 有効なユーザー作成リクエスト
@@ -52,8 +56,8 @@ class TestCreateUserUseCaseImpl(unittest.IsolatedAsyncioTestCase):
         mock_user_repository.create_user.return_value = expected_user
         mock_user_repository_class.return_value = mock_user_repository
 
-        # UserRepositoryインスタンスを設定
-        self.use_case.user_repository = mock_user_repository
+        # リポジトリをモックに置き換え
+        self.use_case.repository = mock_user_repository
 
         # When
         result = await self.use_case.execute(self.mock_session, request)
@@ -71,9 +75,7 @@ class TestCreateUserUseCaseImpl(unittest.IsolatedAsyncioTestCase):
         # パスワードのソルトを取得
         salt_b64, _ = created_password.split("$")
         # ソルトとパスワードを用いて、ハッシュ化を再現
-        recreated_hash = await hash_password(
-            str(expected_user.password_hash), base64.b64decode(salt_b64)
-        )
+        recreated_hash = await hash_password(str(expected_user.password_hash), base64.b64decode(salt_b64))
 
         self.assertEqual(created_user.name, expected_user.name)
         self.assertEqual(created_user.username, expected_user.username)
@@ -85,7 +87,7 @@ class TestCreateUserUseCaseImpl(unittest.IsolatedAsyncioTestCase):
         self.assertNotEqual(created_user.password_hash, expected_user.password_hash)
         self.assertEqual(created_user.password_hash, recreated_hash)
 
-    @patch("usecase.create_user.UserRepository")
+    @patch("usecase.create_user.UserRepositoryIf")
     async def test_execute_with_empty_description(self, mock_user_repository_class):
         """
         Given: 説明が空のユーザー作成リクエスト
@@ -116,7 +118,8 @@ class TestCreateUserUseCaseImpl(unittest.IsolatedAsyncioTestCase):
         mock_user_repository.create_user.return_value = expected_user
         mock_user_repository_class.return_value = mock_user_repository
 
-        self.use_case.user_repository = mock_user_repository
+        # リポジトリをモックに置き換え
+        self.use_case.repository = mock_user_repository
 
         # When
         result = await self.use_case.execute(self.mock_session, request)
@@ -134,9 +137,7 @@ class TestCreateUserUseCaseImpl(unittest.IsolatedAsyncioTestCase):
         # パスワードのソルトを取得
         salt_b64, _ = created_password.split("$")
         # ソルトとパスワードを用いて、ハッシュ化を再現
-        recreated_hash = await hash_password(
-            str(expected_user.password_hash), base64.b64decode(salt_b64)
-        )
+        recreated_hash = await hash_password(str(expected_user.password_hash), base64.b64decode(salt_b64))
 
         self.assertEqual(created_user.name, expected_user.name)
         self.assertEqual(created_user.username, expected_user.username)
@@ -147,7 +148,7 @@ class TestCreateUserUseCaseImpl(unittest.IsolatedAsyncioTestCase):
         self.assertNotEqual(created_user.password_hash, expected_user.password_hash)
         self.assertEqual(created_user.password_hash, recreated_hash)
 
-    @patch("usecase.create_user.UserRepository")
+    @patch("usecase.create_user.UserRepositoryIf")
     async def test_execute_repository_error(self, mock_user_repository_class):
         """
         Given: リポジトリでエラーが発生する場合
@@ -169,7 +170,8 @@ class TestCreateUserUseCaseImpl(unittest.IsolatedAsyncioTestCase):
         mock_user_repository.create_user.side_effect = Exception("データベースエラー")
         mock_user_repository_class.return_value = mock_user_repository
 
-        self.use_case.user_repository = mock_user_repository
+        # リポジトリをモックに置き換え
+        self.use_case.repository = mock_user_repository
 
         # When & Then
         with self.assertRaises(Exception) as context:
@@ -178,7 +180,7 @@ class TestCreateUserUseCaseImpl(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(str(context.exception), "データベースエラー")
         mock_user_repository.create_user.assert_called_once()
 
-    @patch("usecase.create_user.UserRepository")
+    @patch("usecase.create_user.UserRepositoryIf")
     async def test_password_hashing_integration(self, mock_user_repository_class):
         """
         Given: 同じパスワードを持つ複数のリクエスト
@@ -214,7 +216,8 @@ class TestCreateUserUseCaseImpl(unittest.IsolatedAsyncioTestCase):
             description="Test description",
         )
         mock_user_repository_class.return_value = mock_user_repository
-        self.use_case.user_repository = mock_user_repository
+        # リポジトリをモックに置き換え
+        self.use_case.repository = mock_user_repository
 
         # When
         await self.use_case.execute(self.mock_session, request1)

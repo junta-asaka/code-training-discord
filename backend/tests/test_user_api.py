@@ -2,17 +2,18 @@ import os
 import sys
 import unittest
 from typing import AsyncGenerator
+
 from dotenv import load_dotenv
-from httpx import AsyncClient, ASGITransport
+from httpx import ASGITransport, AsyncClient
 from sqlalchemy import text
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 # テストファイルのルートディレクトリからの相対パスでsrcフォルダを指定
 sys.path.append(os.path.join(os.path.dirname(__file__), "../src"))
 
 from database import get_session
-from main import app
 from domains import Base
+from main import app
 
 
 class TestUserAPI(unittest.IsolatedAsyncioTestCase):
@@ -47,9 +48,7 @@ class TestUserAPI(unittest.IsolatedAsyncioTestCase):
         app.dependency_overrides[get_session] = override_get_session
 
         # 非同期でAsyncClientを初期化
-        self.client = AsyncClient(
-            transport=ASGITransport(app=app), base_url="http://testserver"
-        )
+        self.client = AsyncClient(transport=ASGITransport(app=app), base_url="http://testserver")
 
     async def asyncTearDown(self):
         # 依存関数のオーバーライドを削除
@@ -69,9 +68,9 @@ class TestUserAPI(unittest.IsolatedAsyncioTestCase):
         # Given: 新規ユーザー情報
         data = {
             "name": "Test User",
-            "username": "testuser",
-            "email": "test@example.com",
-            "password": "hashed_password",
+            "username": "testuser1",
+            "email": "test1@example.com",
+            "password": "hashed_password1",
             "description": "Test description",
         }
 
@@ -99,9 +98,9 @@ class TestUserAPI(unittest.IsolatedAsyncioTestCase):
         # Given: 重複ユーザー情報
         data = {
             "name": "Test User",
-            "username": "testuser",
-            "email": "test@example.com",
-            "password": "hashed_password",
+            "username": "testuser2",
+            "email": "test2@example.com",
+            "password": "hashed_password2",
             "description": "Test description",
         }
 
