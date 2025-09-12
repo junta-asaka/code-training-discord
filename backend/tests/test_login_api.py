@@ -18,6 +18,9 @@ from main import app
 
 class TestLoginAPI(unittest.IsolatedAsyncioTestCase):
     async def asyncSetUp(self):
+        # テスト環境であることを示す環境変数を設定
+        os.environ["TESTING"] = "true"
+
         load_dotenv()
         DATABASE_URL = os.environ["DATABASE_URL"]
         self.engine = create_async_engine(DATABASE_URL, echo=True, future=True)
@@ -54,6 +57,10 @@ class TestLoginAPI(unittest.IsolatedAsyncioTestCase):
         await self._create_test_user()
 
     async def asyncTearDown(self):
+        # テスト環境変数をクリーンアップ
+        if "TESTING" in os.environ:
+            del os.environ["TESTING"]
+
         # 依存関数のオーバーライドを削除
         app.dependency_overrides.clear()
         # クライアントを非同期に破棄
