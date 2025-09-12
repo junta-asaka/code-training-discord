@@ -14,11 +14,6 @@ def get_usecase(injector=Depends(get_injector)) -> LoginUseCaseIf:
     return injector.get(LoginUseCaseIf)
 
 
-@router.get("/login")
-async def get_login():
-    return {"response": "login"}
-
-
 @router.post("/login", response_model=LoginResponse)
 async def login(
     req: Request,
