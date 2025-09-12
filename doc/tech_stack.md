@@ -4,20 +4,20 @@
 
 ### パッケージ管理
 
-- pnpm
+- **pnpm**
 
 ### ビルドツール
 
-- Vite
+- **Vite**
 
 ### フレームワーク
 
-- React + TypeScript
+- **React + TypeScript**
   - 厳密にはフレームワークではなく、ライブラリ
 
 ### ルーティング
 
-- React Router: 〇
+- **React Router**: 〇
   - デファクトスタンダード
   - 情報を入手しやすい
   - 拡張性が高い
@@ -31,37 +31,75 @@
   
 ### フォーム管理
 
-- React Hook Form: 〇
+- **React Hook Form**: 〇
   - パフォーマンス重視
   - フォーム状態の管理、バリデーション、エラーハンドリング
 - Formik
   - パフォーマンスに問題あり？のため不採用
-- Zod: 〇
+- **Zod**: 〇
   - バリデーション
   - TypeScriptに特化しており、簡潔に型定義ができる
 
+### 状態管理
+
+- Redux Toolkit
+  - Fluxパターンに基づく 一元的なグローバル状態管理 
+  - RTK Queryを併用することでサーバー状態も管理できる
+  - コード量と設計コストが大きい
+- SWR
+  - サーバー状態管理
+  - シンプルで軽量
+  - Next.js（SSR）との親和性が高い
+  - 並行ミューテーションや関連キャッシュの管理に弱い
+- **Tanstack Query (React Query)**: 〇
+  - サーバー状態管理
+  - 並行ミューテーションや関連キャッシュの管理に強い
+  - WebSocketイベントにも対応できるため採用
+- **Zustand**: 〇
+  - クライアント状態
+  - シンプルで軽量なため採用
+- Jotai
+  - クライアント状態
+  - アトム指向
+  - アトム指向の設計コストが高いため不採用
+- Recoil
+  - アトム指向
+- XState
+  - ステートマシン・ステートチャート
+  - データキャッシュ用途には不向き
+  - 通話機能にて有効？
+
+### データフェッチ
+
+- 標準fetch
+- Axios
+- RTK Query
+- SWR
+- **Tanstack Query (React Query)**: 〇
+  - 状態管理ライブラリに基づいて採用
+
 ### スタイル
 
-- sass
+- **sass**
 
 ## バックエンド
 
 ### パッケージ管理
 
-- uv
+- **uv**
 
 ### フレームワーク
 
-- FastAPI
+- **FastAPI**
 
 ### テスト
 
-- unittest
+- **unittest**
 
 ### DB
 
-- PostgreSQL
+- **PostgreSQL**
 
 ### ORM
 
-- SQLAlchemy
+- **SQLAlchemy**
