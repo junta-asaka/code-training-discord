@@ -2,15 +2,18 @@ import os
 import sys
 import unittest
 from unittest.mock import AsyncMock
+
 from dotenv import load_dotenv
+from injector import Injector
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 # テストファイルのルートディレクトリからの相対パスでsrcフォルダを指定
 sys.path.append(os.path.join(os.path.dirname(__file__), "../src"))
 
+from dependencies import configure
 from domains import Base, User
-from repository.user_repository import UserRepository
+from repository.user_repository import UserRepositoryIf
 
 
 class TestUserRepository(unittest.IsolatedAsyncioTestCase):
@@ -25,9 +28,6 @@ class TestUserRepository(unittest.IsolatedAsyncioTestCase):
             autoflush=False,
         )
 
-    def setUp(self):
-        self.repository = UserRepository()
-
     async def asyncSetUp(self):
         # テーブル作成
         async with self.engine.begin() as conn:
@@ -41,6 +41,10 @@ class TestUserRepository(unittest.IsolatedAsyncioTestCase):
             await conn.execute(text("DELETE FROM friends"))
             await conn.execute(text("DELETE FROM sessions"))
             await conn.execute(text("DELETE FROM users"))
+
+        # テスト用DIコンテナからユースケースを取得
+        injector = Injector([configure])
+        self.repository = injector.get(UserRepositoryIf)
 
     async def asyncTearDown(self):
         # エンジンを非同期に破棄
@@ -117,17 +121,14 @@ class TestUserRepository(unittest.IsolatedAsyncioTestCase):
 
         # When
         async with self.AsyncSessionLocal() as session:
-            result = await self.repository.get_user(
-                session, "testuser", "test@example.com", "hashed_password"
-            )
+            result = await self.repository.get_user_by_username(session, "testuser")
 
         # Then
-        result_user: User = result
-        self.assertEqual(result_user.name, expected_user.name)  # type: ignore
-        self.assertEqual(result_user.username, expected_user.username)  # type: ignore
-        self.assertEqual(result_user.email, expected_user.email)  # type: ignore
-        self.assertEqual(result_user.password_hash, expected_user.password_hash)  # type: ignore
-        self.assertEqual(result_user.description, expected_user.description)  # type: ignore
+        self.assertEqual(result.name, expected_user.name)  # type: ignore
+        self.assertEqual(result.username, expected_user.username)  # type: ignore
+        self.assertEqual(result.email, expected_user.email)  # type: ignore
+        self.assertEqual(result.password_hash, expected_user.password_hash)  # type: ignore
+        self.assertEqual(result.description, expected_user.description)  # type: ignore
 
     async def test_get_user_not_found(self):
         """
@@ -144,9 +145,7 @@ class TestUserRepository(unittest.IsolatedAsyncioTestCase):
 
         # When
         async with self.AsyncSessionLocal() as session:
-            result = await self.repository.get_user(
-                session, "nonexist", "nonexist@example.com", "hashed_password"
-            )
+            result = await self.repository.get_user_by_username(session, "nonexist")
 
         # Then
         self.assertIsNone(result)
