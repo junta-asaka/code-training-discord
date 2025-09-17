@@ -1,4 +1,3 @@
-import React from "react";
 import "@/styles/sidebar/Server.scss";
 
 const Server = () => {

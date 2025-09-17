@@ -1,4 +1,3 @@
-import React from "react";
 import EmojiPeopleIcon from "@mui/icons-material/EmojiPeople";
 import "@/styles/Title.scss";
 

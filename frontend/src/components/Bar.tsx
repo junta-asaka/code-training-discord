@@ -1,4 +1,3 @@
-import React from "react";
 import Title from "./Title";
 import Trailing from "./Trailing";
 import "@/styles/Bar.scss";

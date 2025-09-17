@@ -4,6 +4,7 @@ from fastapi.responses import JSONResponse
 from repository.session_repository import SessionRepositoryImpl
 from repository.user_repository import UserRepositoryImpl
 from usecase.login import LoginUseCaseImpl
+from utils import is_test_env
 
 
 async def auth_session(req: Request, call_next):
@@ -17,7 +18,12 @@ async def auth_session(req: Request, call_next):
         _type_: HTTPレスポンス
     """
 
-    if req.url.path in ["/login", "/register", "/docs", "/openapi.json"]:
+    # テスト環境ではセッション認証をスキップ
+    if await is_test_env():
+        return await call_next(req)
+
+    # プリフライトリクエスト（OPTIONS）や認証不要のパスをスキップ
+    if req.method == "OPTIONS" or req.url.path in ["/", "/login", "/register", "/docs", "/openapi.json"]:
         return await call_next(req)
 
     usecase = LoginUseCaseImpl(user_repo=UserRepositoryImpl(), session_repo=SessionRepositoryImpl())

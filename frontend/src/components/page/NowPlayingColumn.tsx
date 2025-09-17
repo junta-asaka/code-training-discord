@@ -1,4 +1,3 @@
-import React from "react";
 import "@/styles/page/NowPlayingColumn.scss";
 import EmptyCard from "./EmptyCard";
 

@@ -1,4 +1,3 @@
-import React from "react";
 import "@/styles/sidebar/Channel.scss";
 import Avatar from "@mui/material/Avatar";
 

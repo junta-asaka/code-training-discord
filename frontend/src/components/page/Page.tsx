@@ -1,4 +1,3 @@
-import React from "react";
 import PeopleIcon from "@mui/icons-material/People";
 import MapsUgcIcon from "@mui/icons-material/MapsUgc";
 import PeopleColumn from "./PeopleColumn";

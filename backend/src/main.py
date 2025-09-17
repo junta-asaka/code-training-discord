@@ -4,8 +4,24 @@ from api.login import router as login_router
 from api.user import router as user_router
 from database import create_tables
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from middleware import auth_session
 
 app = FastAPI()
+
+# CORS設定
+origins = ["http://localhost:8000", "http://localhost:5173"]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# 認証ミドルウェアを適用
+app.middleware("http")(auth_session)
 
 # ルーティング設定
 app.include_router(index_router)

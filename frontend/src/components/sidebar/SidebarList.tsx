@@ -1,4 +1,3 @@
-import React from "react";
 import PeopleIcon from "@mui/icons-material/People";
 import Channel from "./Channel";
 import AddIcon from "@mui/icons-material/Add";
