@@ -38,6 +38,20 @@ class UserRepositoryIf(ABC):
 
         pass
 
+    @abstractmethod
+    async def get_users_by_id(self, session: AsyncSession, user_id_list: list[str]) -> list[User]:
+        """複数のユーザーを取得する
+
+        Args:
+            session (AsyncSession): データベースセッション
+            user_id_list (list[str]): ユーザーIDリスト
+
+        Returns:
+            list[User]: ユーザーリスト
+        """
+
+        pass
+
 
 @singleton
 class UserRepositoryImpl(UserRepositoryIf):
@@ -86,3 +100,21 @@ class UserRepositoryImpl(UserRepositoryIf):
         result = await session.execute(stmt)
 
         return result.scalars().first()
+
+    async def get_users_by_id(self, session: AsyncSession, user_id_list: list[str]) -> list[User]:
+        """複数のユーザーを取得する
+
+        Args:
+            session (AsyncSession): データベースセッション
+            user_id_list (list[str]): ユーザーIDリスト
+
+        Returns:
+            list[User]: ユーザーリスト
+        """
+
+        stmt = select(User).where(
+            User.id.in_(user_id_list),
+        )
+        result = await session.execute(stmt)
+
+        return list(result.scalars().all())
