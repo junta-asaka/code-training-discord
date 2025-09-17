@@ -1,7 +1,12 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, type UseQueryResult } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import { useAuthStore } from '../stores/authStore';
 import { verifySession } from '../api/auth';
+
+// 認証が失敗したかどうか
+const isAuthError = (querry: UseQueryResult<boolean, Error>) => {
+  return querry.isError || (querry.isSuccess && !querry.data);
+}
 
 // 認証状態の検証カスタムフック
 export const useAuthVerification = () => {
@@ -20,11 +25,11 @@ export const useAuthVerification = () => {
 
   // useEffect: 副作用の処理（DOMの書き換え、変数代入、API通信などUI構築以外の処理）を行うためのフック
   useEffect(() => {
-    if (query.isError || (query.isSuccess && !query.data)) {
+    if (isAuthError(query)) {
       // 認証失敗時にログアウト処理
       logout();
     }
-  }, [query.isError, query.isSuccess, query.data, logout]);
+  }, [query, logout]);
 
   return query;
 };

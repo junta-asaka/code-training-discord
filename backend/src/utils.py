@@ -48,3 +48,15 @@ def create_access_token(data: dict, expires_delta: Union[timedelta, None] = None
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
+
+
+async def is_test_env():
+    """テスト環境かどうかを判定する
+
+    Returns:
+        bool: テスト環境ならTrue、そうでなければFalse
+    """
+
+    if os.getenv("TESTING") == "true":
+        return True
+    return False
