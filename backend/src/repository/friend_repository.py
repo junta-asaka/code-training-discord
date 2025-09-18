@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 
 from domains import Friend
 from injector import singleton
-from sqlalchemy import select
+from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
@@ -78,6 +78,8 @@ class FriendRepositoryImpl(FriendRepositoryIf):
             list[Friend]: フレンドリスト
         """
 
-        result = await session.execute(select(Friend).where(Friend.user_id == user_id))
+        result = await session.execute(
+            select(Friend).where(or_(Friend.user_id == user_id, Friend.related_user_id == user_id))
+        )
 
         return list(result.scalars().all())
