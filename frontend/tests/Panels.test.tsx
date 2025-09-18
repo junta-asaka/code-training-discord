@@ -13,6 +13,7 @@ describe("Panels", () => {
     it("given: ユーザー情報がストアに存在する, when: コンポーネントをレンダリングする, then: ユーザー名・ユーザーネーム・アカウント画像が正しく表示される", () => {
       // Given
       const mockUser = {
+        id: "user-id-123",
         name: "テストユーザー",
         username: "testuser",
       };
@@ -51,6 +52,7 @@ describe("Panels", () => {
     it("given: ユーザーのname・usernameが空文字の場合, when: コンポーネントをレンダリングする, then: Unknown User・#0000が表示される", () => {
       // Given
       const mockUser = {
+        id: "",
         name: "",
         username: "",
       };
