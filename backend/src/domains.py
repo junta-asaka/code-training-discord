@@ -3,6 +3,7 @@ import uuid
 from sqlalchemy import Column, DateTime, ForeignKey, String
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import declarative_base
+from sqlalchemy.schema import CheckConstraint, UniqueConstraint
 from sqlalchemy.sql import func
 
 Base = declarative_base()
@@ -27,9 +28,7 @@ class User(Base):
     # 削除日時
     deleted_at = Column(DateTime(timezone=True), nullable=True)
     # 作成日時
-    created_at = Column(
-        DateTime(timezone=True), server_default=func.now(), nullable=False
-    )
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     # 更新日時
     updated_at = Column(
         DateTime(timezone=True),
@@ -57,14 +56,18 @@ class Session(Base):
     # 失効日時
     revoked_at = Column(DateTime(timezone=True), nullable=True)
     # 作成日時
-    created_at = Column(
-        DateTime(timezone=True), server_default=func.now(), nullable=False
-    )
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
 
 # モデル: フレンド
 class Friend(Base):
     __tablename__ = "friends"
+    # 複合ユニーク制約の設定
+    __table_args__ = (
+        UniqueConstraint("user_id", "related_user_id"),
+        # 自己参照防止
+        CheckConstraint("user_id != related_user_id", name="check_no_self_friend"),
+    )
 
     # ID
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -77,9 +80,7 @@ class Friend(Base):
     # タイプ
     type = Column(String, nullable=False)
     # 作成日時
-    created_at = Column(
-        DateTime(timezone=True), server_default=func.now(), nullable=False
-    )
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
 
 # モデル: チャネル
@@ -103,9 +104,7 @@ class Channel(Base):
     # 削除日時
     deleted_at = Column(DateTime(timezone=True), nullable=True)
     # 作成日時
-    created_at = Column(
-        DateTime(timezone=True), server_default=func.now(), nullable=False
-    )
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     # 更新日時
     updated_at = Column(
         DateTime(timezone=True),
@@ -137,9 +136,7 @@ class Message(Base):
     # 削除日時
     deleted_at = Column(DateTime(timezone=True), nullable=True)
     # 作成日時
-    created_at = Column(
-        DateTime(timezone=True), server_default=func.now(), nullable=False
-    )
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     # 更新日時
     updated_at = Column(
         DateTime(timezone=True),
@@ -147,3 +144,6 @@ class Message(Base):
         onupdate=func.now(),  # レコード更新時に現在時刻に更新
         nullable=False,
     )
+
+
+# TODO: Guild, GuildMemberのモデルも追加
