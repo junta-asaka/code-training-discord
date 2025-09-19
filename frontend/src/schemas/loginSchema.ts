@@ -18,6 +18,7 @@ export type LoginFormData = z.infer<typeof loginSchema>;
 
 // APIのレスポンス型定義
 export interface LoginResponse {
+  id: string;
   name: string;
   username: string;
   access_token: string;

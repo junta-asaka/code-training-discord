@@ -153,6 +153,7 @@ describe("Login", () => {
     it("given: 有効な認証情報, when: ログインフォーム送信, then: API呼び出しと画面遷移が正常に実行される", async () => {
       // Given
       const mockLoginResponse = {
+        id: "user-id-123",
         name: "テストユーザー",
         username: "testuser",
         access_token: "test-token",
@@ -187,6 +188,7 @@ describe("Login", () => {
       const authState = useAuthStore.getState();
       expect(authState.isAuthenticated).toBe(true);
       expect(authState.user).toEqual({
+        id: "user-id-123",
         name: "テストユーザー",
         username: "testuser",
       });
@@ -286,6 +288,7 @@ describe("Login", () => {
 
       // ログイン処理を完了
       resolveLogin!({
+        id: "user-id-123",
         name: "テストユーザー",
         username: "testuser",
         access_token: "test-token",
@@ -341,6 +344,7 @@ describe("Login", () => {
 
       // ログイン処理を完了
       resolveLogin!({
+        id: "user-id-123",
         name: "テストユーザー",
         username: "testuser",
         access_token: "test-token",

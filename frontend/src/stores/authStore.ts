@@ -3,6 +3,7 @@ import { persist } from 'zustand/middleware';
 
 // ユーザー情報の型定義
 interface User {
+  id: string;
   name: string;
   username: string;
 }

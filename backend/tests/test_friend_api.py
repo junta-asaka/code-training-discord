@@ -22,7 +22,7 @@ class TestFriendAPI(unittest.IsolatedAsyncioTestCase):
         os.environ["TESTING"] = "true"
 
         load_dotenv()
-        DATABASE_URL = os.environ["DATABASE_URL"]
+        DATABASE_URL = os.environ["DATABASE_URL_TEST"]
         self.engine = create_async_engine(DATABASE_URL, echo=True, future=True)
         self.AsyncSessionLocal = async_sessionmaker(
             bind=self.engine,
