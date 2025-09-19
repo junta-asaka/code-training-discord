@@ -20,7 +20,7 @@ class TestFriendRepository(unittest.IsolatedAsyncioTestCase):
     @classmethod
     def setUpClass(cls):
         load_dotenv()
-        DATABASE_URL = os.environ["DATABASE_URL"]
+        DATABASE_URL = os.environ["DATABASE_URL_TEST"]
         cls.engine = create_async_engine(DATABASE_URL, echo=True, future=True)
         cls.AsyncSessionLocal = async_sessionmaker(
             bind=cls.engine,

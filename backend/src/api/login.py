@@ -51,6 +51,7 @@ async def login(
         raise HTTPException(status_code=401, detail=error_detail)
 
     return LoginResponse(
+        id=str(user.id),
         name=user.name,
         username=user.username,
         access_token=str(session_obj.refresh_token_hash),

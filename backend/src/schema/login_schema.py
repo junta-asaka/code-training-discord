@@ -4,6 +4,7 @@ from pydantic import BaseModel
 
 
 class LoginResponse(BaseModel):
+    id: str
     name: str
     username: str
     access_token: str
