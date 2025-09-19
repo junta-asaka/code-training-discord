@@ -1,5 +1,6 @@
 from injector import Binder, Injector
 from repository.friend_repository import FriendRepositoryIf, FriendRepositoryImpl
+from repository.guild_member_repository import GuildMemberRepositoryIf, GuildMemberRepositoryImpl
 from repository.guild_repository import GuildRepositoryIf, GuildRepositoryImpl
 from repository.session_repository import SessionRepositoryIf, SessionRepositoryImpl
 from repository.user_repository import UserRepositoryIf, UserRepositoryImpl
@@ -30,6 +31,8 @@ def configure(binder: Binder):
     binder.bind(FriendRepositoryIf, to=FriendRepositoryImpl)
     # GuildRepositoryのバインド
     binder.bind(GuildRepositoryIf, to=GuildRepositoryImpl)
+    # GuildMemberRepositoryのバインド
+    binder.bind(GuildMemberRepositoryIf, to=GuildMemberRepositoryImpl)
 
 
 injector = Injector([configure])
