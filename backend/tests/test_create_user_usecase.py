@@ -2,6 +2,7 @@ import base64
 import os
 import sys
 import unittest
+from datetime import datetime
 from unittest.mock import AsyncMock, Mock, patch
 
 from injector import Injector
@@ -11,8 +12,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 sys.path.append(os.path.join(os.path.dirname(__file__), "../src"))
 
 from dependencies import configure
-from domains import User
-from schema.user_schema import UserCreateRequest
+from domains import Guild, User
+from schema.user_schema import UserCreateRequest, UserResponse
 from usecase.create_user import CreateUserUseCaseIf
 from utils import hash_password
 
@@ -25,8 +26,9 @@ class TestCreateUserUseCaseImpl(unittest.IsolatedAsyncioTestCase):
         self.mock_session = Mock(spec=AsyncSession)
 
     # リポジトリのみモックをパッチ
+    @patch("usecase.create_user.GuildRepositoryIf")
     @patch("usecase.create_user.UserRepositoryIf")
-    async def test_execute_success(self, mock_user_repository_class):
+    async def test_execute_success(self, mock_user_repository_class, mock_guild_repository_class):
         """
         Given: 有効なユーザー作成リクエスト
         When: executeメソッドを呼び出す
@@ -43,12 +45,19 @@ class TestCreateUserUseCaseImpl(unittest.IsolatedAsyncioTestCase):
         )
 
         expected_user = User(
-            id=1,
+            id="test-user-id",
             name="Test User",
             username="testuser",
             email="test@example.com",
             password_hash="hashed_password",
             description="Test description",
+            created_at=datetime.now(),
+            updated_at=datetime.now(),
+        )
+
+        expected_guild = Guild(
+            id="test-guild-id",
+            owner_user_id="test-user-id",
         )
 
         # モックの設定
@@ -56,15 +65,28 @@ class TestCreateUserUseCaseImpl(unittest.IsolatedAsyncioTestCase):
         mock_user_repository.create_user.return_value = expected_user
         mock_user_repository_class.return_value = mock_user_repository
 
+        mock_guild_repository = AsyncMock()
+        mock_guild_repository.create_guild.return_value = expected_guild
+        mock_guild_repository_class.return_value = mock_guild_repository
+
         # リポジトリをモックに置き換え
-        self.use_case.repository = mock_user_repository
+        self.use_case.user_repo = mock_user_repository
+        self.use_case.guild_repo = mock_guild_repository
 
         # When
         result = await self.use_case.execute(self.mock_session, request)
 
         # Then
-        self.assertEqual(result, expected_user)
+        self.assertIsInstance(result, UserResponse)
+        self.assertEqual(result.id, str(expected_user.id))
+        self.assertEqual(result.name, expected_user.name)
+        self.assertEqual(result.username, expected_user.username)
+        self.assertEqual(result.email, expected_user.email)
+        self.assertEqual(result.description, expected_user.description)
+        self.assertEqual(result.guild_id, str(expected_guild.id))
+
         mock_user_repository.create_user.assert_called_once()
+        mock_guild_repository.create_guild.assert_called_once()
 
         # create_userに渡されたUserオブジェクトの検証
         call_args = mock_user_repository.create_user.call_args[0]
@@ -87,8 +109,9 @@ class TestCreateUserUseCaseImpl(unittest.IsolatedAsyncioTestCase):
         self.assertNotEqual(created_user.password_hash, expected_user.password_hash)
         self.assertEqual(created_user.password_hash, recreated_hash)
 
+    @patch("usecase.create_user.GuildRepositoryIf")
     @patch("usecase.create_user.UserRepositoryIf")
-    async def test_execute_with_empty_description(self, mock_user_repository_class):
+    async def test_execute_with_empty_description(self, mock_user_repository_class, mock_guild_repository_class):
         """
         Given: 説明が空のユーザー作成リクエスト
         When: executeメソッドを呼び出す
@@ -105,12 +128,19 @@ class TestCreateUserUseCaseImpl(unittest.IsolatedAsyncioTestCase):
         )
 
         expected_user = User(
-            id=1,
+            id="test-user-id",
             name="Test User",
             username="testuser",
             email="test@example.com",
             password_hash="hashed_password",
             description="",
+            created_at=datetime.now(),
+            updated_at=datetime.now(),
+        )
+
+        expected_guild = Guild(
+            id="test-guild-id",
+            owner_user_id="test-user-id",
         )
 
         # モックの設定
@@ -118,15 +148,28 @@ class TestCreateUserUseCaseImpl(unittest.IsolatedAsyncioTestCase):
         mock_user_repository.create_user.return_value = expected_user
         mock_user_repository_class.return_value = mock_user_repository
 
+        mock_guild_repository = AsyncMock()
+        mock_guild_repository.create_guild.return_value = expected_guild
+        mock_guild_repository_class.return_value = mock_guild_repository
+
         # リポジトリをモックに置き換え
-        self.use_case.repository = mock_user_repository
+        self.use_case.user_repo = mock_user_repository
+        self.use_case.guild_repo = mock_guild_repository
 
         # When
         result = await self.use_case.execute(self.mock_session, request)
 
         # Then
-        self.assertEqual(result, expected_user)
+        self.assertIsInstance(result, UserResponse)
+        self.assertEqual(result.id, str(expected_user.id))
+        self.assertEqual(result.name, expected_user.name)
+        self.assertEqual(result.username, expected_user.username)
+        self.assertEqual(result.email, expected_user.email)
+        self.assertEqual(result.description, expected_user.description)
+        self.assertEqual(result.guild_id, str(expected_guild.id))
+
         mock_user_repository.create_user.assert_called_once()
+        mock_guild_repository.create_guild.assert_called_once()
 
         # create_userに渡されたUserオブジェクトの検証
         call_args = mock_user_repository.create_user.call_args[0]
@@ -148,8 +191,9 @@ class TestCreateUserUseCaseImpl(unittest.IsolatedAsyncioTestCase):
         self.assertNotEqual(created_user.password_hash, expected_user.password_hash)
         self.assertEqual(created_user.password_hash, recreated_hash)
 
+    @patch("usecase.create_user.GuildRepositoryIf")
     @patch("usecase.create_user.UserRepositoryIf")
-    async def test_execute_repository_error(self, mock_user_repository_class):
+    async def test_execute_repository_error(self, mock_user_repository_class, mock_guild_repository_class):
         """
         Given: リポジトリでエラーが発生する場合
         When: executeメソッドを呼び出す
@@ -170,8 +214,12 @@ class TestCreateUserUseCaseImpl(unittest.IsolatedAsyncioTestCase):
         mock_user_repository.create_user.side_effect = Exception("データベースエラー")
         mock_user_repository_class.return_value = mock_user_repository
 
+        mock_guild_repository = AsyncMock()
+        mock_guild_repository_class.return_value = mock_guild_repository
+
         # リポジトリをモックに置き換え
-        self.use_case.repository = mock_user_repository
+        self.use_case.user_repo = mock_user_repository
+        self.use_case.guild_repo = mock_guild_repository
 
         # When & Then
         with self.assertRaises(Exception) as context:
@@ -179,9 +227,12 @@ class TestCreateUserUseCaseImpl(unittest.IsolatedAsyncioTestCase):
 
         self.assertEqual(str(context.exception), "データベースエラー")
         mock_user_repository.create_user.assert_called_once()
+        # ユーザー作成でエラーが発生するため、ギルド作成は呼ばれない
+        mock_guild_repository.create_guild.assert_not_called()
 
+    @patch("usecase.create_user.GuildRepositoryIf")
     @patch("usecase.create_user.UserRepositoryIf")
-    async def test_password_hashing_integration(self, mock_user_repository_class):
+    async def test_password_hashing_integration(self, mock_user_repository_class, mock_guild_repository_class):
         """
         Given: 同じパスワードを持つ複数のリクエスト
         When: executeメソッドを複数回呼び出す
@@ -208,16 +259,27 @@ class TestCreateUserUseCaseImpl(unittest.IsolatedAsyncioTestCase):
         # モックの設定
         mock_user_repository = AsyncMock()
         mock_user_repository.create_user.return_value = User(
-            id=1,
+            id="test-user-id",
             name="Test User",
             username="testuser",
             email="test@example.com",
             password_hash="hashed_password",
             description="Test description",
+            created_at=datetime.now(),
+            updated_at=datetime.now(),
         )
         mock_user_repository_class.return_value = mock_user_repository
+
+        mock_guild_repository = AsyncMock()
+        mock_guild_repository.create_guild.return_value = Guild(
+            id="test-guild-id",
+            owner_user_id="test-user-id",
+        )
+        mock_guild_repository_class.return_value = mock_guild_repository
+
         # リポジトリをモックに置き換え
-        self.use_case.repository = mock_user_repository
+        self.use_case.user_repo = mock_user_repository
+        self.use_case.guild_repo = mock_guild_repository
 
         # When
         await self.use_case.execute(self.mock_session, request1)
@@ -226,6 +288,7 @@ class TestCreateUserUseCaseImpl(unittest.IsolatedAsyncioTestCase):
         # Then
         # 2回呼び出されることを確認
         self.assertEqual(mock_user_repository.create_user.call_count, 2)
+        self.assertEqual(mock_guild_repository.create_guild.call_count, 2)
 
         # 両方の呼び出しで渡されたUserオブジェクトのパスワードハッシュを取得
         first_call = mock_user_repository.create_user.call_args_list[0][0][1]

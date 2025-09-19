@@ -1,9 +1,10 @@
 from abc import ABC, abstractmethod
 
-from domains import User
+from domains import Guild, User
 from injector import inject, singleton
+from repository.guild_repository import GuildRepositoryIf
 from repository.user_repository import UserRepositoryIf
-from schema.user_schema import UserCreateRequest
+from schema.user_schema import UserCreateRequest, UserResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from utils import hash_password
 
@@ -16,17 +17,19 @@ class CreateUserUseCaseIf(ABC):
     """
 
     @inject
-    def __init__(self, repository: UserRepositoryIf) -> None:
+    def __init__(self, user_repo: UserRepositoryIf, guild_repo: GuildRepositoryIf) -> None:
         """ユーザー作成ユースケース初期化
 
         Args:
-            repository (UserRepositoryIf): ユーザーリポジトリインターフェース
+            user_repo (UserRepositoryIf): ユーザーリポジトリ
+            guild_repo (GuildRepositoryIf): ギルドリポジトリ
         """
 
-        self.repository: UserRepositoryIf = repository
+        self.user_repo: UserRepositoryIf = user_repo
+        self.guild_repo: GuildRepositoryIf = guild_repo
 
     @abstractmethod
-    async def execute(self, session: AsyncSession, req: UserCreateRequest) -> User:
+    async def execute(self, session: AsyncSession, req: UserCreateRequest) -> UserResponse:
         """ユーザー作成ユースケース実行
 
         Args:
@@ -48,7 +51,7 @@ class CreateUserUseCaseImpl(CreateUserUseCaseIf):
         CreateUserUseCaseIf (_type_): ユーザー作成ユースケースインターフェース
     """
 
-    async def execute(self, session: AsyncSession, req: UserCreateRequest) -> User:
+    async def execute(self, session: AsyncSession, req: UserCreateRequest) -> UserResponse:
         """ユーザー作成ユースケース実行
 
         Args:
@@ -68,4 +71,21 @@ class CreateUserUseCaseImpl(CreateUserUseCaseIf):
             description=req.description,
         )
 
-        return await self.repository.create_user(session, user)
+        user_db = await self.user_repo.create_user(session, user)
+
+        guild = Guild(
+            owner_user_id=user_db.id,
+        )
+
+        guild_db = await self.guild_repo.create_guild(session, guild)
+
+        return UserResponse(
+            id=str(user_db.id),
+            name=str(user_db.name),
+            username=str(user_db.username),
+            email=str(user_db.email),
+            description=str(user_db.description),
+            created_at=user_db.created_at.isoformat(),
+            updated_at=user_db.updated_at.isoformat(),
+            guild_id=str(guild_db.id),
+        )

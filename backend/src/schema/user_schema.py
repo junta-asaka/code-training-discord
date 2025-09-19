@@ -1,5 +1,6 @@
-from pydantic import BaseModel, EmailStr
 from typing import Optional
+
+from pydantic import BaseModel, EmailStr
 
 
 class UserCreateRequest(BaseModel):
@@ -18,3 +19,4 @@ class UserResponse(BaseModel):
     description: Optional[str] = None
     created_at: str
     updated_at: str
+    guild_id: str
