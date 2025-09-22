@@ -14,7 +14,7 @@ from dependencies import configure
 from domains import User
 from schema.user_schema import UserCreateRequest
 from usecase.create_user import CreateUserUseCaseIf
-from utils import hash_password
+from utils.utils import hash_password
 
 
 class TestCreateUserUseCaseImpl(unittest.IsolatedAsyncioTestCase):
