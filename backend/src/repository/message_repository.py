@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 
 from domains import Message
 from injector import singleton
+from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 from utils.logger_utils import get_logger
@@ -27,6 +28,20 @@ class MessageRepositoryIf(ABC):
 
         Returns:
             Message: 作成されたメッセージ情報
+        """
+
+        pass
+
+    @abstractmethod
+    async def get_message_by_channel_id(self, session: AsyncSession, channel_id: str) -> list[Message]:
+        """チャネルIDからメッセージを取得する
+
+        Args:
+            session (AsyncSession): データベースセッション
+            channel_id (str): チャネルID
+
+        Returns:
+            list[Message]: メッセージ情報のリスト
         """
 
         pass
@@ -64,3 +79,20 @@ class MessageRepositoryImpl(MessageRepositoryIf):
             await session.rollback()
             logger.error(f"フレンド作成中に予期しないエラー発生: {e}")
             raise
+
+    async def get_message_by_channel_id(self, session: AsyncSession, channel_id: str) -> list[Message]:
+        """チャネルIDからメッセージを取得する
+
+        Args:
+            session (AsyncSession): データベースセッション
+            channel_id (str): チャネルID
+
+        Returns:
+            list[Message]: メッセージ情報のリスト
+        """
+
+        result = await session.execute(
+            select(Message).where(Message.channel_id == channel_id).order_by(Message.created_at)
+        )
+
+        return list(result.scalars().all())
