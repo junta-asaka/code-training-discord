@@ -58,10 +58,16 @@ class ChannelUseCaseImpl(ChannelUseCaseIf):
 
         Returns:
             ChannelGetResponse: チャネル情報（チャネル基本情報 + メッセージ一覧）
+
+        Raises:
+            ValueError: 指定されたチャネルが存在しない場合
         """
 
         # チャネル基本情報を取得
         channel_db = await self.channel_repo.get_channel_by_id(session, channel_id)
+
+        if channel_db is None:
+            raise ValueError(f"チャネルが見つかりません: {channel_id}")
 
         # チャネルに属するメッセージ一覧を取得
         message_list = await self.message_repo.get_message_by_channel_id(session, channel_id)

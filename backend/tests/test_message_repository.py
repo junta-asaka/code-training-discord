@@ -93,7 +93,7 @@ class TestMessageRepository(unittest.IsolatedAsyncioTestCase):
 
         message = Message(
             channel_id=channel.id,
-            author_user_id=user.id,
+            user_id=user.id,
             type="default",
             content="Hello, World!",
         )
@@ -106,7 +106,7 @@ class TestMessageRepository(unittest.IsolatedAsyncioTestCase):
         self.assertIsNotNone(result)
         self.assertIsNotNone(result.id)
         self.assertEqual(result.channel_id, channel.id)
-        self.assertEqual(result.author_user_id, user.id)
+        self.assertEqual(result.user_id, user.id)
         self.assertEqual(result.type, "default")
         self.assertEqual(result.content, "Hello, World!")
         self.assertIsNotNone(result.created_at)
@@ -125,7 +125,7 @@ class TestMessageRepository(unittest.IsolatedAsyncioTestCase):
 
         message = Message(
             channel_id=channel.id,
-            author_user_id=user.id,
+            user_id=user.id,
             type="default",
             content="",  # 空の内容
         )
@@ -138,7 +138,7 @@ class TestMessageRepository(unittest.IsolatedAsyncioTestCase):
         self.assertIsNotNone(result)
         self.assertIsNotNone(result.id)
         self.assertEqual(result.channel_id, channel.id)
-        self.assertEqual(result.author_user_id, user.id)
+        self.assertEqual(result.user_id, user.id)
         self.assertEqual(result.type, "default")
         self.assertEqual(result.content, "")
         self.assertIsNotNone(result.created_at)
@@ -157,7 +157,7 @@ class TestMessageRepository(unittest.IsolatedAsyncioTestCase):
 
         message = Message(
             channel_id=nonexistent_channel_id,  # 存在しないチャネルID
-            author_user_id=user.id,
+            user_id=user.id,
             type="default",
             content="Test message",
         )
@@ -182,19 +182,19 @@ class TestMessageRepository(unittest.IsolatedAsyncioTestCase):
         messages = [
             Message(
                 channel_id=channel.id,
-                author_user_id=user.id,
+                user_id=user.id,
                 type="default",
                 content="First message",
             ),
             Message(
                 channel_id=channel.id,
-                author_user_id=user.id,
+                user_id=user.id,
                 type="default",
                 content="Second message",
             ),
             Message(
                 channel_id=channel.id,
-                author_user_id=user.id,
+                user_id=user.id,
                 type="default",
                 content="Third message",
             ),

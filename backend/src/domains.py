@@ -125,7 +125,7 @@ class Message(Base):
     channel_id = Column(ForeignKey("channels.id", ondelete="CASCADE"), nullable=False)
     # 作成者ユーザID
     # 外部キー: users.id
-    author_user_id = Column(ForeignKey("users.id"), nullable=False)
+    user_id = Column(ForeignKey("users.id"), nullable=False)
     # タイプ
     type = Column(String, nullable=False)
     # 内容

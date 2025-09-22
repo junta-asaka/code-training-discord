@@ -51,7 +51,7 @@ class ChannelRepositoryIf(ABC):
         pass
 
     @abstractmethod
-    async def get_channel_by_id(self, session: AsyncSession, channel_id: str) -> Channel:
+    async def get_channel_by_id(self, session: AsyncSession, channel_id: str) -> Optional[Channel]:
         """チャネルIDからチャネルを取得する
 
         Args:
@@ -59,7 +59,7 @@ class ChannelRepositoryIf(ABC):
             channel_id (str): チャネルID
 
         Returns:
-            Channel: チャネル
+            Optional[Channel]: チャネル（存在しない場合はNone）
         """
         pass
 
@@ -133,7 +133,7 @@ class ChannelRepositoryImpl(ChannelRepositoryIf):
         result = await session.execute(query)
         return result.scalars().first()
 
-    async def get_channel_by_id(self, session: AsyncSession, channel_id: str) -> Channel:
+    async def get_channel_by_id(self, session: AsyncSession, channel_id: str) -> Optional[Channel]:
         """チャネルIDからチャネルを取得する
 
         Args:
@@ -141,7 +141,7 @@ class ChannelRepositoryImpl(ChannelRepositoryIf):
             channel_id (str): チャネルID
 
         Returns:
-            Channel: チャネル
+            Optional[Channel]: チャネル（存在しない場合はNone）
         """
 
         result = await session.execute(select(Channel).where(Channel.id == channel_id))
