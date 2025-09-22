@@ -6,6 +6,7 @@ from repository.guild_repository import GuildRepositoryIf, GuildRepositoryImpl
 from repository.message_repository import MessageRepositoryIf, MessageRepositoryImpl
 from repository.session_repository import SessionRepositoryIf, SessionRepositoryImpl
 from repository.user_repository import UserRepositoryIf, UserRepositoryImpl
+from usecase.channel import ChannelUseCaseIf, ChannelUseCaseImpl
 from usecase.create_user import CreateUserUseCaseIf, CreateUserUseCaseImpl
 from usecase.friend import FriendUseCaseIf, FriendUseCaseImpl
 from usecase.login import LoginUseCaseIf, LoginUseCaseImpl
@@ -24,6 +25,8 @@ def configure(binder: Binder):
     binder.bind(LoginUseCaseIf, to=LoginUseCaseImpl)
     # FriendUseCaseのバインド
     binder.bind(FriendUseCaseIf, to=FriendUseCaseImpl)
+    # ChannelUseCaseのバインド
+    binder.bind(ChannelUseCaseIf, to=ChannelUseCaseImpl)
 
     # UserRepositoryのバインド
     binder.bind(UserRepositoryIf, to=UserRepositoryImpl)
