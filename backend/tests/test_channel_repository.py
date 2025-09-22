@@ -265,6 +265,52 @@ class TestChannelRepository(unittest.IsolatedAsyncioTestCase):
         # Then: Noneが返される
         self.assertIsNone(result)
 
+    async def test_get_channel_by_id_success(self):
+        """
+        Given: 存在するチャネルID
+        When: get_channel_by_idメソッドを呼び出す
+        Then: 対応するチャネルが取得されること
+        """
+
+        # Given: テスト用ユーザーとチャネルを作成
+        owner = await self.create_test_user("Owner", "owner")
+        channel = Channel(
+            type="text",
+            name="test-channel",
+            owner_user_id=uuid.UUID(str(owner.id)),
+        )
+
+        async with self.AsyncSessionLocal() as session:
+            created_channel = await self.repository.create_channel(session, channel)
+
+        # When: チャネルIDでチャネルを取得
+        async with self.AsyncSessionLocal() as session:
+            result = await self.repository.get_channel_by_id(session, str(created_channel.id))
+
+        # Then: 正しいチャネルが取得される
+        self.assertIsNotNone(result)
+        self.assertEqual(result.id, created_channel.id)
+        self.assertEqual(result.type, "text")
+        self.assertEqual(result.name, "test-channel")
+        self.assertEqual(result.owner_user_id, uuid.UUID(str(owner.id)))
+
+    async def test_get_channel_by_id_nonexistent_channel(self):
+        """
+        Given: 存在しないチャネルID
+        When: get_channel_by_idメソッドを呼び出す
+        Then: Noneが返されること
+        """
+
+        # Given: 存在しないチャネルID
+        nonexistent_channel_id = str(uuid.uuid4())
+
+        # When: 存在しないチャネルIDでチャネルを取得
+        async with self.AsyncSessionLocal() as session:
+            result = await self.repository.get_channel_by_id(session, nonexistent_channel_id)
+
+        # Then: Noneが返される
+        self.assertIsNone(result)
+
 
 if __name__ == "__main__":
     unittest.main()

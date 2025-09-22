@@ -50,6 +50,19 @@ class ChannelRepositoryIf(ABC):
 
         pass
 
+    @abstractmethod
+    async def get_channel_by_id(self, session: AsyncSession, channel_id: str) -> Channel:
+        """チャネルIDからチャネルを取得する
+
+        Args:
+            session (AsyncSession): データベースセッション
+            channel_id (str): チャネルID
+
+        Returns:
+            Channel: チャネル
+        """
+        pass
+
 
 @singleton
 class ChannelRepositoryImpl(ChannelRepositoryIf):
@@ -118,4 +131,18 @@ class ChannelRepositoryImpl(ChannelRepositoryIf):
         query = query.distinct()
 
         result = await session.execute(query)
+        return result.scalars().first()
+
+    async def get_channel_by_id(self, session: AsyncSession, channel_id: str) -> Channel:
+        """チャネルIDからチャネルを取得する
+
+        Args:
+            session (AsyncSession): データベースセッション
+            channel_id (str): チャネルID
+
+        Returns:
+            Channel: チャネル
+        """
+
+        result = await session.execute(select(Channel).where(Channel.id == channel_id))
         return result.scalars().first()
