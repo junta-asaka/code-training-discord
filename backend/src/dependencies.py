@@ -1,7 +1,9 @@
 from injector import Binder, Injector
+from repository.channel_repository import ChannelRepositoryIf, ChannelRepositoryImpl
 from repository.friend_repository import FriendRepositoryIf, FriendRepositoryImpl
 from repository.guild_member_repository import GuildMemberRepositoryIf, GuildMemberRepositoryImpl
 from repository.guild_repository import GuildRepositoryIf, GuildRepositoryImpl
+from repository.message_repository import MessageRepositoryIf, MessageRepositoryImpl
 from repository.session_repository import SessionRepositoryIf, SessionRepositoryImpl
 from repository.user_repository import UserRepositoryIf, UserRepositoryImpl
 from usecase.create_user import CreateUserUseCaseIf, CreateUserUseCaseImpl
@@ -33,6 +35,10 @@ def configure(binder: Binder):
     binder.bind(GuildRepositoryIf, to=GuildRepositoryImpl)
     # GuildMemberRepositoryのバインド
     binder.bind(GuildMemberRepositoryIf, to=GuildMemberRepositoryImpl)
+    # ChannelRepositoryのバインド
+    binder.bind(ChannelRepositoryIf, to=ChannelRepositoryImpl)
+    # MessageRepositoryのバインド
+    binder.bind(MessageRepositoryIf, to=MessageRepositoryImpl)
 
 
 injector = Injector([configure])
