@@ -3,6 +3,7 @@ from dependencies import get_injector
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from schema.login_schema import LoginResponse
+from sqlalchemy.ext.asyncio import AsyncSession
 from usecase.login import LoginUseCaseIf
 
 router = APIRouter()
@@ -18,9 +19,9 @@ def get_usecase(injector=Depends(get_injector)) -> LoginUseCaseIf:
 async def login(
     req: Request,
     form_data: OAuth2PasswordRequestForm = Depends(),
-    session=Depends(get_session),
+    session: AsyncSession = Depends(get_session),
     usecase: LoginUseCaseIf = Depends(get_usecase),
-):
+) -> LoginResponse:
     """ログイン処理
 
     Args:
@@ -50,10 +51,16 @@ async def login(
             error_detail["next"] = next_param
         raise HTTPException(status_code=401, detail=error_detail)
 
-    return LoginResponse(
-        name=user.name,
-        username=user.username,
-        access_token=str(session_obj.refresh_token_hash),
-        token_type="bearer",
-        next=next_param,
-    )
+    # LoginResponseに必要なフィールドのみを抽出
+    login_response_data = {
+        "name": user.name,
+        "username": user.username,
+        "access_token": session_obj.refresh_token_hash,  # ここにアクセストークンが保存されている
+        "token_type": "bearer",
+    }
+
+    # nextパラメータがある場合は追加
+    if next_param:
+        login_response_data["next"] = next_param
+
+    return LoginResponse.model_validate(login_response_data)
