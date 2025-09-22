@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 
 from domains import Guild
 from injector import singleton
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
@@ -24,6 +25,20 @@ class GuildRepositoryIf(ABC):
             Guild: 作成されたギルド情報
         """
 
+        pass
+
+    @abstractmethod
+    async def get_guild_by_user_id_name(self, session: AsyncSession, user_id: str, name: str) -> Guild:
+        """idとギルド名からギルドを取得する
+
+        Args:
+            session (AsyncSession): データベースセッション
+            user_id (str): ギルドのオーナーのユーザーID
+            name (str): ギルド名
+
+        Returns:
+            Guild: ギルド情報
+        """
         pass
 
 
@@ -51,3 +66,19 @@ class GuildRepositoryImpl(GuildRepositoryIf):
         await session.refresh(guild)
 
         return guild
+
+    async def get_guild_by_user_id_name(self, session: AsyncSession, user_id: str, name: str) -> Guild:
+        """idとギルド名からギルドを取得する
+
+        Args:
+            session (AsyncSession): データベースセッション
+            user_id (str): ギルドのオーナーのユーザーID
+            name (str): ギルド名
+
+        Returns:
+            Guild: ギルド情報
+        """
+
+        result = await session.execute(select(Guild).where(Guild.owner_user_id == user_id, Guild.name == name))
+
+        return result.scalars().first()
