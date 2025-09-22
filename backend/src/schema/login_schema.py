@@ -1,10 +1,11 @@
 from typing import Optional
+from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict
 
 
 class LoginResponse(BaseModel):
-    id: str
+    id: UUID
     name: str
     username: str
     access_token: str

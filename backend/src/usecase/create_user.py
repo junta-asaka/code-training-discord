@@ -88,13 +88,15 @@ class CreateUserUseCaseImpl(CreateUserUseCaseIf):
         )
         _ = await self.guild_member_repo.create_guild_member(session, guild_member)
 
-        return UserResponse(
-            id=str(user_db.id),
-            name=str(user_db.name),
-            username=str(user_db.username),
-            email=str(user_db.email),
-            description=str(user_db.description),
-            created_at=user_db.created_at.isoformat(),
-            updated_at=user_db.updated_at.isoformat(),
-            guild_id=str(guild_db.id),
-        )
+        user_response_data = {
+            "id": user_db.id,
+            "name": user_db.name,
+            "username": user_db.username,
+            "email": user_db.email,
+            "description": user_db.description,
+            "created_at": user_db.created_at.isoformat(),
+            "updated_at": user_db.updated_at.isoformat(),
+            "guild_id": guild_db.id,
+        }
+
+        return UserResponse.model_validate(user_response_data)

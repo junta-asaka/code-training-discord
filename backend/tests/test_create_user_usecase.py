@@ -2,6 +2,7 @@ import base64
 import os
 import sys
 import unittest
+import uuid
 from datetime import datetime
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -39,6 +40,10 @@ class TestCreateUserUseCaseImpl(unittest.IsolatedAsyncioTestCase):
         """
 
         # Given
+        test_user_id = str(uuid.uuid4())
+        test_guild_id = str(uuid.uuid4())
+        test_guild_member_id = str(uuid.uuid4())
+
         request = UserCreateRequest(
             name="Test User",
             username="testuser",
@@ -48,7 +53,7 @@ class TestCreateUserUseCaseImpl(unittest.IsolatedAsyncioTestCase):
         )
 
         expected_user = User(
-            id="test-user-id",
+            id=test_user_id,
             name="Test User",
             username="testuser",
             email="test@example.com",
@@ -59,14 +64,14 @@ class TestCreateUserUseCaseImpl(unittest.IsolatedAsyncioTestCase):
         )
 
         expected_guild = Guild(
-            id="test-guild-id",
-            owner_user_id="test-user-id",
+            id=test_guild_id,
+            owner_user_id=test_user_id,
         )
 
         expected_guild_member = GuildMember(
-            id="test-guild-member-id",
-            user_id="test-user-id",
-            guild_id="test-guild-id",
+            id=test_guild_member_id,
+            user_id=test_user_id,
+            guild_id=test_guild_id,
         )
 
         # モックの設定
@@ -92,12 +97,12 @@ class TestCreateUserUseCaseImpl(unittest.IsolatedAsyncioTestCase):
 
         # Then
         self.assertIsInstance(result, UserResponse)
-        self.assertEqual(result.id, str(expected_user.id))
+        self.assertEqual(result.id, uuid.UUID(test_user_id))
         self.assertEqual(result.name, expected_user.name)
         self.assertEqual(result.username, expected_user.username)
         self.assertEqual(result.email, expected_user.email)
         self.assertEqual(result.description, expected_user.description)
-        self.assertEqual(result.guild_id, str(expected_guild.id))
+        self.assertEqual(result.guild_id, uuid.UUID(test_guild_id))
 
         mock_user_repository.create_user.assert_called_once()
         mock_guild_repository.create_guild.assert_called_once()
@@ -136,6 +141,10 @@ class TestCreateUserUseCaseImpl(unittest.IsolatedAsyncioTestCase):
         """
 
         # Given
+        test_user_id = str(uuid.uuid4())
+        test_guild_id = str(uuid.uuid4())
+        test_guild_member_id = str(uuid.uuid4())
+
         request = UserCreateRequest(
             name="Test User",
             username="testuser",
@@ -145,7 +154,7 @@ class TestCreateUserUseCaseImpl(unittest.IsolatedAsyncioTestCase):
         )
 
         expected_user = User(
-            id="test-user-id",
+            id=test_user_id,
             name="Test User",
             username="testuser",
             email="test@example.com",
@@ -156,14 +165,14 @@ class TestCreateUserUseCaseImpl(unittest.IsolatedAsyncioTestCase):
         )
 
         expected_guild = Guild(
-            id="test-guild-id",
-            owner_user_id="test-user-id",
+            id=test_guild_id,
+            owner_user_id=test_user_id,
         )
 
         expected_guild_member = GuildMember(
-            id="test-guild-member-id",
-            user_id="test-user-id",
-            guild_id="test-guild-id",
+            id=test_guild_member_id,
+            user_id=test_user_id,
+            guild_id=test_guild_id,
         )
 
         # モックの設定
@@ -189,12 +198,12 @@ class TestCreateUserUseCaseImpl(unittest.IsolatedAsyncioTestCase):
 
         # Then
         self.assertIsInstance(result, UserResponse)
-        self.assertEqual(result.id, str(expected_user.id))
+        self.assertEqual(result.id, uuid.UUID(test_user_id))
         self.assertEqual(result.name, expected_user.name)
         self.assertEqual(result.username, expected_user.username)
         self.assertEqual(result.email, expected_user.email)
         self.assertEqual(result.description, expected_user.description)
-        self.assertEqual(result.guild_id, str(expected_guild.id))
+        self.assertEqual(result.guild_id, uuid.UUID(test_guild_id))
 
         mock_user_repository.create_user.assert_called_once()
         mock_guild_repository.create_guild.assert_called_once()
@@ -278,6 +287,10 @@ class TestCreateUserUseCaseImpl(unittest.IsolatedAsyncioTestCase):
         """
 
         # Given
+        test_user_id = str(uuid.uuid4())
+        test_guild_id = str(uuid.uuid4())
+        test_guild_member_id = str(uuid.uuid4())
+
         request1 = UserCreateRequest(
             name="Test User1",
             username="testuser1",
@@ -297,7 +310,7 @@ class TestCreateUserUseCaseImpl(unittest.IsolatedAsyncioTestCase):
         # モックの設定
         mock_user_repository = AsyncMock()
         mock_user_repository.create_user.return_value = User(
-            id="test-user-id",
+            id=test_user_id,
             name="Test User",
             username="testuser",
             email="test@example.com",
@@ -310,16 +323,16 @@ class TestCreateUserUseCaseImpl(unittest.IsolatedAsyncioTestCase):
 
         mock_guild_repository = AsyncMock()
         mock_guild_repository.create_guild.return_value = Guild(
-            id="test-guild-id",
-            owner_user_id="test-user-id",
+            id=test_guild_id,
+            owner_user_id=test_user_id,
         )
         mock_guild_repository_class.return_value = mock_guild_repository
 
         mock_guild_member_repository = AsyncMock()
         mock_guild_member_repository.create_guild_member.return_value = GuildMember(
-            id="test-guild-member-id",
-            user_id="test-user-id",
-            guild_id="test-guild-id",
+            id=test_guild_member_id,
+            user_id=test_user_id,
+            guild_id=test_guild_id,
         )
         mock_guild_member_repository_class.return_value = mock_guild_member_repository
 

@@ -31,4 +31,4 @@ async def create_user(
     except SQLAlchemyError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-    return UserResponse.model_validate(user_db)
+    return response
