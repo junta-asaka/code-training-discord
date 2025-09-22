@@ -1,6 +1,6 @@
 from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
 class LoginResponse(BaseModel):
@@ -9,3 +9,4 @@ class LoginResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
     next: Optional[str] = None
+    model_config = ConfigDict(from_attributes=True)

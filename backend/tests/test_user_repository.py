@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock
 from dotenv import load_dotenv
 from injector import Injector
 from sqlalchemy import text
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 # テストファイルのルートディレクトリからの相対パスでsrcフォルダを指定
@@ -20,7 +21,7 @@ class TestUserRepository(unittest.IsolatedAsyncioTestCase):
     @classmethod
     def setUpClass(cls):
         load_dotenv()
-        DATABASE_URL = os.environ["DATABASE_URL"]
+        DATABASE_URL = os.environ["DATABASE_URL_TEST"]
         cls.engine = create_async_engine(DATABASE_URL, echo=True, future=True)
         cls.AsyncSessionLocal = async_sessionmaker(
             bind=cls.engine,
@@ -84,21 +85,31 @@ class TestUserRepository(unittest.IsolatedAsyncioTestCase):
         Then: 例外が発生すること
         """
 
-        # Given
-        user_data = User(
+        # Given - 1回目のユーザー作成
+        user_data1 = User(
             name="Test User",
             username="testuser",
             email="test@example.com",
             password_hash="hashed_password",
             description="Test description",
         )
-        async with self.AsyncSessionLocal() as session:
-            _ = await self.repository.create_user(session, user_data)
 
-        # When / Then
-        with self.assertRaises(Exception):
+        async with self.AsyncSessionLocal() as session:
+            _ = await self.repository.create_user(session, user_data1)
+
+        # When / Then - 2回目のユーザー作成（重複）
+        # 重要: 新しいUserオブジェクトインスタンスを作成
+        user_data2 = User(
+            name="Test User",
+            username="testuser",  # 同じusername（重複）
+            email="test@example.com",  # 同じemail（重複）
+            password_hash="hashed_password",
+            description="Test description",
+        )
+
+        with self.assertRaises(SQLAlchemyError):
             async with self.AsyncSessionLocal() as session:
-                _ = await self.repository.create_user(session, user_data)
+                _ = await self.repository.create_user(session, user_data2)
 
     async def test_get_user_found(self):
         """

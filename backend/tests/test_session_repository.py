@@ -7,6 +7,7 @@ from datetime import datetime, timezone
 from dotenv import load_dotenv
 from injector import Injector
 from sqlalchemy import text
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 # テストファイルのルートディレクトリからの相対パスでsrcフォルダを指定
@@ -129,8 +130,8 @@ class TestSessionRepository(unittest.IsolatedAsyncioTestCase):
         Then: 例外が発生すること
         """
 
-        # Given
-        session_data = Session(
+        # Given - 1回目のセッション作成
+        session_data1 = Session(
             user_id=self.test_user.id,
             refresh_token_hash="refresh_token_hash_duplicate",
             user_agent="Mozilla/5.0 Test Browser",
@@ -140,12 +141,21 @@ class TestSessionRepository(unittest.IsolatedAsyncioTestCase):
 
         # 最初のセッション作成
         async with self.AsyncSessionLocal() as session:
-            _ = await self.repository.create_session(session, session_data)
+            _ = await self.repository.create_session(session, session_data1)
 
-        # When / Then
-        with self.assertRaises(Exception):
+        # When / Then - 2回目のセッション作成（重複）
+        # 重要: 新しいSessionオブジェクトインスタンスを作成
+        session_data2 = Session(
+            user_id=self.test_user.id,
+            refresh_token_hash="refresh_token_hash_duplicate",  # 同じrefresh_token_hash（重複）
+            user_agent="Mozilla/5.0 Test Browser",
+            ip_address="192.168.1.1",
+            revoked_at=None,
+        )
+
+        with self.assertRaises(SQLAlchemyError):
             async with self.AsyncSessionLocal() as session:
-                _ = await self.repository.create_session(session, session_data)
+                _ = await self.repository.create_session(session, session_data2)
 
     async def test_get_session_by_token_found(self):
         """
