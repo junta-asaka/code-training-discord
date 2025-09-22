@@ -7,7 +7,7 @@ from repository.guild_repository import GuildRepositoryIf
 from repository.user_repository import UserRepositoryIf
 from schema.user_schema import UserCreateRequest, UserResponse
 from sqlalchemy.ext.asyncio import AsyncSession
-from utils import hash_password
+from utils.utils import hash_password
 
 
 class CreateUserUseCaseIf(ABC):

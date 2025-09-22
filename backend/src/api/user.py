@@ -2,7 +2,7 @@ from database import get_session
 from dependencies import get_injector
 from fastapi import APIRouter, Depends, HTTPException, status
 from schema.user_schema import UserCreateRequest, UserResponse
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 from usecase.create_user import CreateUserUseCaseIf
 
@@ -28,5 +28,7 @@ async def create_user(
         )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
+    except SQLAlchemyError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
-    return response
+    return UserResponse.model_validate(user_db)
