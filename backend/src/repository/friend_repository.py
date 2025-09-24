@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 
 from domains import Friend
 from injector import singleton
-from sqlalchemy import select
+from sqlalchemy import or_, select
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 from utils.logger_utils import get_logger
@@ -92,7 +92,9 @@ class FriendRepositoryImpl(FriendRepositoryIf):
         """
 
         result = await session.execute(
-            select(Friend).where(Friend.user_id == user_id).order_by(Friend.created_at.desc())  # 作成日時で降順ソート
+            select(Friend)
+            .where(or_(Friend.user_id == user_id, Friend.related_user_id == user_id))
+            .order_by(Friend.created_at.desc())  # 作成日時で降順ソート
         )
 
         return list(result.scalars().all())
