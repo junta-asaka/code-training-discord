@@ -54,16 +54,13 @@ class TestCreateMessageUseCaseImpl(unittest.IsolatedAsyncioTestCase):
         return message
 
     def create_mock_message_request(
-        self, channel_id=None, user_id=None, message_type="default", content="Test message", referenced_message_id=None
+        self, user_id=None, message_type="default", content="Test message", referenced_message_id=None
     ):
         """モックのMessageCreateRequestオブジェクトを作成"""
-        if channel_id is None:
-            channel_id = uuid.uuid4()
         if user_id is None:
             user_id = uuid.uuid4()
 
         return MessageCreateRequest(
-            channel_id=channel_id,
             user_id=user_id,
             type=message_type,
             content=content,
@@ -84,9 +81,7 @@ class TestCreateMessageUseCaseImpl(unittest.IsolatedAsyncioTestCase):
         channel_id = uuid.uuid4()
         user_id = uuid.uuid4()
 
-        request = self.create_mock_message_request(
-            channel_id=channel_id, user_id=user_id, message_type="default", content="Test message"
-        )
+        request = self.create_mock_message_request(user_id=user_id, message_type="default", content="Test message")
 
         expected_message = self.create_mock_message(
             message_id=message_id,
@@ -110,7 +105,7 @@ class TestCreateMessageUseCaseImpl(unittest.IsolatedAsyncioTestCase):
         self.use_case.channel_repo = mock_channel_repo
 
         # When
-        result = await self.use_case.execute(self.mock_session, request)
+        result = await self.use_case.execute(self.mock_session, request, str(channel_id))
 
         # Then
         # メッセージが正常に作成されること
@@ -142,7 +137,7 @@ class TestCreateMessageUseCaseImpl(unittest.IsolatedAsyncioTestCase):
         channel_id = uuid.uuid4()
         user_id = uuid.uuid4()
 
-        request = self.create_mock_message_request(channel_id=channel_id, user_id=user_id)
+        request = self.create_mock_message_request(user_id=user_id)
 
         # モックの設定 - メッセージ作成でエラーを発生させる
         mock_message_repo = AsyncMock()
@@ -158,7 +153,7 @@ class TestCreateMessageUseCaseImpl(unittest.IsolatedAsyncioTestCase):
 
         # When & Then
         with self.assertRaises(Exception) as context:
-            await self.use_case.execute(self.mock_session, request)
+            await self.use_case.execute(self.mock_session, request, str(channel_id))
 
         self.assertEqual(str(context.exception), "Database error")
 
@@ -182,7 +177,7 @@ class TestCreateMessageUseCaseImpl(unittest.IsolatedAsyncioTestCase):
         channel_id = uuid.uuid4()
         user_id = uuid.uuid4()
 
-        request = self.create_mock_message_request(channel_id=channel_id, user_id=user_id)
+        request = self.create_mock_message_request(user_id=user_id)
 
         expected_message = self.create_mock_message(message_id=message_id, channel_id=channel_id, user_id=user_id)
 
@@ -201,7 +196,7 @@ class TestCreateMessageUseCaseImpl(unittest.IsolatedAsyncioTestCase):
 
         # When & Then
         with self.assertRaises(Exception) as context:
-            await self.use_case.execute(self.mock_session, request)
+            await self.use_case.execute(self.mock_session, request, str(channel_id))
 
         self.assertEqual(str(context.exception), "Channel update error")
 

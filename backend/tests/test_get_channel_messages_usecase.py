@@ -68,8 +68,8 @@ class TestChannelUseCaseImpl(unittest.IsolatedAsyncioTestCase):
 
         return message
 
-    @patch("usecase.channel.ChannelRepositoryIf")
-    @patch("usecase.channel.MessageRepositoryIf")
+    @patch("usecase.get_channel_messages.ChannelRepositoryIf")
+    @patch("usecase.get_channel_messages.MessageRepositoryIf")
     async def test_execute_success_with_messages(self, mock_message_repository_class, mock_channel_repository_class):
         """
         Given: 有効なチャネルIDとメッセージが存在する
@@ -123,8 +123,8 @@ class TestChannelUseCaseImpl(unittest.IsolatedAsyncioTestCase):
         mock_channel_repo.get_channel_by_id.assert_called_once_with(self.mock_session, test_channel_id)
         mock_message_repo.get_message_by_channel_id.assert_called_once_with(self.mock_session, test_channel_id)
 
-    @patch("usecase.channel.ChannelRepositoryIf")
-    @patch("usecase.channel.MessageRepositoryIf")
+    @patch("usecase.get_channel_messages.ChannelRepositoryIf")
+    @patch("usecase.get_channel_messages.MessageRepositoryIf")
     async def test_execute_success_with_empty_messages(
         self, mock_message_repository_class, mock_channel_repository_class
     ):
@@ -170,8 +170,8 @@ class TestChannelUseCaseImpl(unittest.IsolatedAsyncioTestCase):
         mock_channel_repo.get_channel_by_id.assert_called_once_with(self.mock_session, test_channel_id)
         mock_message_repo.get_message_by_channel_id.assert_called_once_with(self.mock_session, test_channel_id)
 
-    @patch("usecase.channel.ChannelRepositoryIf")
-    @patch("usecase.channel.MessageRepositoryIf")
+    @patch("usecase.get_channel_messages.ChannelRepositoryIf")
+    @patch("usecase.get_channel_messages.MessageRepositoryIf")
     async def test_execute_channel_not_found(self, mock_message_repository_class, mock_channel_repository_class):
         """
         Given: 存在しないチャネルID
@@ -204,8 +204,8 @@ class TestChannelUseCaseImpl(unittest.IsolatedAsyncioTestCase):
         # チャネル取得でエラーが発生した場合、メッセージ取得は呼ばれない
         mock_message_repo.get_message_by_channel_id.assert_not_called()
 
-    @patch("usecase.channel.ChannelRepositoryIf")
-    @patch("usecase.channel.MessageRepositoryIf")
+    @patch("usecase.get_channel_messages.ChannelRepositoryIf")
+    @patch("usecase.get_channel_messages.MessageRepositoryIf")
     async def test_execute_message_repository_error(self, mock_message_repository_class, mock_channel_repository_class):
         """
         Given: 有効なチャネルIDだがメッセージ取得でエラーが発生
