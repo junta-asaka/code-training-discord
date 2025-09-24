@@ -21,6 +21,7 @@ export const useLogin = () => {
     onSuccess: (response) => {
       setAuth(
         {
+          id: response.id,
           name: response.name,
           username: response.username,
         },

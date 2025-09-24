@@ -53,6 +53,7 @@ async def login(
 
     # LoginResponseに必要なフィールドのみを抽出
     login_response_data = {
+        "id": user.id,
         "name": user.name,
         "username": user.username,
         "access_token": session_obj.refresh_token_hash,  # ここにアクセストークンが保存されている

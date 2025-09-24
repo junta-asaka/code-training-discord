@@ -107,6 +107,15 @@ class FriendUseCaseImpl(FriendUseCaseIf):
         """
 
         friends = await self.friend_repo.get_friend_all(session, user_id)
-        user_id_list = [str(friend.related_user_id) for friend in friends]
+
+        # 双方向の関係を考慮して相手のユーザーIDを取得
+        user_id_list = []
+        for friend in friends:
+            if str(friend.user_id) == user_id:
+                # 自分がuser_idの場合、related_user_idが相手
+                user_id_list.append(str(friend.related_user_id))
+            else:
+                # 自分がrelated_user_idの場合、user_idが相手
+                user_id_list.append(str(friend.user_id))
 
         return await self.user_repo.get_users_by_id(session, user_id_list)
