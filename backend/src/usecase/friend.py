@@ -1,11 +1,18 @@
 from abc import ABC, abstractmethod
 
-from domains import Friend, User
+from domains import Channel, Friend, GuildMember, User
 from injector import inject, singleton
+from repository.channel_repository import ChannelRepositoryIf
 from repository.friend_repository import FriendRepositoryIf
+from repository.guild_member_repository import GuildMemberRepositoryIf
+from repository.guild_repository import GuildRepositoryIf
 from repository.user_repository import UserRepositoryIf
 from schema.friend_schema import FriendCreateRequest
 from sqlalchemy.ext.asyncio import AsyncSession
+from utils.logger_utils import get_logger
+
+# ロガーを取得
+logger = get_logger(__name__)
 
 
 class FriendUseCaseIf(ABC):
@@ -16,7 +23,14 @@ class FriendUseCaseIf(ABC):
     """
 
     @inject
-    def __init__(self, user_repo: UserRepositoryIf, friend_repo: FriendRepositoryIf) -> None:
+    def __init__(
+        self,
+        user_repo: UserRepositoryIf,
+        friend_repo: FriendRepositoryIf,
+        guild_repo: GuildRepositoryIf,
+        guild_member_repo: GuildMemberRepositoryIf,
+        channel_repo: ChannelRepositoryIf,
+    ) -> None:
         """フレンドユースケース初期化
 
         Args:
@@ -26,6 +40,9 @@ class FriendUseCaseIf(ABC):
 
         self.user_repo: UserRepositoryIf = user_repo
         self.friend_repo: FriendRepositoryIf = friend_repo
+        self.guild_repo: GuildRepositoryIf = guild_repo
+        self.guild_member_repo: GuildMemberRepositoryIf = guild_member_repo
+        self.channel_repo: ChannelRepositoryIf = channel_repo
 
     @abstractmethod
     async def create_friend(self, session: AsyncSession, req: FriendCreateRequest) -> Friend | None:
@@ -93,7 +110,44 @@ class FriendUseCaseImpl(FriendUseCaseIf):
             type=req.type,
         )
 
-        return await self.friend_repo.create_friend(session, friend)
+        try:
+            friend_db = await self.friend_repo.create_friend(session, friend)
+
+            # フレンド追加後、お互いのギルドにフレンドを追加
+            guild_db_me = await self.guild_repo.get_guild_by_user_id_name(session, str(friend_db.user_id), "@me")
+            guild_member_me = GuildMember(
+                user_id=friend_db.related_user_id,
+                guild_id=guild_db_me.id,
+            )
+            _ = await self.guild_member_repo.create_guild_member(session, guild_member_me)
+
+            guild_db_related = await self.guild_repo.get_guild_by_user_id_name(
+                session, str(friend_db.related_user_id), "@me"
+            )
+            guild_member_related = GuildMember(
+                user_id=friend_db.user_id,
+                guild_id=guild_db_related.id,
+            )
+            _ = await self.guild_member_repo.create_guild_member(session, guild_member_related)
+
+            # ギルドにフレンドを追加後、それぞれチャネルを作成
+            channel_me = Channel(
+                guild_id=guild_db_me.id,
+                owner_user_id=friend_db.user_id,
+            )
+            _ = await self.channel_repo.create_channel(session, channel_me)
+
+            channel_related = Channel(
+                guild_id=guild_db_related.id,
+                owner_user_id=friend_db.related_user_id,
+            )
+            _ = await self.channel_repo.create_channel(session, channel_related)
+
+        except Exception as e:
+            logger.exception(f"フレンド作成中にエラー発生: {e}")
+            raise Exception(e)
+
+        return friend_db
 
     async def get_friend_all(self, session: AsyncSession, user_id: str) -> list[User] | None:
         """すべてのフレンドを取得

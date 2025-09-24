@@ -39,6 +39,8 @@ class TestFriendAPI(unittest.IsolatedAsyncioTestCase):
             # 外部キー制約のため、子テーブルから削除
             await conn.execute(text("DELETE FROM messages"))
             await conn.execute(text("DELETE FROM channels"))
+            await conn.execute(text("DELETE FROM guild_members"))
+            await conn.execute(text("DELETE FROM guilds"))
             await conn.execute(text("DELETE FROM friends"))
             await conn.execute(text("DELETE FROM sessions"))
             await conn.execute(text("DELETE FROM users"))

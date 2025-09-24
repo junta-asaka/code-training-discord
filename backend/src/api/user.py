@@ -20,7 +20,7 @@ async def create_user(
     usecase: CreateUserUseCaseIf = Depends(get_usecase),
 ) -> UserResponse:
     try:
-        user_db = await usecase.execute(session, req)
+        response = await usecase.execute(session, req)
     except IntegrityError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -31,4 +31,4 @@ async def create_user(
     except SQLAlchemyError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-    return UserResponse.model_validate(user_db)
+    return response
