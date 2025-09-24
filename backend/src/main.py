@@ -4,6 +4,7 @@ import uvicorn
 from api.channel import router as channel_router
 from api.friend import router as friend_router
 from api.login import router as login_router
+from api.message import router as message_router
 from api.user import router as user_router
 from database import create_tables
 from fastapi import FastAPI
@@ -50,6 +51,7 @@ app.include_router(user_router)
 app.include_router(login_router)
 app.include_router(friend_router)
 app.include_router(channel_router)
+app.include_router(message_router)
 
 
 if __name__ == "__main__":
