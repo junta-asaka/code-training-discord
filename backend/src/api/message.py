@@ -17,15 +17,14 @@ def get_usecase(injector=Depends(get_injector)) -> CreateMessageUseCaseIf:
 
 
 # チャネルにメッセージを送信するエンドポイント
-@router.post("/channels/{channel_id}/messages", response_model=MessageResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/message", response_model=MessageResponse, status_code=status.HTTP_201_CREATED)
 async def post_message_to_channel(
     req: MessageCreateRequest,
-    channel_id: str,
     session: AsyncSession = Depends(get_session),
     usecase: CreateMessageUseCaseIf = Depends(get_usecase),
 ) -> MessageResponse:
     try:
-        response = await usecase.execute(session, req, channel_id)
+        response = await usecase.execute(session, req)
     except Exception as e:
         logger.error(f"メッセージ作成中にエラー発生: {e}")
         raise HTTPException(

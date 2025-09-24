@@ -126,28 +126,28 @@ class TestMessageAPI(unittest.IsolatedAsyncioTestCase):
 
     async def test_post_message_to_channel_success_normal_message(self):
         """
-        Given: 有効なチャネルIDと通常のメッセージデータ
-        When: POST /api/channels/{channel_id}/messages にリクエスト
+        Given: 有効なメッセージデータ
+        When: POST /api/message にリクエスト
         Then: 201でメッセージ作成成功レスポンスが返る
         """
 
-        # Given: 有効なチャネルIDと通常のメッセージデータ
-        channel_id = str(self.test_channel_id)
+        # Given: 有効なメッセージデータ
         message_data = {
+            "channel_id": str(self.test_channel_id),
             "user_id": str(self.test_user_id),
             "type": "default",
             "content": "Hello, world!",
             "referenced_message_id": None,
         }
 
-        # When: POST /api/channels/{channel_id}/messages にリクエスト
-        response = await self.client.post(f"/api/channels/{channel_id}/messages", json=message_data)
+        # When: POST /api/message にリクエスト
+        response = await self.client.post("/api/message", json=message_data)
 
         # Then: 201でメッセージ作成成功レスポンスが返る
         self.assertEqual(response.status_code, 201)
         res_json = response.json()
 
-        self.assertEqual(res_json["channel_id"], channel_id)
+        self.assertEqual(res_json["channel_id"], str(self.test_channel_id))
         self.assertEqual(res_json["user_id"], str(self.test_user_id))
         self.assertEqual(res_json["type"], "default")
         self.assertEqual(res_json["content"], "Hello, world!")
@@ -158,22 +158,22 @@ class TestMessageAPI(unittest.IsolatedAsyncioTestCase):
 
     async def test_post_message_to_channel_failure_nonexistent_channel(self):
         """
-        Given: 存在しないチャネルIDと有効なメッセージデータ
-        When: POST /api/channels/{channel_id}/messages にリクエスト
+        Given: 存在しないチャネルIDを含む有効なメッセージデータ
+        When: POST /api/message にリクエスト
         Then: 500でサーバーエラーレスポンスが返る
         """
 
-        # Given: 存在しないチャネルIDと有効なメッセージデータ
-        nonexistent_channel_id = str(uuid.uuid4())
+        # Given: 存在しないチャネルIDを含む有効なメッセージデータ
         message_data = {
+            "channel_id": str(uuid.uuid4()),  # 存在しないチャネルID
             "user_id": str(self.test_user_id),
             "type": "default",
             "content": "Hello, world!",
             "referenced_message_id": None,
         }
 
-        # When: POST /api/channels/{channel_id}/messages にリクエスト
-        response = await self.client.post(f"/api/channels/{nonexistent_channel_id}/messages", json=message_data)
+        # When: POST /api/message にリクエスト
+        response = await self.client.post("/api/message", json=message_data)
 
         # Then: 500でサーバーエラーレスポンスが返る
         self.assertEqual(response.status_code, 500)
@@ -182,22 +182,22 @@ class TestMessageAPI(unittest.IsolatedAsyncioTestCase):
 
     async def test_post_message_to_channel_failure_invalid_user_id(self):
         """
-        Given: 有効なチャネルIDと存在しないユーザーIDを含むメッセージデータ
-        When: POST /api/channels/{channel_id}/messages にリクエスト
+        Given: 存在しないユーザーIDを含むメッセージデータ
+        When: POST /api/message にリクエスト
         Then: 500でサーバーエラーレスポンスが返る
         """
 
-        # Given: 有効なチャネルIDと存在しないユーザーIDを含むメッセージデータ
-        channel_id = str(self.test_channel_id)
+        # Given: 存在しないユーザーIDを含むメッセージデータ
         message_data = {
+            "channel_id": str(self.test_channel_id),
             "user_id": str(uuid.uuid4()),  # 存在しないユーザーID
             "type": "default",
             "content": "Hello, world!",
             "referenced_message_id": None,
         }
 
-        # When: POST /api/channels/{channel_id}/messages にリクエスト
-        response = await self.client.post(f"/api/channels/{channel_id}/messages", json=message_data)
+        # When: POST /api/message にリクエスト
+        response = await self.client.post("/api/message", json=message_data)
 
         # Then: 500でサーバーエラーレスポンスが返る
         self.assertEqual(response.status_code, 500)
@@ -206,22 +206,22 @@ class TestMessageAPI(unittest.IsolatedAsyncioTestCase):
 
     async def test_post_message_to_channel_failure_missing_required_field(self):
         """
-        Given: 有効なチャネルIDと必須フィールドが欠けているメッセージデータ
-        When: POST /api/channels/{channel_id}/messages にリクエスト
+        Given: 必須フィールドが欠けているメッセージデータ
+        When: POST /api/message にリクエスト
         Then: 422でバリデーションエラーレスポンスが返る
         """
 
-        # Given: 有効なチャネルIDと必須フィールドが欠けているメッセージデータ
-        channel_id = str(self.test_channel_id)
+        # Given: 必須フィールドが欠けているメッセージデータ
         message_data = {
+            "channel_id": str(self.test_channel_id),
             "user_id": str(self.test_user_id),
             "type": "default",
             # content フィールドが欠けている
             "referenced_message_id": None,
         }
 
-        # When: POST /api/channels/{channel_id}/messages にリクエスト
-        response = await self.client.post(f"/api/channels/{channel_id}/messages", json=message_data)
+        # When: POST /api/message にリクエスト
+        response = await self.client.post("/api/message", json=message_data)
 
         # Then: 422でバリデーションエラーレスポンスが返る
         self.assertEqual(response.status_code, 422)
@@ -230,22 +230,22 @@ class TestMessageAPI(unittest.IsolatedAsyncioTestCase):
 
     async def test_post_message_to_channel_failure_invalid_uuid_format(self):
         """
-        Given: 有効なチャネルIDと不正なUUID形式のuser_idを含むメッセージデータ
-        When: POST /api/channels/{channel_id}/messages にリクエスト
+        Given: 不正なUUID形式のuser_idを含むメッセージデータ
+        When: POST /api/message にリクエスト
         Then: 422でバリデーションエラーレスポンスが返る
         """
 
-        # Given: 有効なチャネルIDと不正なUUID形式のuser_idを含むメッセージデータ
-        channel_id = str(self.test_channel_id)
+        # Given: 不正なUUID形式のuser_idを含むメッセージデータ
         message_data = {
+            "channel_id": str(self.test_channel_id),
             "user_id": "invalid-uuid",  # 不正なUUID形式
             "type": "default",
             "content": "Hello, world!",
             "referenced_message_id": None,
         }
 
-        # When: POST /api/channels/{channel_id}/messages にリクエスト
-        response = await self.client.post(f"/api/channels/{channel_id}/messages", json=message_data)
+        # When: POST /api/message にリクエスト
+        response = await self.client.post("/api/message", json=message_data)
 
         # Then: 422でバリデーションエラーレスポンスが返る
         self.assertEqual(response.status_code, 422)

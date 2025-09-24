@@ -28,13 +28,12 @@ class CreateMessageUseCaseIf(ABC):
         self.channel_repo = channel_repo
 
     @abstractmethod
-    async def execute(self, session: AsyncSession, req: MessageCreateRequest, channel_id: str) -> MessageResponse:
+    async def execute(self, session: AsyncSession, req: MessageCreateRequest) -> MessageResponse:
         """メッセージ作成処理の実行
 
         Args:
             session (AsyncSession): データベースセッション
             req (MessageCreateRequest): メッセージ作成リクエスト
-            channel_id (str): チャネルID
 
         Returns:
             Message: 作成されたメッセージ
@@ -51,13 +50,12 @@ class CreateMessageUseCaseImpl(CreateMessageUseCaseIf):
         CreateMessageUseCaseIf (_type_): メッセージ作成ユースケースのインターフェース
     """
 
-    async def execute(self, session: AsyncSession, req: MessageCreateRequest, channel_id: str) -> MessageResponse:
+    async def execute(self, session: AsyncSession, req: MessageCreateRequest) -> MessageResponse:
         """メッセージを作成し、チャネルの最終メッセージIDを更新する
 
         Args:
             session (AsyncSession): データベースセッション
             req (MessageCreateRequest): メッセージ作成リクエスト
-            channel_id (str): チャネルID
 
         Returns:
             Message: 作成されたメッセージ
@@ -65,7 +63,7 @@ class CreateMessageUseCaseImpl(CreateMessageUseCaseIf):
 
         # メッセージエンティティを作成
         message = Message(
-            channel_id=channel_id,
+            channel_id=req.channel_id,
             user_id=req.user_id,
             type=req.type,
             content=req.content,

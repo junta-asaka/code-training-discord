@@ -16,7 +16,7 @@ def get_usecase(injector=Depends(get_injector)) -> GetChannelMessagesUseCaseIf:
     return injector.get(GetChannelMessagesUseCaseIf)
 
 
-@router.get("/channels/@me/{channel_id}", response_model=ChannelGetResponse, status_code=status.HTTP_201_CREATED)
+@router.get("/channel", response_model=ChannelGetResponse, status_code=status.HTTP_201_CREATED)
 async def get_channels(
     channel_id: str,
     session: AsyncSession = Depends(get_session),

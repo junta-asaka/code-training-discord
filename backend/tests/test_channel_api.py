@@ -156,15 +156,15 @@ class TestChannelAPI(unittest.IsolatedAsyncioTestCase):
     async def test_get_channel_success_with_messages(self):
         """
         Given: メッセージが存在するチャネルID
-        When: GET /api/channels/@me/{channel_id} にリクエスト
+        When: GET /api/channel にリクエスト
         Then: 201でチャネル情報とメッセージ一覧が返る
         """
 
         # Given: メッセージが存在するチャネルID
         channel_id = str(self.test_channel_with_messages_id)
 
-        # When: GET /api/channels/@me/{channel_id} にリクエスト
-        response = await self.client.get(f"/api/channels/@me/{channel_id}")
+        # When: GET /api/channel にリクエスト
+        response = await self.client.get(f"/api/channel?channel_id={channel_id}")
 
         # Then: 201でチャネル情報とメッセージ一覧が返る
         self.assertEqual(response.status_code, 201)
@@ -189,15 +189,15 @@ class TestChannelAPI(unittest.IsolatedAsyncioTestCase):
     async def test_get_channel_success_empty_messages(self):
         """
         Given: メッセージが存在しないチャネルID
-        When: GET /api/channels/@me/{channel_id} にリクエスト
+        When: GET /api/channel にリクエスト
         Then: 201でチャネル情報と空のメッセージ一覧が返る
         """
 
         # Given: メッセージが存在しないチャネルID
         channel_id = str(self.test_channel_empty_id)
 
-        # When: GET /api/channels/@me/{channel_id} にリクエスト
-        response = await self.client.get(f"/api/channels/@me/{channel_id}")
+        # When: GET /api/channel にリクエスト
+        response = await self.client.get(f"/api/channel?channel_id={channel_id}")
 
         # Then: 201でチャネル情報と空のメッセージ一覧が返る
         self.assertEqual(response.status_code, 201)
@@ -211,15 +211,15 @@ class TestChannelAPI(unittest.IsolatedAsyncioTestCase):
     async def test_get_channel_not_found(self):
         """
         Given: 存在しないチャネルID
-        When: GET /api/channels/@me/{channel_id} にリクエスト
+        When: GET /api/channel にリクエスト
         Then: 500エラーが返る
         """
 
         # Given: 存在しないチャネルID
         non_existent_channel_id = str(uuid.uuid4())
 
-        # When: GET /api/channels/@me/{channel_id} にリクエスト
-        response = await self.client.get(f"/api/channels/@me/{non_existent_channel_id}")
+        # When: GET /api/channel にリクエスト
+        response = await self.client.get(f"/api/channel?channel_id={non_existent_channel_id}")
 
         # Then: 500エラーが返る
         self.assertEqual(response.status_code, 500)

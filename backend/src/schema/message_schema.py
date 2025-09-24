@@ -5,6 +5,7 @@ from pydantic import BaseModel, ConfigDict
 
 
 class MessageCreateRequest(BaseModel):
+    channel_id: UUID
     user_id: UUID
     type: str
     content: str
