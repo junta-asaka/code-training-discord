@@ -7,7 +7,7 @@ from schema.channel_schema import ChannelGetResponse
 from schema.message_schema import MessageResponse
 
 
-class ChannelUseCaseIf(ABC):
+class GetChannelMessagesUseCaseIf(ABC):
     """チャネルユースケースのインターフェース
 
     Args:
@@ -42,7 +42,7 @@ class ChannelUseCaseIf(ABC):
 
 
 @singleton
-class ChannelUseCaseImpl(ChannelUseCaseIf):
+class GetChannelMessagesUseCaseImpl(GetChannelMessagesUseCaseIf):
     """チャネルユースケースの実装クラス
 
     Args:

@@ -14,14 +14,14 @@ sys.path.append(os.path.join(os.path.dirname(__file__), "../src"))
 from dependencies import configure
 from domains import Channel
 from schema.channel_schema import ChannelGetResponse
-from usecase.channel import ChannelUseCaseIf
+from usecase.get_channel_messages import GetChannelMessagesUseCaseIf
 
 
 class TestChannelUseCaseImpl(unittest.IsolatedAsyncioTestCase):
     async def asyncSetUp(self):
         # テスト用DIコンテナからユースケースを取得
         injector = Injector([configure])
-        self.use_case = injector.get(ChannelUseCaseIf)
+        self.use_case = injector.get(GetChannelMessagesUseCaseIf)
         self.mock_session = Mock(spec=AsyncSession)
 
     def create_mock_channel(self, channel_id=None, guild_id=None, name="test-channel"):
