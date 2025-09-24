@@ -1,7 +1,9 @@
 from injector import Binder, Injector
+from repository.friend_repository import FriendRepositoryIf, FriendRepositoryImpl
 from repository.session_repository import SessionRepositoryIf, SessionRepositoryImpl
 from repository.user_repository import UserRepositoryIf, UserRepositoryImpl
 from usecase.create_user import CreateUserUseCaseIf, CreateUserUseCaseImpl
+from usecase.friend import FriendUseCaseIf, FriendUseCaseImpl
 from usecase.login import LoginUseCaseIf, LoginUseCaseImpl
 
 
@@ -16,11 +18,15 @@ def configure(binder: Binder):
     binder.bind(CreateUserUseCaseIf, to=CreateUserUseCaseImpl)
     # LoginUseCaseのバインド
     binder.bind(LoginUseCaseIf, to=LoginUseCaseImpl)
+    # FriendUseCaseのバインド
+    binder.bind(FriendUseCaseIf, to=FriendUseCaseImpl)
 
     # UserRepositoryのバインド
     binder.bind(UserRepositoryIf, to=UserRepositoryImpl)
     # SessionRepositoryのバインド
     binder.bind(SessionRepositoryIf, to=SessionRepositoryImpl)
+    # FriendRepositoryのバインド
+    binder.bind(FriendRepositoryIf, to=FriendRepositoryImpl)
 
 
 injector = Injector([configure])

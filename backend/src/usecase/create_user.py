@@ -5,7 +5,7 @@ from injector import inject, singleton
 from repository.user_repository import UserRepositoryIf
 from schema.user_schema import UserCreateRequest
 from sqlalchemy.ext.asyncio import AsyncSession
-from utils import hash_password
+from utils.utils import hash_password
 
 
 class CreateUserUseCaseIf(ABC):
