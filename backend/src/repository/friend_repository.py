@@ -3,7 +3,12 @@ from abc import ABC, abstractmethod
 from domains import Friend
 from injector import singleton
 from sqlalchemy import or_, select
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
+from utils.logger_utils import get_logger
+
+# ロガーを取得
+logger = get_logger(__name__)
 
 
 class FriendRepositoryIf(ABC):
@@ -61,11 +66,19 @@ class FriendRepositoryImpl(FriendRepositoryIf):
             Friend: 作成されたフレンド情報
         """
 
-        session.add(friend)
-        await session.commit()
-        await session.refresh(friend)
-
-        return friend
+        try:
+            session.add(friend)
+            await session.commit()
+            await session.refresh(friend)
+            return friend
+        except SQLAlchemyError as e:
+            await session.rollback()
+            logger.error(f"フレンド作成中にDBエラー発生: {e}")
+            raise
+        except Exception as e:
+            await session.rollback()
+            logger.error(f"フレンド作成中に予期しないエラー発生: {e}")
+            raise
 
     async def get_friend_all(self, session: AsyncSession, user_id: str) -> list[Friend]:
         """すべてのフレンドを取得する
@@ -79,7 +92,9 @@ class FriendRepositoryImpl(FriendRepositoryIf):
         """
 
         result = await session.execute(
-            select(Friend).where(or_(Friend.user_id == user_id, Friend.related_user_id == user_id))
+            select(Friend)
+            .where(or_(Friend.user_id == user_id, Friend.related_user_id == user_id))
+            .order_by(Friend.created_at.desc())  # 作成日時で降順ソート
         )
 
         return list(result.scalars().all())

@@ -1,11 +1,10 @@
-import os
-
 from database import get_session
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from repository.session_repository import SessionRepositoryImpl
 from repository.user_repository import UserRepositoryImpl
 from usecase.login import LoginUseCaseImpl
+from utils import is_test_env
 
 
 async def auth_session(req: Request, call_next):
@@ -20,7 +19,7 @@ async def auth_session(req: Request, call_next):
     """
 
     # テスト環境ではセッション認証をスキップ
-    if os.getenv("TESTING") == "true":
+    if await is_test_env():
         return await call_next(req)
 
     # プリフライトリクエスト（OPTIONS）や認証不要のパスをスキップ

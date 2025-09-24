@@ -8,7 +8,7 @@ from injector import inject, singleton
 from repository.session_repository import SessionRepositoryIf
 from repository.user_repository import UserRepositoryIf
 from sqlalchemy.ext.asyncio import AsyncSession
-from utils import create_access_token, verify_password
+from utils.utils import create_access_token, verify_password
 
 
 class LoginUseCaseIf(ABC):
