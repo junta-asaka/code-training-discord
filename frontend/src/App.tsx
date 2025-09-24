@@ -24,6 +24,15 @@ function App() {
               </AuthGuard>
             }
           />
+          {/* チャンネルページ */}
+          <Route
+            path="/channel"
+            element={
+              <AuthGuard>
+                <Top channel />
+              </AuthGuard>
+            }
+          />
           {/* ログインページ */}
           <Route path="/login" element={<Login />} />
           {/* 404ページ */}
