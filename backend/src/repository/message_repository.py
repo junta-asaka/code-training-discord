@@ -73,11 +73,11 @@ class MessageRepositoryImpl(MessageRepositoryIf):
             return message
         except SQLAlchemyError as e:
             await session.rollback()
-            logger.error(f"フレンド作成中にDBエラー発生: {e}")
+            logger.error(f"メッセージ作成中にDBエラー発生: {e}")
             raise
         except Exception as e:
             await session.rollback()
-            logger.error(f"フレンド作成中に予期しないエラー発生: {e}")
+            logger.error(f"メッセージ作成中に予期しないエラー発生: {e}")
             raise
 
     async def get_message_by_channel_id(self, session: AsyncSession, channel_id: str) -> list[Message]:
