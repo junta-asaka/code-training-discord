@@ -1,13 +1,13 @@
 from abc import ABC, abstractmethod
 
-from domains import Channel, Friend, GuildMember, User
+from domains import Channel, Friend, GuildMember
 from injector import inject, singleton
 from repository.channel_repository import ChannelRepositoryIf
 from repository.friend_repository import FriendRepositoryIf
 from repository.guild_member_repository import GuildMemberRepositoryIf
 from repository.guild_repository import GuildRepositoryIf
 from repository.user_repository import UserRepositoryIf
-from schema.friend_schema import FriendCreateRequest
+from schema.friend_schema import FriendCreateRequest, FriendGetResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from utils.logger_utils import get_logger
 
@@ -59,7 +59,7 @@ class FriendUseCaseIf(ABC):
         pass
 
     @abstractmethod
-    async def get_friend_all(self, session: AsyncSession, user_id: str) -> list[User] | None:
+    async def get_friend_all(self, session: AsyncSession, user_id: str) -> list[FriendGetResponse] | None:
         """すべてのフレンドを取得
 
         Args:
@@ -67,7 +67,7 @@ class FriendUseCaseIf(ABC):
             user_id (str): ユーザーID
 
         Returns:
-            list[User] | None: フレンドのユーザーリスト（失敗時はNone）
+            list[FriendGetResponse] | None: フレンドのレスポンスリスト（失敗時はNone）
         """
 
         pass
@@ -149,7 +149,7 @@ class FriendUseCaseImpl(FriendUseCaseIf):
 
         return friend_db
 
-    async def get_friend_all(self, session: AsyncSession, user_id: str) -> list[User] | None:
+    async def get_friend_all(self, session: AsyncSession, user_id: str) -> list[FriendGetResponse] | None:
         """すべてのフレンドを取得
 
         Args:
@@ -157,7 +157,7 @@ class FriendUseCaseImpl(FriendUseCaseIf):
             user_id (str): ユーザーID
 
         Returns:
-            list[User] | None: フレンドのユーザーリスト（失敗時はNone）
+            list[FriendGetResponse] | None: フレンドのレスポンスリスト（失敗時はNone）
         """
 
         friends = await self.friend_repo.get_friend_all(session, user_id)
@@ -172,4 +172,28 @@ class FriendUseCaseImpl(FriendUseCaseIf):
                 # 自分がrelated_user_idの場合、user_idが相手
                 user_id_list.append(str(friend.user_id))
 
-        return await self.user_repo.get_users_by_id(session, user_id_list)
+        users = await self.user_repo.get_users_by_id(session, user_id_list)
+
+        # フレンドごとにDM用のチャネルIDを取得する
+        friend_res_list = []
+        type_name = "text"
+        channel_name = ""
+        for user in users:
+            related_user_id = str(user.id)
+            channel_db = await self.channel_repo.get_channels_by_user_ids_type_name(
+                session, [user_id, related_user_id], type_name, channel_name
+            )
+
+            # FriendGetResponseを作成してリストに追加
+            if channel_db:
+                friend_response_data = {
+                    "name": user.name,
+                    "username": user.username,
+                    "description": user.description,
+                    "created_at": user.created_at,
+                    "channel_id": channel_db.id,
+                }
+                friend_response = FriendGetResponse.model_validate(friend_response_data)
+                friend_res_list.append(friend_response)
+
+        return friend_res_list

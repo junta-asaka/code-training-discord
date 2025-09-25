@@ -36,7 +36,11 @@ const SidebarList = () => {
           {error && <p>フレンド一覧の取得に失敗しました</p>}
           {friends &&
             friends.map((friend, index) => (
-              <Channel key={`${friend.username}-${index}`} name={friend.name} />
+              <Channel
+                key={`${friend.username}-${index}`}
+                name={friend.name}
+                channelId={friend.channel_id}
+              />
             ))}
         </ul>
       </div>
