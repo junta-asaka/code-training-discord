@@ -6,22 +6,28 @@ import GifBoxIcon from "@mui/icons-material/GifBox";
 import SentimentSatisfiedAltIcon from "@mui/icons-material/SentimentSatisfiedAlt";
 import StickyNote2Icon from "@mui/icons-material/StickyNote2";
 import SportsEsportsIcon from "@mui/icons-material/SportsEsports";
+import { useParams } from "react-router-dom";
+import { useMessages } from "@/hooks/useMessages";
 
 const ChatContent = () => {
+  const { channelId } = useParams<{ channelId: string }>();
+  const { data: messages, isLoading, error } = useMessages(channelId);
+
   return (
     <main className="chatContent">
       <div className="scrollerContent">
         <ol className="scrollerInner">
-          <ChatMessage />
-          <ChatMessage />
-          <ChatMessage />
-          <ChatMessage />
-          <ChatMessage />
-          <ChatMessage />
-          <ChatMessage />
-          <ChatMessage />
-          <ChatMessage />
-          <ChatMessage />
+          {isLoading && <p>メッセージ一覧を読み込み中...</p>}
+          {error && <p>メッセージ一覧の取得に失敗しました</p>}
+          {messages?.["messages"] &&
+            messages["messages"].map((message, index) => (
+              <ChatMessage
+                key={`${message.id}-${index}`}
+                user_id={message.user_id}
+                content={message.content}
+                created_at={message.created_at}
+              />
+            ))}
         </ol>
       </div>
       {/* メッセージ作成 */}
