@@ -24,6 +24,15 @@ function App() {
               </AuthGuard>
             }
           />
+          {/* チャンネルページ（チャンネルID付き） */}
+          <Route
+            path="/channels/@me/:channelId"
+            element={
+              <AuthGuard>
+                <Top channel />
+              </AuthGuard>
+            }
+          />
           {/* チャンネルページ */}
           <Route
             path="/channel"

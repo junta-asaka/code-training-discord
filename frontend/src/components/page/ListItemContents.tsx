@@ -7,13 +7,18 @@ import "@/styles/page/ListItemContents.scss";
 interface ListItemContentsProps {
   name: string;
   username: string;
+  channelId?: string;
 }
 
-const ListItemContents = ({ name, username }: ListItemContentsProps) => {
+const ListItemContents = ({
+  name,
+  username,
+  channelId,
+}: ListItemContentsProps) => {
   const navigate = useNavigate();
 
   const handleItemClick = () => {
-    navigate("/channel");
+    navigate(`/channels/@me/${channelId}`);
   };
 
   return (
