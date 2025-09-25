@@ -1,7 +1,8 @@
-.channelPage {
+.page {
     display: flex;
     flex-direction: column;
-    height: 100%;
+    height: calc(100vh - 32px);
+    flex-grow: 1;
     background-color: #1a1a1e;
     color: white;
 }
