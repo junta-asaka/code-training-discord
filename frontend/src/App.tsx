@@ -17,7 +17,7 @@ function App() {
           {/* 認証ガードを適用 */}
           {/* トップページ */}
           <Route
-            path="/"
+            path="/channels/@me"
             element={
               <AuthGuard>
                 <Top />
