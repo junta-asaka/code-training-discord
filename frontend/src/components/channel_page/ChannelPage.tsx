@@ -43,7 +43,7 @@ const ChannelPage = () => {
         </div>
       </div>
       <div className="tabBody">
-        <ChatContent />
+        <ChatContent friendUsername={currentFriend?.username} />
         <UserProfileSidebar />
       </div>
     </div>
