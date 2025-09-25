@@ -4,10 +4,16 @@ import AddIcon from "@mui/icons-material/Add";
 import StorefrontIcon from "@mui/icons-material/Storefront";
 import WhatshotIcon from "@mui/icons-material/Whatshot";
 import { useFriends } from "../../hooks/useFriends";
+import { useNavigate } from "react-router-dom";
 import "@/styles/sidebar/SidebarList.scss";
 
 const SidebarList = () => {
   const { data: friends, isLoading, error } = useFriends();
+  const navigate = useNavigate();
+
+  const handleFriendsClick = () => {
+    navigate("/channels/@me");
+  };
 
   return (
     <div className="sidebarList">
@@ -16,7 +22,10 @@ const SidebarList = () => {
       </div>
       <div className="scroller">
         <ul role="list" className="content">
-          <div className="friendsButton chanelButton">
+          <div
+            className="friendsButton chanelButton"
+            onClick={handleFriendsClick}
+          >
             <PeopleIcon />
             <h4>フレンド</h4>
           </div>
