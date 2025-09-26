@@ -15,7 +15,7 @@ const PeopleColumn = () => {
 
       <div className="peopleList">
         <div className="sectionTitle">
-          <h4>オンライン - 1</h4>
+          <h4>すべてのフレンド</h4>
         </div>
         <div className="peopleListItem">
           {isLoading && <p>フレンド一覧を読み込み中...</p>}
