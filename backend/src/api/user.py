@@ -6,7 +6,7 @@ from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 from usecase.create_user import CreateUserUseCaseIf
 
-router = APIRouter()
+router = APIRouter(prefix="/api")
 
 
 def get_usecase(injector=Depends(get_injector)) -> CreateUserUseCaseIf:
