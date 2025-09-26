@@ -2,14 +2,29 @@ import SearchIcon from "@mui/icons-material/Search";
 import ListItemContents from "./ListItemContents";
 import "@/styles/page/PeopleColumn.scss";
 import { useFriends } from "../../hooks/useFriends";
+import { useState } from "react";
 
-const PeopleColumn = () => {
+interface PeopleColumnProps {
+  onSearchValueChange: (value: string) => void;
+}
+
+const PeopleColumn = ({ onSearchValueChange }: PeopleColumnProps) => {
   const { data: friends, isLoading, error } = useFriends();
+  const [searchValue, setSearchValue] = useState("");
 
   return (
     <div className="peopleColumn">
       <div className="searchBar">
-        <input type="text" placeholder="検索" />
+        <input
+          type="text"
+          placeholder="検索"
+          value={searchValue}
+          onChange={(e) => {
+            const value = e.target.value;
+            setSearchValue(value);
+            onSearchValueChange(value);
+          }}
+        />
         <SearchIcon />
       </div>
 
