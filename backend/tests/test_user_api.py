@@ -84,7 +84,7 @@ class TestUserAPI(unittest.IsolatedAsyncioTestCase):
         }
 
         # When: POST /user にリクエスト
-        response = await self.client.post("/user", json=data)
+        response = await self.client.post("/api/user", json=data)
 
         # Then: 201でユーザー情報が返る
         self.assertEqual(response.status_code, 201)
@@ -116,10 +116,10 @@ class TestUserAPI(unittest.IsolatedAsyncioTestCase):
 
         # Given: POST /user に2回リクエスト
         # 1回目
-        response1 = await self.client.post("/user", json=data)
+        response1 = await self.client.post("/api/user", json=data)
         self.assertEqual(response1.status_code, 201)
         # 2回目
-        response2 = await self.client.post("/user", json=data)
+        response2 = await self.client.post("/api/user", json=data)
 
         # Then: 400エラー
         self.assertEqual(response2.status_code, 400)

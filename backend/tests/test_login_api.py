@@ -79,7 +79,7 @@ class TestLoginAPI(unittest.IsolatedAsyncioTestCase):
             "password": "testpassword",
             "description": "",
         }
-        await self.client.post("/user", json=user_data)
+        await self.client.post("/api/user", json=user_data)
 
     async def test_post_login_success(self):
         """
