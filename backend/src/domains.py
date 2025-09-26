@@ -91,6 +91,8 @@ class Channel(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     # サーバーID
     guild_id = Column(ForeignKey("guilds.id"), nullable=True)
+    # 相手サーバーID（DMチャネルのみ）
+    related_guild_id = Column(ForeignKey("guilds.id"), nullable=True)
     # タイプ
     type = Column(String, nullable=False, default="text")
     # チャネル名

@@ -148,18 +148,15 @@ class FriendUseCaseImpl(FriendUseCaseIf):
             # ギルドにフレンドを追加後、それぞれチャネルを作成
             channel_me = Channel(
                 guild_id=guild_db_me.id,
+                related_guild_id=guild_db_related.id,
                 owner_user_id=friend_db.user_id,
             )
             _ = await self.channel_repo.create_channel(session, channel_me)
 
-            channel_related = Channel(
-                guild_id=guild_db_related.id,
-                owner_user_id=friend_db.related_user_id,
-            )
-            _ = await self.channel_repo.create_channel(session, channel_related)
-
             # すべての操作が成功した場合に commit
             await session.commit()
+
+            return friend_db
 
         except UserRepositoryError as e:
             await session.rollback()
@@ -185,8 +182,6 @@ class FriendUseCaseImpl(FriendUseCaseIf):
             await session.rollback()
             raise FriendTransactionError("予期しないエラーが発生しました", e)
 
-        return friend_db
-
     async def get_friend_all(self, session: AsyncSession, user_id: str) -> list[FriendGetResponse]:
         """すべてのフレンドを取得
 
@@ -199,45 +194,25 @@ class FriendUseCaseImpl(FriendUseCaseIf):
         """
 
         try:
-            friends = await self.friend_repo.get_friend_all(session, user_id)
+            # JOINを使用してフレンド詳細情報を一度に取得
+            friend_details = await self.friend_repo.get_friends_with_details(session, user_id)
 
-            # 双方向の関係を考慮して相手のユーザーIDを取得
-            user_id_list = []
-            for friend in friends:
-                if str(friend.user_id) == user_id:
-                    # 自分がuser_idの場合、related_user_idが相手
-                    user_id_list.append(str(friend.related_user_id))
-                else:
-                    # 自分がrelated_user_idの場合、user_idが相手
-                    user_id_list.append(str(friend.user_id))
-
-            users = await self.user_repo.get_users_by_id(session, user_id_list)
-
-            # フレンドごとにDM用のチャネルIDを取得する
+            # FriendGetResponseのリストを作成
             friend_res_list = []
-            channel_name = ""
-            for user in users:
-                related_user_id = str(user.id)
-                channel_db = await self.channel_repo.get_channels_by_user_ids_type_name(
-                    session, [user_id, related_user_id], CHANNEL_TYPE_TEXT, channel_name
+            for row in friend_details:
+                friend_res_list.append(
+                    FriendGetResponse.model_validate(
+                        {
+                            "name": row.user_name,
+                            "username": row.user_username,
+                            "description": row.user_description,
+                            "created_at": row.user_created_at,
+                            "channel_id": row.channel_id,
+                        }
+                    )
                 )
 
-                # FriendGetResponseを作成してリストに追加
-                if channel_db:
-                    friend_response_data = {
-                        "name": user.name,
-                        "username": user.username,
-                        "description": user.description,
-                        "created_at": user.created_at,
-                        "channel_id": channel_db.id,
-                    }
-                    friend_response = FriendGetResponse.model_validate(friend_response_data)
-                    friend_res_list.append(friend_response)
-
             return friend_res_list
-
-        except UserRepositoryError as e:
-            raise FriendTransactionError("ユーザー取得中にエラーが発生しました", e)
 
         except FriendRepositoryError as e:
             raise FriendTransactionError("フレンド取得中にエラーが発生しました", e)

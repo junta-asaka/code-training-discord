@@ -257,6 +257,22 @@ class TestFriendAPI(unittest.IsolatedAsyncioTestCase):
         # Then: 422でバリデーションエラーが返る
         self.assertEqual(response.status_code, 422)
 
+    async def test_get_friends_invalid_uuid_format(self):
+        """
+        Given: 無効なUUID形式のuser_idでリクエスト
+        When: GET /api/friends にリクエスト
+        Then: 400でエラーが返る
+        """
+
+        # Given: 無効なUUID形式のuser_id
+        invalid_user_id = "invalid-uuid-format"
+
+        # When: GET /api/friends にリクエスト
+        response = await self.client.get(f"/api/friends?user_id={invalid_user_id}")
+
+        # Then: 400でエラーが返る
+        self.assertEqual(response.status_code, 400)
+
 
 if __name__ == "__main__":
     unittest.main()
