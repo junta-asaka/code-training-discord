@@ -2,6 +2,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { loginSchema, type LoginFormData } from "../schemas/loginSchema";
 import { useLogin } from "../hooks/useLogin";
+import "../styles/views/Login.scss";
 
 const Login = () => {
   // useForm: フォームの状態管理とバリデーションを簡単に行うためのライブラリ
