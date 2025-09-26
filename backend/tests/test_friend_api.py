@@ -37,8 +37,8 @@ class TestFriendAPI(unittest.IsolatedAsyncioTestCase):
         # テーブルクリーンアップ処理を実行
         async with self.engine.begin() as conn:
             # 外部キー制約のため、子テーブルから削除
-            await conn.execute(text("DELETE FROM messages"))
             await conn.execute(text("DELETE FROM channels"))
+            await conn.execute(text("DELETE FROM messages"))
             await conn.execute(text("DELETE FROM guild_members"))
             await conn.execute(text("DELETE FROM guilds"))
             await conn.execute(text("DELETE FROM friends"))
@@ -225,23 +225,21 @@ class TestFriendAPI(unittest.IsolatedAsyncioTestCase):
         res_json = response.json()
         self.assertEqual(res_json, [])
 
-    async def test_get_friends_empty_user_list(self):
+    async def test_get_friends_invalid_uuid_format(self):
         """
-        Given: 存在しないユーザーIDでリクエスト
+        Given: 無効なUUID形式のuser_idでリクエスト
         When: GET /api/friends にリクエスト
-        Then: 200で空のリストが返る
+        Then: 400でエラーが返る
         """
 
-        # Given: 存在しないユーザーIDでリクエスト
-        nonexistent_user_id = "00000000-0000-0000-0000-000000000000"
+        # Given: 無効なUUID形式のuser_id
+        invalid_user_id = "invalid-uuid-format"
 
         # When: GET /api/friends にリクエスト
-        response = await self.client.get(f"/api/friends?user_id={nonexistent_user_id}")
+        response = await self.client.get(f"/api/friends?user_id={invalid_user_id}")
 
-        # Then: 200で空のリストが返る
-        self.assertEqual(response.status_code, 200)
-        res_json = response.json()
-        self.assertEqual(res_json, [])
+        # Then: 400でエラーが返る
+        self.assertEqual(response.status_code, 400)
 
     async def test_get_friends_missing_user_id(self):
         """

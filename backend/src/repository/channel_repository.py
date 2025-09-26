@@ -1,9 +1,9 @@
 from abc import ABC, abstractmethod
 from typing import Optional
 
-from domains import Channel, Guild, GuildMember
+from domains import Channel
 from injector import singleton
-from sqlalchemy import and_, select, update
+from sqlalchemy import select, update
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 from utils.logger_utils import get_logger
@@ -38,20 +38,13 @@ class ChannelRepositoryIf(ABC):
         pass
 
     @abstractmethod
-    async def get_channels_by_user_ids_type_name(
-        self,
-        session: AsyncSession,
-        user_ids: list[str],
-        type: Optional[str] = None,
-        name: Optional[str] = None,
-    ) -> Channel:
-        """指定したユーザーIDを含むギルドのチャネルを取得する
+    async def get_channel_by_guild_ids(self, session: AsyncSession, guild_id: str, related_guild_id: str) -> Channel:
+        """ギルドIDと関連ギルドIDからチャネルを取得する
 
         Args:
             session (AsyncSession): データベースセッション
-            user_ids (list[str]): ユーザーIDのリスト
-            type (Optional[str]): チャネルタイプ
-            name (Optional[str]): チャネル名
+            guild_id (str): ギルドID
+            related_guild_id (str): 関連ギルドID
 
         Returns:
             Channel: チャネル
@@ -126,48 +119,22 @@ class ChannelRepositoryImpl(ChannelRepositoryIf):
             logger.error(f"チャネル作成中に予期しないエラー発生: {e}")
             raise
 
-    async def get_channels_by_user_ids_type_name(
-        self,
-        session: AsyncSession,
-        user_ids: list[str],
-        type: Optional[str] = None,
-        name: Optional[str] = None,
-    ) -> Channel:
-        """指定したユーザーIDを含むギルドのチャネルを取得する
+    async def get_channel_by_guild_ids(self, session: AsyncSession, guild_id: str, related_guild_id: str) -> Channel:
+        """ギルドIDと関連ギルドIDからチャネルを取得する
 
         Args:
             session (AsyncSession): データベースセッション
-            user_ids (list[str]): ユーザーIDのリスト
-            type (Optional[str]): チャネルタイプ
-            name (Optional[str]): チャネル名
+            guild_id (str): ギルドID
+            related_guild_id (str): 関連ギルドID
 
         Returns:
             Channel: チャネル
         """
 
-        # 基本的なJOIN条件を構築
-        query = (
-            select(Channel)
-            .join(Guild, Channel.guild_id == Guild.id)
-            .join(GuildMember, Guild.id == GuildMember.guild_id)
-            .where(GuildMember.user_id.in_(user_ids))
+        result = await session.execute(
+            select(Channel).where(Channel.guild_id == guild_id, Channel.related_guild_id == related_guild_id)
         )
 
-        # 追加の条件を動的に構築
-        conditions = []
-        if type is not None:
-            conditions.append(Channel.type == type)
-        if name is not None:
-            conditions.append(Channel.name == name)
-
-        # 条件がある場合は追加
-        if conditions:
-            query = query.where(and_(*conditions))
-
-        # 重複を除去
-        query = query.distinct()
-
-        result = await session.execute(query)
         return result.scalars().first()
 
     async def get_channel_by_id(self, session: AsyncSession, channel_id: str) -> Optional[Channel]:

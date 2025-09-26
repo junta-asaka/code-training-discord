@@ -251,11 +251,16 @@ class TestFriendUseCaseImpl(unittest.IsolatedAsyncioTestCase):
         mock_user_repo.get_user_by_username.assert_any_call(self.mock_session, "nonexistuser")
         mock_friend_repo.create_friend.assert_not_called()
 
+    @patch("usecase.friend.GuildRepositoryIf")
     @patch("usecase.friend.ChannelRepositoryIf")
     @patch("usecase.friend.UserRepositoryIf")
     @patch("usecase.friend.FriendRepositoryIf")
     async def test_get_friend_all_success(
-        self, mock_friend_repository_class, mock_user_repository_class, mock_channel_repository_class
+        self,
+        mock_friend_repository_class,
+        mock_user_repository_class,
+        mock_channel_repository_class,
+        mock_guild_repository_class,
     ):
         """
         Given: 有効なユーザーIDとフレンドが存在する場合
@@ -296,12 +301,26 @@ class TestFriendUseCaseImpl(unittest.IsolatedAsyncioTestCase):
         mock_user_repository_class.return_value = mock_user_repo
 
         mock_channel_repo = AsyncMock()
-        mock_channel_repo.get_channels_by_user_ids_type_name.side_effect = [mock_channel1, mock_channel2]
+        mock_channel_repo.get_channel_by_guild_ids.side_effect = [mock_channel1, mock_channel2]
         mock_channel_repository_class.return_value = mock_channel_repo
+
+        # ギルドリポジトリのモック設定を追加
+        mock_guild_repo = AsyncMock()
+        mock_guild_me = Mock(id=uuid.uuid4())
+        mock_guild_related1 = Mock(id=uuid.uuid4())
+        mock_guild_related2 = Mock(id=uuid.uuid4())
+        # 自ギルド取得は1回、相手ギルド取得は2回（各フレンドごと）
+        mock_guild_repo.get_guild_by_user_id_name.side_effect = [
+            mock_guild_me,  # 自分のギルド
+            mock_guild_related1,  # フレンド1のギルド
+            mock_guild_related2,  # フレンド2のギルド
+        ]
+        mock_guild_repository_class.return_value = mock_guild_repo
 
         self.use_case.friend_repo = mock_friend_repo
         self.use_case.user_repo = mock_user_repo
         self.use_case.channel_repo = mock_channel_repo
+        self.use_case.guild_repo = mock_guild_repo
 
         # When
         result = await self.use_case.get_friend_all(self.mock_session, user_id)
@@ -320,14 +339,21 @@ class TestFriendUseCaseImpl(unittest.IsolatedAsyncioTestCase):
         mock_user_repo.get_users_by_id.assert_called_once_with(
             self.mock_session, [str(related_user1_id), str(related_user2_id)]
         )
+        # ギルド取得が3回呼ばれることを確認（自分1回、フレンド2回）
+        self.assertEqual(mock_guild_repo.get_guild_by_user_id_name.call_count, 3)
         # チャネル取得が2回呼ばれることを確認
-        self.assertEqual(mock_channel_repo.get_channels_by_user_ids_type_name.call_count, 2)
+        self.assertEqual(mock_channel_repo.get_channel_by_guild_ids.call_count, 2)
 
+    @patch("usecase.friend.GuildRepositoryIf")
     @patch("usecase.friend.ChannelRepositoryIf")
     @patch("usecase.friend.UserRepositoryIf")
     @patch("usecase.friend.FriendRepositoryIf")
     async def test_get_friend_all_empty_list(
-        self, mock_friend_repository_class, mock_user_repository_class, mock_channel_repository_class
+        self,
+        mock_friend_repository_class,
+        mock_user_repository_class,
+        mock_channel_repository_class,
+        mock_guild_repository_class,
     ):
         """
         Given: フレンドが存在しないユーザーID
@@ -350,9 +376,13 @@ class TestFriendUseCaseImpl(unittest.IsolatedAsyncioTestCase):
         mock_channel_repo = AsyncMock()
         mock_channel_repository_class.return_value = mock_channel_repo
 
+        mock_guild_repo = AsyncMock()
+        mock_guild_repository_class.return_value = mock_guild_repo
+
         self.use_case.friend_repo = mock_friend_repo
         self.use_case.user_repo = mock_user_repo
         self.use_case.channel_repo = mock_channel_repo
+        self.use_case.guild_repo = mock_guild_repo
 
         # When
         result = await self.use_case.get_friend_all(self.mock_session, user_id)
@@ -427,11 +457,16 @@ class TestFriendUseCaseImpl(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(str(context.exception), "データベースエラー")
         mock_friend_repo.create_friend.assert_called_once()
 
+    @patch("usecase.friend.GuildRepositoryIf")
     @patch("usecase.friend.ChannelRepositoryIf")
     @patch("usecase.friend.UserRepositoryIf")
     @patch("usecase.friend.FriendRepositoryIf")
     async def test_get_friend_all_repository_error(
-        self, mock_friend_repository_class, mock_user_repository_class, mock_channel_repository_class
+        self,
+        mock_friend_repository_class,
+        mock_user_repository_class,
+        mock_channel_repository_class,
+        mock_guild_repository_class,
     ):
         """
         Given: フレンドリポジトリでエラーが発生する場合
@@ -453,9 +488,13 @@ class TestFriendUseCaseImpl(unittest.IsolatedAsyncioTestCase):
         mock_channel_repo = AsyncMock()
         mock_channel_repository_class.return_value = mock_channel_repo
 
+        mock_guild_repo = AsyncMock()
+        mock_guild_repository_class.return_value = mock_guild_repo
+
         self.use_case.friend_repo = mock_friend_repo
         self.use_case.user_repo = mock_user_repo
         self.use_case.channel_repo = mock_channel_repo
+        self.use_case.guild_repo = mock_guild_repo
 
         # When & Then
         with self.assertRaises(Exception) as context:

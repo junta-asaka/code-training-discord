@@ -130,18 +130,13 @@ class FriendUseCaseImpl(FriendUseCaseIf):
             )
             _ = await self.guild_member_repo.create_guild_member(session, guild_member_related)
 
-            # ギルドにフレンドを追加後、それぞれチャネルを作成
+            # ギルドにフレンドを追加後、共有されるDM用チャネルを作成
             channel_me = Channel(
                 guild_id=guild_db_me.id,
+                related_guild_id=guild_db_related.id,
                 owner_user_id=friend_db.user_id,
             )
             _ = await self.channel_repo.create_channel(session, channel_me)
-
-            channel_related = Channel(
-                guild_id=guild_db_related.id,
-                owner_user_id=friend_db.related_user_id,
-            )
-            _ = await self.channel_repo.create_channel(session, channel_related)
 
         except Exception as e:
             logger.exception(f"フレンド作成中にエラー発生: {e}")
@@ -174,15 +169,18 @@ class FriendUseCaseImpl(FriendUseCaseIf):
 
         users = await self.user_repo.get_users_by_id(session, user_id_list)
 
-        # フレンドごとにDM用のチャネルIDを取得する
+        # フレンドごとにDM用の共有チャネルIDを取得する
+        guild_db_me = await self.guild_repo.get_guild_by_user_id_name(session, str(user_id), "@me")
+        guild_id_me = str(guild_db_me.id)
         friend_res_list = []
-        type_name = "text"
-        channel_name = ""
         for user in users:
+            # DM用チャネルを取得するため、フレンドの@meギルドIDを取得
             related_user_id = str(user.id)
-            channel_db = await self.channel_repo.get_channels_by_user_ids_type_name(
-                session, [user_id, related_user_id], type_name, channel_name
-            )
+            guild_db_related = await self.guild_repo.get_guild_by_user_id_name(session, related_user_id, "@me")
+            guild_id_related = str(guild_db_related.id)
+
+            # DM用チャネルを取得
+            channel_db = await self.channel_repo.get_channel_by_guild_ids(session, guild_id_me, guild_id_related)
 
             # FriendGetResponseを作成してリストに追加
             if channel_db:
@@ -195,5 +193,20 @@ class FriendUseCaseImpl(FriendUseCaseIf):
                 }
                 friend_response = FriendGetResponse.model_validate(friend_response_data)
                 friend_res_list.append(friend_response)
+            else:
+                # チャネルが見つからない場合、guild_id_meとguild_id_relatedを逆にして再度チャネルを探す
+                channel_db = await self.channel_repo.get_channel_by_guild_ids(session, guild_id_related, guild_id_me)
+
+                # FriendGetResponseを作成してリストに追加
+                if channel_db:
+                    friend_response_data = {
+                        "name": user.name,
+                        "username": user.username,
+                        "description": user.description,
+                        "created_at": user.created_at,
+                        "channel_id": channel_db.id,
+                    }
+                    friend_response = FriendGetResponse.model_validate(friend_response_data)
+                    friend_res_list.append(friend_response)
 
         return friend_res_list
