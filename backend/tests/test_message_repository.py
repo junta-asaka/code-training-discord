@@ -13,7 +13,10 @@ sys.path.append(os.path.join(os.path.dirname(__file__), "../src"))
 
 from dependencies import configure
 from domains import Base, Channel, Message, User
-from repository.message_repository import MessageRepositoryIf
+from repository.message_repository import (
+    MessageDatabaseConstraintError,
+    MessageRepositoryIf,
+)
 
 
 class TestMessageRepository(unittest.IsolatedAsyncioTestCase):
@@ -36,8 +39,8 @@ class TestMessageRepository(unittest.IsolatedAsyncioTestCase):
         # テーブルクリーンアップ処理を実行
         async with self.engine.begin() as conn:
             # 外部キー制約のため、子テーブルから削除
-            await conn.execute(text("DELETE FROM messages"))
             await conn.execute(text("DELETE FROM channels"))
+            await conn.execute(text("DELETE FROM messages"))
             await conn.execute(text("DELETE FROM guild_members"))
             await conn.execute(text("DELETE FROM guilds"))
             await conn.execute(text("DELETE FROM friends"))
@@ -101,6 +104,7 @@ class TestMessageRepository(unittest.IsolatedAsyncioTestCase):
         # When: メッセージを作成
         async with self.AsyncSessionLocal() as session:
             result = await self.repository.create_message(session, message)
+            await session.commit()  # データを永続化
 
         # Then: メッセージが正常に作成される
         self.assertIsNotNone(result)
@@ -133,6 +137,7 @@ class TestMessageRepository(unittest.IsolatedAsyncioTestCase):
         # When: メッセージを作成
         async with self.AsyncSessionLocal() as session:
             result = await self.repository.create_message(session, message)
+            await session.commit()  # データを永続化
 
         # Then: メッセージが正常に作成される
         self.assertIsNotNone(result)
@@ -148,7 +153,7 @@ class TestMessageRepository(unittest.IsolatedAsyncioTestCase):
         """
         Given: 存在しないチャネルIDを持つメッセージ情報
         When: create_messageメソッドを呼び出す
-        Then: 外部キー制約エラーが発生すること
+        Then: MessageDatabaseConstraintErrorが発生すること
         """
 
         # Given: テスト用ユーザーを作成（チャネルは作成しない）
@@ -162,10 +167,19 @@ class TestMessageRepository(unittest.IsolatedAsyncioTestCase):
             content="Test message",
         )
 
-        # When/Then: 外部キー制約エラーが発生する
-        with self.assertRaises(Exception):  # SQLAlchemy IntegrityError等
+        # When/Then: MessageDatabaseConstraintErrorが発生する
+        with self.assertRaises(MessageDatabaseConstraintError) as context:
             async with self.AsyncSessionLocal() as session:
                 await self.repository.create_message(session, message)
+
+        # エラーメッセージに適切な情報が含まれていることを確認
+        error_message = str(context.exception)
+        self.assertIn("データベース制約違反", error_message)
+        self.assertIn(str(nonexistent_channel_id), error_message)
+        self.assertIn(str(user.id), error_message)
+
+        # 元の例外が保持されていることを確認
+        self.assertIsNotNone(context.exception.original_error)
 
     async def test_get_message_by_channel_id_success(self):
         """
@@ -204,6 +218,8 @@ class TestMessageRepository(unittest.IsolatedAsyncioTestCase):
         async with self.AsyncSessionLocal() as session:
             for message in messages:
                 await self.repository.create_message(session, message)
+            # 全てのメッセージ作成後にコミット
+            await session.commit()
 
         # When: チャネルIDでメッセージを取得
         async with self.AsyncSessionLocal() as session:

@@ -14,7 +14,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), "../src"))
 from dependencies import configure
 from domains import Channel
 from schema.channel_schema import ChannelGetResponse
-from usecase.get_channel_messages import GetChannelMessagesUseCaseIf
+from usecase.get_channel_messages import GetChannelMessagesUseCaseIf, GetChannelMessageTransactionError
 
 
 class TestChannelUseCaseImpl(unittest.IsolatedAsyncioTestCase):
@@ -194,10 +194,10 @@ class TestChannelUseCaseImpl(unittest.IsolatedAsyncioTestCase):
         self.use_case.message_repo = mock_message_repo
 
         # When & Then
-        with self.assertRaises(Exception) as context:
+        with self.assertRaises(GetChannelMessageTransactionError) as context:
             await self.use_case.execute(self.mock_session, test_channel_id)
 
-        self.assertEqual(str(context.exception), "Channel not found")
+        self.assertEqual(str(context.exception), "予期しないエラーが発生しました")
 
         # モックメソッドの呼び出し確認
         mock_channel_repo.get_channel_by_id.assert_called_once_with(self.mock_session, test_channel_id)
@@ -234,10 +234,10 @@ class TestChannelUseCaseImpl(unittest.IsolatedAsyncioTestCase):
         self.use_case.message_repo = mock_message_repo
 
         # When & Then
-        with self.assertRaises(Exception) as context:
+        with self.assertRaises(GetChannelMessageTransactionError) as context:
             await self.use_case.execute(self.mock_session, test_channel_id)
 
-        self.assertEqual(str(context.exception), "Database connection error")
+        self.assertEqual(str(context.exception), "予期しないエラーが発生しました")
 
         # モックメソッドの呼び出し確認
         mock_channel_repo.get_channel_by_id.assert_called_once_with(self.mock_session, test_channel_id)

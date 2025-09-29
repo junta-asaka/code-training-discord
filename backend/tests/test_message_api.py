@@ -12,8 +12,9 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 # テストファイルのルートディレクトリからの相対パスでsrcフォルダを指定
 sys.path.append(os.path.join(os.path.dirname(__file__), "../src"))
 
+from api.message import check_channel_access_for_message
 from database import get_session
-from domains import Base, Channel, Guild, Message, User
+from domains import Base, Channel, Guild, GuildMember, Message, User
 from main import app
 
 
@@ -38,8 +39,8 @@ class TestMessageAPI(unittest.IsolatedAsyncioTestCase):
         # テーブルクリーンアップ処理を実行
         async with self.engine.begin() as conn:
             # 外部キー制約のため、子テーブルから削除
-            await conn.execute(text("DELETE FROM messages"))
             await conn.execute(text("DELETE FROM channels"))
+            await conn.execute(text("DELETE FROM messages"))
             await conn.execute(text("DELETE FROM guild_members"))
             await conn.execute(text("DELETE FROM guilds"))
             await conn.execute(text("DELETE FROM friends"))
@@ -51,7 +52,13 @@ class TestMessageAPI(unittest.IsolatedAsyncioTestCase):
             async with self.AsyncSessionLocal() as session:
                 yield session
 
+        # テスト用のチャンネルアクセスチェック関数をオーバーライド（認証をスキップ）
+        async def override_check_channel_access_for_message() -> None:
+            # テストでは常にアクセス許可
+            pass
+
         app.dependency_overrides[get_session] = override_get_session
+        app.dependency_overrides[check_channel_access_for_message] = override_check_channel_access_for_message
 
         # 非同期でAsyncClientを初期化
         self.client = AsyncClient(transport=ASGITransport(app=app), base_url="http://testserver")
@@ -84,6 +91,14 @@ class TestMessageAPI(unittest.IsolatedAsyncioTestCase):
             )
             session.add(test_guild)
             # ギルドをコミット
+            await session.commit()
+
+            # テスト用ギルドメンバー作成（アクセス権限のため）
+            test_guild_member = GuildMember(
+                guild_id=self.test_guild_id,
+                user_id=self.test_user_id,
+            )
+            session.add(test_guild_member)
             await session.commit()
 
             # テスト用チャネル作成
@@ -160,7 +175,7 @@ class TestMessageAPI(unittest.IsolatedAsyncioTestCase):
         """
         Given: 存在しないチャネルIDを含む有効なメッセージデータ
         When: POST /api/message にリクエスト
-        Then: 500でサーバーエラーレスポンスが返る
+        Then: 404でチャンネルが見つからないエラーレスポンスが返る
         """
 
         # Given: 存在しないチャネルIDを含む有効なメッセージデータ
@@ -175,16 +190,16 @@ class TestMessageAPI(unittest.IsolatedAsyncioTestCase):
         # When: POST /api/message にリクエスト
         response = await self.client.post("/api/message", json=message_data)
 
-        # Then: 500でサーバーエラーレスポンスが返る
-        self.assertEqual(response.status_code, 500)
+        # Then: 404でチャンネルが見つからないエラーレスポンスが返る
+        self.assertEqual(response.status_code, 404)
         res_json = response.json()
-        self.assertEqual(res_json["detail"], "サーバー内部エラーが発生しました")
+        self.assertEqual(res_json["detail"], "指定されたチャンネルが見つかりません")
 
     async def test_post_message_to_channel_failure_invalid_user_id(self):
         """
         Given: 存在しないユーザーIDを含むメッセージデータ
         When: POST /api/message にリクエスト
-        Then: 500でサーバーエラーレスポンスが返る
+        Then: 404でチャンネルが見つからないエラーレスポンスが返る
         """
 
         # Given: 存在しないユーザーIDを含むメッセージデータ
@@ -199,10 +214,10 @@ class TestMessageAPI(unittest.IsolatedAsyncioTestCase):
         # When: POST /api/message にリクエスト
         response = await self.client.post("/api/message", json=message_data)
 
-        # Then: 500でサーバーエラーレスポンスが返る
-        self.assertEqual(response.status_code, 500)
+        # Then: 404でチャンネルが見つからないエラーレスポンスが返る
+        self.assertEqual(response.status_code, 404)
         res_json = response.json()
-        self.assertEqual(res_json["detail"], "サーバー内部エラーが発生しました")
+        self.assertEqual(res_json["detail"], "指定されたチャンネルが見つかりません")
 
     async def test_post_message_to_channel_failure_missing_required_field(self):
         """
