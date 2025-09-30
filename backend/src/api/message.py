@@ -22,7 +22,7 @@ def get_usecase(injector=Depends(get_injector)) -> CreateMessageUseCaseIf:
     return injector.get(CreateMessageUseCaseIf)
 
 
-async def check_channel_access_for_message(
+async def check_channel_access(
     req: MessageCreateRequest,
     request: Request,
     session: AsyncSession = Depends(get_session),
@@ -34,12 +34,12 @@ async def check_channel_access_for_message(
 
 
 # チャネルにメッセージを送信するエンドポイント
-@router.post("/message", response_model=MessageResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/messages", response_model=MessageResponse, status_code=status.HTTP_201_CREATED)
 async def post_message_to_channel(
     req: MessageCreateRequest,
     session: AsyncSession = Depends(get_session),
     usecase: CreateMessageUseCaseIf = Depends(get_usecase),
-    _: None = Depends(check_channel_access_for_message),  # チャンネルアクセス権限チェック
+    _: None = Depends(check_channel_access),  # チャンネルアクセス権限チェック
 ) -> MessageResponse:
     try:
         response = await usecase.execute(session, req)

@@ -32,7 +32,7 @@ async def check_channel_access(
     await access_checker.execute(request, channel_id, session)
 
 
-@router.get("/channel/{channel_id}", response_model=ChannelGetResponse, status_code=status.HTTP_200_OK)
+@router.get("/channels/{channel_id}", response_model=ChannelGetResponse, status_code=status.HTTP_200_OK)
 async def get_channel(
     channel_id: str,
     session: AsyncSession = Depends(get_session),

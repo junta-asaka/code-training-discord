@@ -12,7 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 # テストファイルのルートディレクトリからの相対パスでsrcフォルダを指定
 sys.path.append(os.path.join(os.path.dirname(__file__), "../src"))
 
-from api.message import check_channel_access_for_message
+from api.message import check_channel_access
 from database import get_session
 from domains import Base, Channel, Guild, GuildMember, Message, User
 from main import app
@@ -53,12 +53,12 @@ class TestMessageAPI(unittest.IsolatedAsyncioTestCase):
                 yield session
 
         # テスト用のチャンネルアクセスチェック関数をオーバーライド（認証をスキップ）
-        async def override_check_channel_access_for_message() -> None:
+        async def override_check_channel_access() -> None:
             # テストでは常にアクセス許可
             pass
 
         app.dependency_overrides[get_session] = override_get_session
-        app.dependency_overrides[check_channel_access_for_message] = override_check_channel_access_for_message
+        app.dependency_overrides[check_channel_access] = override_check_channel_access
 
         # 非同期でAsyncClientを初期化
         self.client = AsyncClient(transport=ASGITransport(app=app), base_url="http://testserver")
@@ -142,7 +142,7 @@ class TestMessageAPI(unittest.IsolatedAsyncioTestCase):
     async def test_post_message_to_channel_success_normal_message(self):
         """
         Given: 有効なメッセージデータ
-        When: POST /api/message にリクエスト
+        When: POST /api/messages にリクエスト
         Then: 201でメッセージ作成成功レスポンスが返る
         """
 
@@ -155,8 +155,8 @@ class TestMessageAPI(unittest.IsolatedAsyncioTestCase):
             "referenced_message_id": None,
         }
 
-        # When: POST /api/message にリクエスト
-        response = await self.client.post("/api/message", json=message_data)
+        # When: POST /api/messages にリクエスト
+        response = await self.client.post("/api/messages", json=message_data)
 
         # Then: 201でメッセージ作成成功レスポンスが返る
         self.assertEqual(response.status_code, 201)
@@ -174,7 +174,7 @@ class TestMessageAPI(unittest.IsolatedAsyncioTestCase):
     async def test_post_message_to_channel_failure_nonexistent_channel(self):
         """
         Given: 存在しないチャネルIDを含む有効なメッセージデータ
-        When: POST /api/message にリクエスト
+        When: POST /api/messages にリクエスト
         Then: 404でチャンネルが見つからないエラーレスポンスが返る
         """
 
@@ -187,8 +187,8 @@ class TestMessageAPI(unittest.IsolatedAsyncioTestCase):
             "referenced_message_id": None,
         }
 
-        # When: POST /api/message にリクエスト
-        response = await self.client.post("/api/message", json=message_data)
+        # When: POST /api/messages にリクエスト
+        response = await self.client.post("/api/messages", json=message_data)
 
         # Then: 404でチャンネルが見つからないエラーレスポンスが返る
         self.assertEqual(response.status_code, 404)
@@ -198,7 +198,7 @@ class TestMessageAPI(unittest.IsolatedAsyncioTestCase):
     async def test_post_message_to_channel_failure_invalid_user_id(self):
         """
         Given: 存在しないユーザーIDを含むメッセージデータ
-        When: POST /api/message にリクエスト
+        When: POST /api/messages にリクエスト
         Then: 404でチャンネルが見つからないエラーレスポンスが返る
         """
 
@@ -211,8 +211,8 @@ class TestMessageAPI(unittest.IsolatedAsyncioTestCase):
             "referenced_message_id": None,
         }
 
-        # When: POST /api/message にリクエスト
-        response = await self.client.post("/api/message", json=message_data)
+        # When: POST /api/messages にリクエスト
+        response = await self.client.post("/api/messages", json=message_data)
 
         # Then: 404でチャンネルが見つからないエラーレスポンスが返る
         self.assertEqual(response.status_code, 404)
@@ -222,7 +222,7 @@ class TestMessageAPI(unittest.IsolatedAsyncioTestCase):
     async def test_post_message_to_channel_failure_missing_required_field(self):
         """
         Given: 必須フィールドが欠けているメッセージデータ
-        When: POST /api/message にリクエスト
+        When: POST /api/messages にリクエスト
         Then: 422でバリデーションエラーレスポンスが返る
         """
 
@@ -235,8 +235,8 @@ class TestMessageAPI(unittest.IsolatedAsyncioTestCase):
             "referenced_message_id": None,
         }
 
-        # When: POST /api/message にリクエスト
-        response = await self.client.post("/api/message", json=message_data)
+        # When: POST /api/messages にリクエスト
+        response = await self.client.post("/api/messages", json=message_data)
 
         # Then: 422でバリデーションエラーレスポンスが返る
         self.assertEqual(response.status_code, 422)
@@ -246,7 +246,7 @@ class TestMessageAPI(unittest.IsolatedAsyncioTestCase):
     async def test_post_message_to_channel_failure_invalid_uuid_format(self):
         """
         Given: 不正なUUID形式のuser_idを含むメッセージデータ
-        When: POST /api/message にリクエスト
+        When: POST /api/messages にリクエスト
         Then: 422でバリデーションエラーレスポンスが返る
         """
 
@@ -259,8 +259,8 @@ class TestMessageAPI(unittest.IsolatedAsyncioTestCase):
             "referenced_message_id": None,
         }
 
-        # When: POST /api/message にリクエスト
-        response = await self.client.post("/api/message", json=message_data)
+        # When: POST /api/messages にリクエスト
+        response = await self.client.post("/api/messages", json=message_data)
 
         # Then: 422でバリデーションエラーレスポンスが返る
         self.assertEqual(response.status_code, 422)
