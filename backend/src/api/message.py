@@ -9,6 +9,7 @@ from usecase.create_message import (
     CreateMessageUseCaseError,
     CreateMessageUseCaseIf,
 )
+from utils.api_utils import get_channel_access_checker
 from utils.logger_utils import get_logger
 
 # ロガーを取得
@@ -21,10 +22,6 @@ def get_usecase(injector=Depends(get_injector)) -> CreateMessageUseCaseIf:
     return injector.get(CreateMessageUseCaseIf)
 
 
-def get_channel_access_checker(injector=Depends(get_injector)) -> ChannelAccessCheckerUseCaseIf:
-    return injector.get(ChannelAccessCheckerUseCaseIf)
-
-
 async def check_channel_access_for_message(
     req: MessageCreateRequest,
     request: Request,
@@ -32,6 +29,7 @@ async def check_channel_access_for_message(
     access_checker: ChannelAccessCheckerUseCaseIf = Depends(get_channel_access_checker),
 ) -> None:
     """メッセージ投稿時のチャンネルアクセス権限をチェックする依存関数"""
+    # 共通のアクセスチェッカーを使用してチャンネルアクセスを確認
     await access_checker.execute(request, str(req.channel_id), session)
 
 

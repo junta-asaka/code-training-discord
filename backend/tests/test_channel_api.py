@@ -181,7 +181,7 @@ class TestChannelAPI(unittest.IsolatedAsyncioTestCase):
         channel_id = str(self.test_channel_with_messages_id)
 
         # When: GET /api/channel にリクエスト
-        response = await self.client.get(f"/api/channel?channel_id={channel_id}")
+        response = await self.client.get(f"/api/channel/{channel_id}")
 
         # Then: 200でチャネル情報とメッセージ一覧が返る
         self.assertEqual(response.status_code, 200)
@@ -214,7 +214,7 @@ class TestChannelAPI(unittest.IsolatedAsyncioTestCase):
         channel_id = str(self.test_channel_empty_id)
 
         # When: GET /api/channel にリクエスト
-        response = await self.client.get(f"/api/channel?channel_id={channel_id}")
+        response = await self.client.get(f"/api/channel/{channel_id}")
 
         # Then: 200でチャネル情報と空のメッセージ一覧が返る
         self.assertEqual(response.status_code, 200)
@@ -236,7 +236,7 @@ class TestChannelAPI(unittest.IsolatedAsyncioTestCase):
         non_existent_channel_id = str(uuid.uuid4())
 
         # When: GET /api/channel にリクエスト
-        response = await self.client.get(f"/api/channel?channel_id={non_existent_channel_id}")
+        response = await self.client.get(f"/api/channel/{non_existent_channel_id}")
 
         # Then: 404エラーが返る
         self.assertEqual(response.status_code, 404)

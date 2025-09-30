@@ -9,6 +9,7 @@ from usecase.get_channel_messages import (
     GetChannelMessagesUseCaseError,
     GetChannelMessagesUseCaseIf,
 )
+from utils.api_utils import get_channel_access_checker
 from utils.logger_utils import get_logger
 
 # ロガーを取得
@@ -21,22 +22,18 @@ def get_usecase(injector=Depends(get_injector)) -> GetChannelMessagesUseCaseIf:
     return injector.get(GetChannelMessagesUseCaseIf)
 
 
-def get_channel_access_checker(injector=Depends(get_injector)) -> ChannelAccessCheckerUseCaseIf:
-    return injector.get(ChannelAccessCheckerUseCaseIf)
-
-
 async def check_channel_access(
     channel_id: str,
     request: Request,
     session: AsyncSession = Depends(get_session),
     access_checker: ChannelAccessCheckerUseCaseIf = Depends(get_channel_access_checker),
 ) -> None:
-    """チャンネルアクセス権限をチェックする依存関数"""
+    """チャンネルアクセス権限をチェックする共通関数"""
     await access_checker.execute(request, channel_id, session)
 
 
-@router.get("/channel", response_model=ChannelGetResponse, status_code=status.HTTP_200_OK)
-async def get_channels(
+@router.get("/channel/{channel_id}", response_model=ChannelGetResponse, status_code=status.HTTP_200_OK)
+async def get_channel(
     channel_id: str,
     session: AsyncSession = Depends(get_session),
     usecase: GetChannelMessagesUseCaseIf = Depends(get_usecase),
