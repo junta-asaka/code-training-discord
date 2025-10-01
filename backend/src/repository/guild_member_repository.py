@@ -2,7 +2,25 @@ from abc import ABC, abstractmethod
 
 from domains import GuildMember
 from injector import singleton
+from repository.base_exception import BaseRepositoryError
+from repository.decorators import handle_repository_errors
 from sqlalchemy.ext.asyncio import AsyncSession
+from utils.logger_utils import get_logger
+
+# ロガーを取得
+logger = get_logger(__name__)
+
+
+class GuildMemberRepositoryError(BaseRepositoryError):
+    """ギルドメンバーリポジトリ例外クラス"""
+
+    pass
+
+
+class GuildMemberCreateError(GuildMemberRepositoryError):
+    """ギルドメンバー作成時のエラー"""
+
+    pass
 
 
 class GuildMemberRepositoryIf(ABC):
@@ -35,6 +53,7 @@ class GuildMemberRepositoryImpl(GuildMemberRepositoryIf):
         GuildMemberRepositoryIf (_type_): ギルドメンバーリポジトリインターフェース
     """
 
+    @handle_repository_errors(GuildMemberCreateError, "ギルドメンバー作成")
     async def create_guild_member(self, session: AsyncSession, guild_member: GuildMember) -> GuildMember:
         """ギルドメンバーを作成する
 

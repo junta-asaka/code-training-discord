@@ -4,7 +4,7 @@ from domains import Channel, Friend, GuildMember, User
 from injector import inject, singleton
 from repository.channel_repository import ChannelRepositoryError, ChannelRepositoryIf
 from repository.friend_repository import FriendRepositoryError, FriendRepositoryIf
-from repository.guild_member_repository import GuildMemberRepositoryIf
+from repository.guild_member_repository import GuildMemberRepositoryError, GuildMemberRepositoryIf
 from repository.guild_repository import GuildRepositoryIf
 from repository.user_repository import UserRepositoryIf
 from schema.friend_schema import FriendCreateRequest
@@ -158,6 +158,9 @@ class FriendUseCaseImpl(FriendUseCaseIf):
 
         except FriendRepositoryError as e:
             raise FriendTransactionError("フレンド作成中にエラーが発生しました", e)
+
+        except GuildMemberRepositoryError as e:
+            raise FriendTransactionError("ギルドメンバー作成中にエラーが発生しました", e)
 
         except ChannelRepositoryError as e:
             raise FriendTransactionError("チャンネル作成中にエラーが発生しました", e)
