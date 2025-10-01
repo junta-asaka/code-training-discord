@@ -5,7 +5,7 @@ from domains import Session
 from fastapi import Request
 from fastapi.security import OAuth2PasswordRequestForm
 from injector import inject, singleton
-from repository.session_repository import SessionRepositoryIf
+from repository.session_repository import SessionRepositoryError, SessionRepositoryIf
 from repository.user_repository import UserRepositoryError, UserRepositoryIf
 from sqlalchemy.ext.asyncio import AsyncSession
 from usecase.base_exception import BaseMessageUseCaseError
@@ -128,6 +128,9 @@ class LoginUseCaseImpl(LoginUseCaseIf):
         except UserRepositoryError as e:
             raise LoginTransactionError("ユーザー取得中にエラーが発生しました", e)
 
+        except SessionRepositoryError as e:
+            raise LoginTransactionError("セッション作成中にエラーが発生しました", e)
+
         except Exception as e:
             raise LoginTransactionError("予期しないエラーが発生しました", e)
 
@@ -142,7 +145,14 @@ class LoginUseCaseImpl(LoginUseCaseIf):
             Session | None: セッション情報
         """
 
-        # CookieまたはAuthorizationヘッダーからトークンを取得
-        token = req.cookies.get("session_token") or req.headers.get("Authorization", "").replace("Bearer ", "")
+        try:
+            # CookieまたはAuthorizationヘッダーからトークンを取得
+            token = req.cookies.get("session_token") or req.headers.get("Authorization", "").replace("Bearer ", "")
 
-        return await self.session_repo.get_session_by_token(session, token)
+            return await self.session_repo.get_session_by_token(session, token)
+
+        except SessionRepositoryError as e:
+            raise LoginTransactionError("セッション取得中にエラーが発生しました", e)
+
+        except Exception as e:
+            raise LoginTransactionError("予期しないエラーが発生しました", e)

@@ -7,7 +7,6 @@ from datetime import datetime, timezone
 from dotenv import load_dotenv
 from injector import Injector
 from sqlalchemy import text
-from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 # テストファイルのルートディレクトリからの相対パスでsrcフォルダを指定
@@ -15,7 +14,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), "../src"))
 
 from dependencies import configure
 from domains import Base, Session, User
-from repository.session_repository import SessionRepositoryIf
+from repository.session_repository import SessionCreateError, SessionRepositoryIf
 
 
 class TestSessionRepository(unittest.IsolatedAsyncioTestCase):
@@ -155,7 +154,7 @@ class TestSessionRepository(unittest.IsolatedAsyncioTestCase):
             revoked_at=None,
         )
 
-        with self.assertRaises(SQLAlchemyError):
+        with self.assertRaises(SessionCreateError):
             async with self.AsyncSessionLocal() as session:
                 _ = await self.repository.create_session(session, session_data2)
 
