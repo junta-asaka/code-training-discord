@@ -83,6 +83,7 @@ class ChannelAccessCheckerUseCaseImpl(ChannelAccessCheckerUseCaseIf):
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="サーバーエラーが発生しました"
             )
+
         except Exception as e:
             # その他の予期しないエラー
             logger.error(f"予期しないエラーが発生: {e}")
@@ -106,6 +107,13 @@ class ChannelAccessCheckerUseCaseImpl(ChannelAccessCheckerUseCaseIf):
 
         except GuildRepositoryError as e:
             logger.error(f"ギルド情報の取得中にエラーが発生: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="サーバーエラーが発生しました"
+            )
+
+        except Exception as e:
+            # その他の予期しないエラー
+            logger.error(f"予期しないエラーが発生: {e}")
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="サーバーエラーが発生しました"
             )
