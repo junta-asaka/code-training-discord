@@ -83,6 +83,12 @@ class ChannelAccessCheckerUseCaseImpl(ChannelAccessCheckerUseCaseIf):
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="サーバーエラーが発生しました"
             )
+        except Exception as e:
+            # その他の予期しないエラー
+            logger.error(f"予期しないエラーが発生: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="サーバーエラーが発生しました"
+            )
 
         if not channel_db:
             logger.warning(f"存在しないチャンネルID {channel_id} へのアクセスが試行されました")

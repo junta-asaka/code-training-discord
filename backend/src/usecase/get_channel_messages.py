@@ -11,18 +11,17 @@ from repository.message_repository import (
 )
 from schema.channel_schema import ChannelGetResponse
 from schema.message_schema import MessageResponse
+from usecase.base_exception import BaseMessageUseCaseError
 from utils.logger_utils import get_logger
 
 # ロガーを取得
 logger = get_logger(__name__)
 
 
-class GetChannelMessagesUseCaseError(Exception):
-    """チャンネルメッセージ取得ユースケース基底例外クラス"""
+class GetChannelMessagesUseCaseError(BaseMessageUseCaseError):
+    """チャンネルメッセージ取得ユースケース例外クラス"""
 
-    def __init__(self, message: str, original_error: Exception | None = None):
-        super().__init__(message)
-        self.original_error = original_error
+    pass
 
 
 class ChannelNotFoundError(GetChannelMessagesUseCaseError):
@@ -133,7 +132,7 @@ class GetChannelMessagesUseCaseImpl(GetChannelMessagesUseCaseIf):
             raise ChannelNotFoundError(str(e))
 
         except ChannelRepositoryError as e:
-            raise GetChannelMessageTransactionError("チャンネルメッセージ取得中にエラーが発生しました", e)
+            raise GetChannelMessageTransactionError("チャンネル取得中にエラーが発生しました", e)
 
         except MessageRepositoryError as e:
             raise GetChannelMessageTransactionError("メッセージ取得中にエラーが発生しました", e)

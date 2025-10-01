@@ -2,13 +2,32 @@ from abc import ABC, abstractmethod
 
 from domains import Friend
 from injector import singleton
+from repository.base_exception import BaseRepositoryError
+from repository.decorators import handle_repository_errors
 from sqlalchemy import or_, select
-from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 from utils.logger_utils import get_logger
 
 # ロガーを取得
 logger = get_logger(__name__)
+
+
+class FriendRepositoryError(BaseRepositoryError):
+    """フレンドリポジトリ例外クラス"""
+
+    pass
+
+
+class FriendCreateError(FriendRepositoryError):
+    """フレンド作成時のエラー"""
+
+    pass
+
+
+class FriendQueryError(FriendRepositoryError):
+    """フレンドクエリ実行時のエラー"""
+
+    pass
 
 
 class FriendRepositoryIf(ABC):
@@ -55,6 +74,7 @@ class FriendRepositoryImpl(FriendRepositoryIf):
         FriendRepositoryIf (_type_): フレンドリポジトリインターフェース
     """
 
+    @handle_repository_errors(FriendCreateError, "フレンド作成")
     async def create_friend(self, session: AsyncSession, friend: Friend) -> Friend:
         """フレンドを作成する
 
@@ -66,20 +86,13 @@ class FriendRepositoryImpl(FriendRepositoryIf):
             Friend: 作成されたフレンド情報
         """
 
-        try:
-            session.add(friend)
-            await session.commit()
-            await session.refresh(friend)
-            return friend
-        except SQLAlchemyError as e:
-            await session.rollback()
-            logger.error(f"フレンド作成中にDBエラー発生: {e}")
-            raise
-        except Exception as e:
-            await session.rollback()
-            logger.error(f"フレンド作成中に予期しないエラー発生: {e}")
-            raise
+        session.add(friend)
+        await session.commit()
+        await session.refresh(friend)
 
+        return friend
+
+    @handle_repository_errors(FriendQueryError, "フレンド取得")
     async def get_friend_all(self, session: AsyncSession, user_id: str) -> list[Friend]:
         """すべてのフレンドを取得する
 

@@ -2,17 +2,30 @@ from abc import ABC, abstractmethod
 
 from domains import Channel, Friend, GuildMember, User
 from injector import inject, singleton
-from repository.channel_repository import ChannelRepositoryIf
-from repository.friend_repository import FriendRepositoryIf
+from repository.channel_repository import ChannelRepositoryError, ChannelRepositoryIf
+from repository.friend_repository import FriendRepositoryError, FriendRepositoryIf
 from repository.guild_member_repository import GuildMemberRepositoryIf
 from repository.guild_repository import GuildRepositoryIf
 from repository.user_repository import UserRepositoryIf
 from schema.friend_schema import FriendCreateRequest
 from sqlalchemy.ext.asyncio import AsyncSession
+from usecase.base_exception import BaseMessageUseCaseError
 from utils.logger_utils import get_logger
 
 # ロガーを取得
 logger = get_logger(__name__)
+
+
+class FriendUseCaseError(BaseMessageUseCaseError):
+    """フレンドユースケース例外クラス"""
+
+    pass
+
+
+class FriendTransactionError(FriendUseCaseError):
+    """フレンド作成のトランザクションエラー"""
+
+    pass
 
 
 class FriendUseCaseIf(ABC):
@@ -143,9 +156,14 @@ class FriendUseCaseImpl(FriendUseCaseIf):
             )
             _ = await self.channel_repo.create_channel(session, channel_related)
 
+        except FriendRepositoryError as e:
+            raise FriendTransactionError("フレンド作成中にエラーが発生しました", e)
+
+        except ChannelRepositoryError as e:
+            raise FriendTransactionError("チャンネル作成中にエラーが発生しました", e)
+
         except Exception as e:
-            logger.exception(f"フレンド作成中にエラー発生: {e}")
-            raise Exception(e)
+            raise FriendTransactionError("予期しないエラーが発生しました", e)
 
         return friend_db
 
@@ -160,16 +178,23 @@ class FriendUseCaseImpl(FriendUseCaseIf):
             list[User] | None: フレンドのユーザーリスト（失敗時はNone）
         """
 
-        friends = await self.friend_repo.get_friend_all(session, user_id)
+        try:
+            friends = await self.friend_repo.get_friend_all(session, user_id)
 
-        # 双方向の関係を考慮して相手のユーザーIDを取得
-        user_id_list = []
-        for friend in friends:
-            if str(friend.user_id) == user_id:
-                # 自分がuser_idの場合、related_user_idが相手
-                user_id_list.append(str(friend.related_user_id))
-            else:
-                # 自分がrelated_user_idの場合、user_idが相手
-                user_id_list.append(str(friend.user_id))
+            # 双方向の関係を考慮して相手のユーザーIDを取得
+            user_id_list = []
+            for friend in friends:
+                if str(friend.user_id) == user_id:
+                    # 自分がuser_idの場合、related_user_idが相手
+                    user_id_list.append(str(friend.related_user_id))
+                else:
+                    # 自分がrelated_user_idの場合、user_idが相手
+                    user_id_list.append(str(friend.user_id))
 
-        return await self.user_repo.get_users_by_id(session, user_id_list)
+            return await self.user_repo.get_users_by_id(session, user_id_list)
+
+        except FriendRepositoryError as e:
+            raise FriendTransactionError("フレンド取得中にエラーが発生しました", e)
+
+        except Exception as e:
+            raise FriendTransactionError("予期しないエラーが発生しました", e)
