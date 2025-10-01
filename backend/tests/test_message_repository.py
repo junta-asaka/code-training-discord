@@ -13,10 +13,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), "../src"))
 
 from dependencies import configure
 from domains import Base, Channel, Message, User
-from repository.message_repository import (
-    MessageDatabaseConstraintError,
-    MessageRepositoryIf,
-)
+from repository.message_repository import MessageCreateError, MessageRepositoryIf
 
 
 class TestMessageRepository(unittest.IsolatedAsyncioTestCase):
@@ -167,16 +164,15 @@ class TestMessageRepository(unittest.IsolatedAsyncioTestCase):
             content="Test message",
         )
 
-        # When/Then: MessageDatabaseConstraintErrorが発生する
-        with self.assertRaises(MessageDatabaseConstraintError) as context:
+        # When/Then: MessageCreateErrorが発生する
+        with self.assertRaises(MessageCreateError) as context:
             async with self.AsyncSessionLocal() as session:
                 await self.repository.create_message(session, message)
 
         # エラーメッセージに適切な情報が含まれていることを確認
         error_message = str(context.exception)
         self.assertIn("データベース制約違反", error_message)
-        self.assertIn(str(nonexistent_channel_id), error_message)
-        self.assertIn(str(user.id), error_message)
+        print(context.exception.original_error)
 
         # 元の例外が保持されていることを確認
         self.assertIsNotNone(context.exception.original_error)

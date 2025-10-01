@@ -10,11 +10,11 @@ from repository.channel_repository import (
     ChannelUpdateError,
 )
 from repository.message_repository import (
-    MessageDatabaseConstraintError,
     MessageRepositoryError,
     MessageRepositoryIf,
 )
 from schema.message_schema import MessageCreateRequest, MessageResponse
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
@@ -115,11 +115,6 @@ class CreateMessageUseCaseImpl(CreateMessageUseCaseIf):
 
             return MessageResponse.model_validate(message_db)
 
-        except MessageDatabaseConstraintError as e:
-            # チャンネルが存在しないなどの制約違反エラー
-            await session.rollback()
-            raise ChannelNotFoundError(f"指定されたチャンネル（ID: {req.channel_id}）が存在しません", e)
-
         except ChannelRepoNotFoundError as e:
             await session.rollback()
             raise ChannelNotFoundError(f"指定されたチャンネル（ID: {req.channel_id}）が存在しません", e)
@@ -127,6 +122,8 @@ class CreateMessageUseCaseImpl(CreateMessageUseCaseIf):
         except MessageRepositoryError as e:
             # リポジトリ層のエラーをユースケース層のエラーに変換
             await session.rollback()
+            if isinstance(e.original_error, IntegrityError):
+                raise ChannelNotFoundError(f"指定されたチャンネル（ID: {req.channel_id}）が存在しません", e)
             raise CreateMessageTransactionError("メッセージの作成中にエラーが発生しました", e)
 
         except ChannelUpdateError as e:
