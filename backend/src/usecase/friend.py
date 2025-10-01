@@ -6,7 +6,7 @@ from repository.channel_repository import ChannelRepositoryError, ChannelReposit
 from repository.friend_repository import FriendRepositoryError, FriendRepositoryIf
 from repository.guild_member_repository import GuildMemberRepositoryError, GuildMemberRepositoryIf
 from repository.guild_repository import GuildRepositoryError, GuildRepositoryIf
-from repository.user_repository import UserRepositoryIf
+from repository.user_repository import UserRepositoryError, UserRepositoryIf
 from schema.friend_schema import FriendCreateRequest
 from sqlalchemy.ext.asyncio import AsyncSession
 from usecase.base_exception import BaseMessageUseCaseError
@@ -105,25 +105,25 @@ class FriendUseCaseImpl(FriendUseCaseIf):
             Friend | None: 作成されたフレンド情報（失敗時はNone）
         """
 
-        # 自ユーザーの取得
-        username = req.username
-        user = await self.user_repo.get_user_by_username(session, username)
-        if not user:
-            return None
-
-        # 相手ユーザーの取得
-        related_username = req.related_username
-        related_user = await self.user_repo.get_user_by_username(session, related_username)
-        if not related_user:
-            return None
-
-        friend = Friend(
-            user_id=user.id,
-            related_user_id=related_user.id,
-            type=req.type,
-        )
-
         try:
+            # 自ユーザーの取得
+            username = req.username
+            user = await self.user_repo.get_user_by_username(session, username)
+            if not user:
+                return None
+
+            # 相手ユーザーの取得
+            related_username = req.related_username
+            related_user = await self.user_repo.get_user_by_username(session, related_username)
+            if not related_user:
+                return None
+
+            friend = Friend(
+                user_id=user.id,
+                related_user_id=related_user.id,
+                type=req.type,
+            )
+
             friend_db = await self.friend_repo.create_friend(session, friend)
 
             # フレンド追加後、お互いのギルドにフレンドを追加
@@ -155,6 +155,9 @@ class FriendUseCaseImpl(FriendUseCaseIf):
                 owner_user_id=friend_db.related_user_id,
             )
             _ = await self.channel_repo.create_channel(session, channel_related)
+
+        except UserRepositoryError as e:
+            raise FriendTransactionError("ユーザー取得中にエラーが発生しました", e)
 
         except FriendRepositoryError as e:
             raise FriendTransactionError("フレンド作成中にエラーが発生しました", e)
@@ -198,6 +201,9 @@ class FriendUseCaseImpl(FriendUseCaseIf):
                     user_id_list.append(str(friend.user_id))
 
             return await self.user_repo.get_users_by_id(session, user_id_list)
+
+        except UserRepositoryError as e:
+            raise FriendTransactionError("ユーザー取得中にエラーが発生しました", e)
 
         except FriendRepositoryError as e:
             raise FriendTransactionError("フレンド取得中にエラーが発生しました", e)

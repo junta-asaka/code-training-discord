@@ -4,7 +4,7 @@ from domains import Guild, GuildMember, User
 from injector import inject, singleton
 from repository.guild_member_repository import GuildMemberRepositoryError, GuildMemberRepositoryIf
 from repository.guild_repository import GuildRepositoryError, GuildRepositoryIf
-from repository.user_repository import UserRepositoryIf
+from repository.user_repository import UserRepositoryError, UserRepositoryIf
 from schema.user_schema import UserCreateRequest, UserResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from usecase.base_exception import BaseMessageUseCaseError
@@ -118,6 +118,9 @@ class CreateUserUseCaseImpl(CreateUserUseCaseIf):
             }
 
             return UserResponse.model_validate(user_response_data)
+
+        except UserRepositoryError as e:
+            raise CreateUserTransactionError("ユーザー作成中にエラーが発生しました", e)
 
         except GuildRepositoryError as e:
             raise CreateUserTransactionError("ギルド作成中にエラーが発生しました", e)
