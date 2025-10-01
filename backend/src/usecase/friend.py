@@ -5,7 +5,7 @@ from injector import inject, singleton
 from repository.channel_repository import ChannelRepositoryError, ChannelRepositoryIf
 from repository.friend_repository import FriendRepositoryError, FriendRepositoryIf
 from repository.guild_member_repository import GuildMemberRepositoryError, GuildMemberRepositoryIf
-from repository.guild_repository import GuildRepositoryIf
+from repository.guild_repository import GuildRepositoryError, GuildRepositoryIf
 from repository.user_repository import UserRepositoryIf
 from schema.friend_schema import FriendCreateRequest
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -158,6 +158,9 @@ class FriendUseCaseImpl(FriendUseCaseIf):
 
         except FriendRepositoryError as e:
             raise FriendTransactionError("フレンド作成中にエラーが発生しました", e)
+
+        except GuildRepositoryError as e:
+            raise FriendTransactionError("ギルド取得中にエラーが発生しました", e)
 
         except GuildMemberRepositoryError as e:
             raise FriendTransactionError("ギルドメンバー作成中にエラーが発生しました", e)

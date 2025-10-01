@@ -3,8 +3,9 @@ from typing import Optional
 
 from domains import Channel, Guild, GuildMember
 from injector import singleton
+from repository.base_exception import BaseRepositoryError
+from repository.decorators import handle_repository_errors
 from sqlalchemy import select
-from sqlalchemy.exc import OperationalError, SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 from utils.logger_utils import get_logger
 
@@ -12,16 +13,14 @@ from utils.logger_utils import get_logger
 logger = get_logger(__name__)
 
 
-class GuildRepositoryError(Exception):
-    """ギルドリポジトリ基底例外クラス"""
+class GuildRepositoryError(BaseRepositoryError):
+    """ギルドリポジトリ例外クラス"""
 
-    def __init__(self, message: str, original_error: Exception | None = None):
-        super().__init__(message)
-        self.original_error = original_error
+    pass
 
 
-class GuildDatabaseConnectionError(GuildRepositoryError):
-    """データベース接続エラー"""
+class GuildCreateError(GuildRepositoryError):
+    """ギルド作成時のエラー"""
 
     pass
 
@@ -80,10 +79,6 @@ class GuildRepositoryIf(ABC):
 
         Returns:
             Optional[Guild]: ギルド情報
-
-        Raises:
-            GuildDatabaseConnectionError: データベース接続エラーの場合
-            GuildQueryError: クエリ実行に失敗した場合
         """
 
         pass
@@ -97,6 +92,7 @@ class GuildRepositoryImpl(GuildRepositoryIf):
         GuildRepositoryIf (_type_): ギルドリポジトリインターフェース
     """
 
+    @handle_repository_errors(GuildCreateError, "ギルド作成")
     async def create_guild(self, session: AsyncSession, guild: Guild) -> Guild:
         """ギルドを作成する
 
@@ -114,6 +110,7 @@ class GuildRepositoryImpl(GuildRepositoryIf):
 
         return guild
 
+    @handle_repository_errors(GuildQueryError, "ギルド取得")
     async def get_guild_by_user_id_name(self, session: AsyncSession, user_id: str, name: str) -> Guild:
         """idとギルド名からギルドを取得する
 
@@ -130,6 +127,7 @@ class GuildRepositoryImpl(GuildRepositoryIf):
 
         return result.scalars().first()
 
+    @handle_repository_errors(GuildQueryError, "ギルド取得")
     async def get_guild_by_member_channel(
         self, session: AsyncSession, member_id: str, channel_id: str
     ) -> Optional[Guild]:
@@ -142,39 +140,19 @@ class GuildRepositoryImpl(GuildRepositoryIf):
 
         Returns:
             Optional[Guild]: ギルド情報
-
-        Raises:
-            GuildDatabaseConnectionError: データベース接続エラーの場合
-            GuildQueryError: クエリ実行に失敗した場合
         """
 
-        try:
-            result = await session.execute(
-                select(Guild)
-                .join(GuildMember)
-                .join(Channel)
-                .where(GuildMember.user_id == member_id, Channel.id == channel_id)
-            )
-            guild = result.scalars().first()
+        result = await session.execute(
+            select(Guild)
+            .join(GuildMember)
+            .join(Channel)
+            .where(GuildMember.user_id == member_id, Channel.id == channel_id)
+        )
+        guild = result.scalars().first()
 
-            if guild:
-                logger.info(f"ギルドが見つかりました: member_id={member_id}, channel_id={channel_id}")
-            else:
-                logger.info(f"ギルドが見つかりませんでした: member_id={member_id}, channel_id={channel_id}")
+        if guild:
+            logger.info(f"ギルドが見つかりました: member_id={member_id}, channel_id={channel_id}")
+        else:
+            logger.info(f"ギルドが見つかりませんでした: member_id={member_id}, channel_id={channel_id}")
 
-            return guild
-
-        except OperationalError as e:
-            error_msg = f"データベース接続エラーによりギルド取得に失敗: member_id={member_id}, channel_id={channel_id}"
-            logger.error(f"{error_msg}: {e}")
-            raise GuildDatabaseConnectionError(error_msg, e)
-
-        except SQLAlchemyError as e:
-            error_msg = f"SQLAlchemyエラーによりギルド取得に失敗: member_id={member_id}, channel_id={channel_id}"
-            logger.error(f"{error_msg}: {e}")
-            raise GuildQueryError(error_msg, e)
-
-        except Exception as e:
-            error_msg = f"予期しないエラーによりギルド取得に失敗: member_id={member_id}, channel_id={channel_id}"
-            logger.error(f"{error_msg}: {e}")
-            raise GuildQueryError(error_msg, e)
+        return guild
