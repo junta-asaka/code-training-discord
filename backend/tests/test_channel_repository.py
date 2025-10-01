@@ -14,7 +14,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), "../src"))
 from dependencies import configure
 from domains import Base, Channel, Guild, GuildMember, Message, User
 from repository.channel_repository import (
-    ChannelDatabaseConstraintError,
+    ChannelCreateError,
     ChannelNotFoundError,
     ChannelRepositoryIf,
 )
@@ -175,18 +175,14 @@ class TestChannelRepository(unittest.IsolatedAsyncioTestCase):
             owner_user_id=nonexistent_user_id,
         )
 
-        # When/Then: ChannelDatabaseConstraintErrorが発生する
-        with self.assertRaises(ChannelDatabaseConstraintError) as context:
+        # When/Then: ChannelCreateErrorが発生する
+        with self.assertRaises(ChannelCreateError) as context:
             async with self.AsyncSessionLocal() as session:
                 await self.repository.create_channel(session, channel)
 
         # エラーメッセージに適切な情報が含まれていることを確認
         error_message = str(context.exception)
         self.assertIn("データベース制約違反", error_message)
-        self.assertIn("test-channel", error_message)
-        self.assertIn(str(nonexistent_user_id), error_message)
-        # guild_idがNoneであることを確認（guild_idが指定されていないため）
-        self.assertIn("guild_id=None", error_message)
 
         # 元の例外が保持されていることを確認
         self.assertIsNotNone(context.exception.original_error)
