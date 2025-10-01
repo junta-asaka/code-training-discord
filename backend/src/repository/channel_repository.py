@@ -3,6 +3,7 @@ from typing import Optional
 
 from domains import Channel
 from injector import singleton
+from repository.base_exception import BaseRepositoryError
 from repository.decorators import handle_repository_errors
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -12,12 +13,10 @@ from utils.logger_utils import get_logger
 logger = get_logger(__name__)
 
 
-class ChannelRepositoryError(Exception):
-    """チャンネルリポジトリ基底例外クラス"""
+class ChannelRepositoryError(BaseRepositoryError):
+    """チャンネルリポジトリ例外クラス"""
 
-    def __init__(self, message: str, original_error: Exception | None = None):
-        super().__init__(message)
-        self.original_error = original_error
+    pass
 
 
 class ChannelCreateError(ChannelRepositoryError):

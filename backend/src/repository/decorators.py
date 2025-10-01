@@ -1,6 +1,7 @@
 from functools import wraps
 from typing import Type
 
+from repository.base_exception import BaseRepositoryError
 from sqlalchemy.exc import IntegrityError, OperationalError, SQLAlchemyError
 from utils.logger_utils import get_logger
 
@@ -43,13 +44,20 @@ def handle_repository_errors(error_class: Type[Exception], operation_name: str):
                 logger.error(f"{error_msg}: {e}")
                 raise error_class(error_msg, e)
 
+            except BaseRepositoryError as e:
+                if "rollback" in dir(args[1]):
+                    await args[1].rollback()
+                error_msg = f"その他リポジトリエラーにより [{operation_name}] に失敗"
+                logger.error(f"{error_msg}: {e}")
+                # repositoryから定義したカスタムエラーが来る可能性があるため、そのまま再スロー
+                raise
+
             except Exception as e:
                 if "rollback" in dir(args[1]):
                     await args[1].rollback()
                 error_msg = f"予期しないエラーにより [{operation_name}] に失敗"
                 logger.error(f"{error_msg}: {e}")
-                # repositoryから定義したカスタムエラーが来る可能性があるため、そのまま再スロー
-                raise
+                raise error_class(error_msg, e)
 
         return wrapper
 
