@@ -95,7 +95,7 @@ class ChannelAccessCheckerUseCaseImpl(ChannelAccessCheckerUseCaseIf):
             logger.warning(f"存在しないチャンネルID {channel_id} へのアクセスが試行されました")
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="指定されたチャンネルは存在しません")
 
-        if not bool(channel_db.deleted_at):
+        if bool(channel_db.deleted_at):
             logger.warning(f"ユーザー {user.id} がチャンネル {channel_id} へのアクセスを拒否されました")
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN, detail="このチャンネルへのアクセス権限がありません"
