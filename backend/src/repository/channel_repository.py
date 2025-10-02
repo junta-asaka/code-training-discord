@@ -1,11 +1,11 @@
 from abc import ABC, abstractmethod
 from typing import Optional
 
-from domains import Channel
+from domains import Channel, Guild, GuildMember
 from injector import singleton
 from repository.base_exception import BaseRepositoryError
 from repository.decorators import handle_repository_errors
-from sqlalchemy import select, update
+from sqlalchemy import and_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from utils.logger_utils import get_logger
 
@@ -65,6 +65,28 @@ class ChannelRepositoryIf(ABC):
         pass
 
     @abstractmethod
+    async def get_channels_by_user_ids_type_name(
+        self,
+        session: AsyncSession,
+        user_ids: list[str],
+        type: Optional[str] = None,
+        name: Optional[str] = None,
+    ) -> Channel:
+        """指定したユーザーIDを含むギルドのチャンネルを取得する
+
+        Args:
+            session (AsyncSession): データベースセッション
+            user_ids (list[str]): ユーザーIDのリスト
+            type (Optional[str]): チャンネルタイプ
+            name (Optional[str]): チャンネル名
+
+        Returns:
+            Channel: チャンネル
+        """
+
+        pass
+
+    @abstractmethod
     async def get_channel_by_id(self, session: AsyncSession, channel_id: str) -> Optional[Channel]:
         """チャンネルIDからチャンネルを取得する
 
@@ -116,6 +138,58 @@ class ChannelRepositoryImpl(ChannelRepositoryIf):
         await session.flush()  # commit の代わりに flush を使用（IDを取得するため）
         await session.refresh(channel)
         logger.info(f"チャンネルが正常に作成されました: channel_id={channel.id}, guild_id={channel.guild_id}")
+
+        return channel
+
+    @handle_repository_errors(ChannelQueryError, "ユーザーID・チャンネルタイプ・チャンネル名によるチャンネル取得")
+    async def get_channels_by_user_ids_type_name(
+        self,
+        session: AsyncSession,
+        user_ids: list[str],
+        type: Optional[str] = None,
+        name: Optional[str] = None,
+    ) -> Channel:
+        """指定したユーザーIDを含むギルドのチャンネルを取得する
+
+        Args:
+            session (AsyncSession): データベースセッション
+            user_ids (list[str]): ユーザーIDのリスト
+            type (Optional[str]): チャンネルタイプ
+            name (Optional[str]): チャンネル名
+
+        Returns:
+            Channel: チャンネル
+        """
+
+        # 基本的なJOIN条件を構築
+        query = (
+            select(Channel)
+            .join(Guild, Channel.guild_id == Guild.id)
+            .join(GuildMember, Guild.id == GuildMember.guild_id)
+            .where(GuildMember.user_id.in_(user_ids))
+        )
+
+        # 追加の条件を動的に構築
+        conditions = []
+        if type is not None:
+            conditions.append(Channel.type == type)
+        if name is not None:
+            conditions.append(Channel.name == name)
+
+        # 条件がある場合は追加
+        if conditions:
+            query = query.where(and_(*conditions))
+
+        # 重複を除去
+        query = query.distinct()
+
+        result = await session.execute(query)
+        channel = result.scalars().first()
+
+        if channel:
+            logger.info(f"ユーザーIDリスト {user_ids} に対応するチャンネルを取得しました: channel_id={channel.id}")
+        else:
+            logger.info(f"ユーザーIDリスト {user_ids} に対応するチャンネルが見つかりませんでした")
 
         return channel
 

@@ -148,8 +148,12 @@ class LoginUseCaseImpl(LoginUseCaseIf):
         try:
             # CookieまたはAuthorizationヘッダーからトークンを取得
             token = req.cookies.get("session_token") or req.headers.get("Authorization", "").replace("Bearer ", "")
+            session_db = await self.session_repo.get_session_by_token(session, token)
 
-            return await self.session_repo.get_session_by_token(session, token)
+            if not session_db:
+                return None
+
+            return await self.user_repo.get_user_by_id(session, str(session_db.user_id))
 
         except SessionRepositoryError as e:
             raise LoginTransactionError("セッション取得中にエラーが発生しました", e)

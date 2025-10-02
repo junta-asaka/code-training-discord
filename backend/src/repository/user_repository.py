@@ -52,6 +52,20 @@ class UserRepositoryIf(ABC):
         pass
 
     @abstractmethod
+    async def get_user_by_id(self, session: AsyncSession, user_id: str) -> User | None:
+        """IDでユーザーを取得する
+
+        Args:
+            session (AsyncSession): データベースセッション
+            user_id (str): ユーザーID
+
+        Returns:
+            User | None: ユーザー情報またはNone
+        """
+
+        pass
+
+    @abstractmethod
     async def get_user_by_username(self, session: AsyncSession, username: str) -> User:
         """ユーザーを取得する
 
@@ -102,6 +116,22 @@ class UserRepositoryImpl(UserRepositoryIf):
         await session.refresh(user)
 
         return user
+
+    @handle_repository_errors(UserQueryError, "ユーザー取得")
+    async def get_user_by_id(self, session: AsyncSession, user_id: str) -> User | None:
+        """IDでユーザーを取得する
+
+        Args:
+            session (AsyncSession): データベースセッション
+            user_id (str): ユーザーID
+
+        Returns:
+            User | None: ユーザー情報またはNone
+        """
+
+        result = await session.execute(select(User).where(User.id == user_id))
+
+        return result.scalars().first()
 
     @handle_repository_errors(UserQueryError, "ユーザー取得")
     async def get_user_by_username(self, session: AsyncSession, username: str) -> User:
