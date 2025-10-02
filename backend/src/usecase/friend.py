@@ -156,22 +156,31 @@ class FriendUseCaseImpl(FriendUseCaseIf):
             )
             _ = await self.channel_repo.create_channel(session, channel_related)
 
+            # すべての操作が成功した場合に commit
+            await session.commit()
+
         except UserRepositoryError as e:
+            await session.rollback()
             raise FriendTransactionError("ユーザー取得中にエラーが発生しました", e)
 
         except FriendRepositoryError as e:
+            await session.rollback()
             raise FriendTransactionError("フレンド作成中にエラーが発生しました", e)
 
         except GuildRepositoryError as e:
+            await session.rollback()
             raise FriendTransactionError("ギルド取得中にエラーが発生しました", e)
 
         except GuildMemberRepositoryError as e:
+            await session.rollback()
             raise FriendTransactionError("ギルドメンバー作成中にエラーが発生しました", e)
 
         except ChannelRepositoryError as e:
+            await session.rollback()
             raise FriendTransactionError("チャンネル作成中にエラーが発生しました", e)
 
         except Exception as e:
+            await session.rollback()
             raise FriendTransactionError("予期しないエラーが発生しました", e)
 
         return friend_db

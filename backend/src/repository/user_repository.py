@@ -98,7 +98,7 @@ class UserRepositoryImpl(UserRepositoryIf):
         """
 
         session.add(user)
-        await session.commit()
+        await session.flush()  # commit の代わりに flush を使用（IDを取得するため）
         await session.refresh(user)
 
         return user

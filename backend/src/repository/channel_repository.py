@@ -113,7 +113,7 @@ class ChannelRepositoryImpl(ChannelRepositoryIf):
         """
 
         session.add(channel)
-        await session.commit()
+        await session.flush()  # commit の代わりに flush を使用（IDを取得するため）
         await session.refresh(channel)
         logger.info(f"チャンネルが正常に作成されました: channel_id={channel.id}, guild_id={channel.guild_id}")
 

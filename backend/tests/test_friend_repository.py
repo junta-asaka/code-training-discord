@@ -129,6 +129,7 @@ class TestFriendRepository(unittest.IsolatedAsyncioTestCase):
         )
         async with self.AsyncSessionLocal() as session:
             await self.repository.create_friend(session, friend_data)
+            await session.commit()  # テスト用に明示的にcommit
 
         # When / Then
         duplicate_friend_data = Friend(
@@ -216,6 +217,7 @@ class TestFriendRepository(unittest.IsolatedAsyncioTestCase):
         async with self.AsyncSessionLocal() as session:
             await self.repository.create_friend(session, friend1)
             await self.repository.create_friend(session, friend2)
+            await session.commit()  # テスト用に明示的にcommit
 
         # When
         async with self.AsyncSessionLocal() as session:
@@ -290,6 +292,7 @@ class TestFriendRepository(unittest.IsolatedAsyncioTestCase):
         async with self.AsyncSessionLocal() as session:
             await self.repository.create_friend(session, friend1)
             await self.repository.create_friend(session, friend2)
+            await session.commit()  # テスト用に明示的にcommit
 
         # When
         async with self.AsyncSessionLocal() as session:
@@ -323,6 +326,7 @@ class TestFriendRepository(unittest.IsolatedAsyncioTestCase):
         async with self.AsyncSessionLocal() as session:
             await self.repository.create_friend(session, friend1)
             await self.repository.create_friend(session, friend2)
+            await session.commit()  # テスト用に明示的にcommit
 
         # When
         async with self.AsyncSessionLocal() as session:

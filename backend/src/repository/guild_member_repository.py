@@ -66,7 +66,7 @@ class GuildMemberRepositoryImpl(GuildMemberRepositoryIf):
         """
 
         session.add(guild_member)
-        await session.commit()
+        await session.flush()  # commit の代わりに flush を使用（IDを取得するため）
         await session.refresh(guild_member)
 
         return guild_member

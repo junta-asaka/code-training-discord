@@ -117,16 +117,23 @@ class CreateUserUseCaseImpl(CreateUserUseCaseIf):
                 "guild_id": guild_db.id,
             }
 
+            # すべての操作が成功した場合に commit
+            await session.commit()
+
             return UserResponse.model_validate(user_response_data)
 
         except UserRepositoryError as e:
+            await session.rollback()
             raise CreateUserTransactionError("ユーザー作成中にエラーが発生しました", e)
 
         except GuildRepositoryError as e:
+            await session.rollback()
             raise CreateUserTransactionError("ギルド作成中にエラーが発生しました", e)
 
         except GuildMemberRepositoryError as e:
+            await session.rollback()
             raise CreateUserTransactionError("ギルドメンバー作成中にエラーが発生しました", e)
 
         except Exception as e:
+            await session.rollback()
             raise CreateUserTransactionError("予期しないエラーが発生しました", e)

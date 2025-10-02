@@ -87,7 +87,7 @@ class FriendRepositoryImpl(FriendRepositoryIf):
         """
 
         session.add(friend)
-        await session.commit()
+        await session.flush()  # commit の代わりに flush を使用（IDを取得するため）
         await session.refresh(friend)
 
         return friend

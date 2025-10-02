@@ -142,6 +142,7 @@ class TestChannelRepository(unittest.IsolatedAsyncioTestCase):
         )
         async with self.AsyncSessionLocal() as session:
             first_result = await self.repository.create_channel(session, first_channel)
+            await session.commit()  # テスト用に明示的にcommit
 
         # When: 同じ名前の2つ目のチャネルを作成
         second_channel = Channel(
@@ -151,6 +152,7 @@ class TestChannelRepository(unittest.IsolatedAsyncioTestCase):
         )
         async with self.AsyncSessionLocal() as session:
             second_result = await self.repository.create_channel(session, second_channel)
+            await session.commit()  # テスト用に明示的にcommit
 
         # Then: 両方のチャネルが正常に作成される（異なるID）
         self.assertIsNotNone(first_result)
@@ -204,6 +206,7 @@ class TestChannelRepository(unittest.IsolatedAsyncioTestCase):
 
         async with self.AsyncSessionLocal() as session:
             created_channel = await self.repository.create_channel(session, channel)
+            await session.commit()  # テスト用に明示的にcommit
 
         # When: チャネルIDでチャネルを取得
         async with self.AsyncSessionLocal() as session:
@@ -251,6 +254,7 @@ class TestChannelRepository(unittest.IsolatedAsyncioTestCase):
 
         async with self.AsyncSessionLocal() as session:
             created_channel = await self.repository.create_channel(session, channel)
+            await session.commit()  # テスト用に明示的にcommit
 
         message = Message(
             channel_id=created_channel.id,
@@ -316,6 +320,7 @@ class TestChannelRepository(unittest.IsolatedAsyncioTestCase):
 
         async with self.AsyncSessionLocal() as session:
             created_channel = await self.repository.create_channel(session, channel)
+            await session.commit()  # テスト用に明示的にcommit
 
         first_message = Message(
             channel_id=created_channel.id,

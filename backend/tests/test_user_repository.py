@@ -97,6 +97,7 @@ class TestUserRepository(unittest.IsolatedAsyncioTestCase):
 
         async with self.AsyncSessionLocal() as session:
             _ = await self.repository.create_user(session, user_data1)
+            await session.commit()  # テスト用に明示的にcommit
 
         # When / Then - 2回目のユーザー作成（重複）
         # 重要: 新しいUserオブジェクトインスタンスを作成
@@ -130,6 +131,7 @@ class TestUserRepository(unittest.IsolatedAsyncioTestCase):
 
         async with self.AsyncSessionLocal() as session:
             _ = await self.repository.create_user(session, expected_user)
+            await session.commit()  # テスト用に明示的にcommit
 
         # When
         async with self.AsyncSessionLocal() as session:
