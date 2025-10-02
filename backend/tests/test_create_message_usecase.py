@@ -14,7 +14,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), "../src"))
 from dependencies import configure
 from domains import Message
 from schema.message_schema import MessageCreateRequest, MessageResponse
-from usecase.create_message import CreateMessageUseCaseIf
+from usecase.create_message import CreateMessageTransactionError, CreateMessageUseCaseIf
 
 
 class TestCreateMessageUseCaseImpl(unittest.IsolatedAsyncioTestCase):
@@ -157,10 +157,10 @@ class TestCreateMessageUseCaseImpl(unittest.IsolatedAsyncioTestCase):
         self.use_case.channel_repo = mock_channel_repo
 
         # When & Then
-        with self.assertRaises(Exception) as context:
+        with self.assertRaises(CreateMessageTransactionError) as context:
             await self.use_case.execute(self.mock_session, request)
 
-        self.assertEqual(str(context.exception), "Database error")
+        self.assertEqual(str(context.exception), "予期しないエラーが発生しました")
 
         # メッセージリポジトリが呼び出されること
         mock_message_repo.create_message.assert_called_once()
@@ -200,10 +200,10 @@ class TestCreateMessageUseCaseImpl(unittest.IsolatedAsyncioTestCase):
         self.use_case.channel_repo = mock_channel_repo
 
         # When & Then
-        with self.assertRaises(Exception) as context:
+        with self.assertRaises(CreateMessageTransactionError) as context:
             await self.use_case.execute(self.mock_session, request)
 
-        self.assertEqual(str(context.exception), "Channel update error")
+        self.assertEqual(str(context.exception), "予期しないエラーが発生しました")
 
         # メッセージリポジトリが呼び出されること
         mock_message_repo.create_message.assert_called_once()

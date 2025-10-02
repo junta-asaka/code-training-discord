@@ -29,7 +29,10 @@ async def auth_session(req: Request, call_next):
     usecase = LoginUseCaseImpl(user_repo=UserRepositoryImpl(), session_repo=SessionRepositoryImpl())
 
     async for session in get_session():
-        if not session or (not await usecase.auth_session(session, req)):
+        result_auth = await usecase.auth_session(session, req)
+        if not session or (not result_auth):
             return JSONResponse(status_code=401, content="Unauthorized")
+
+        req.state.user = result_auth
 
         return await call_next(req)

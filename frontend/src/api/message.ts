@@ -12,15 +12,12 @@ export const getMessagesApi = async (
   accessToken: string
 ): Promise<MessagesResponse> => {
   try {
-    const response = await fetch(
-      `${API_BASE_URL}/api/channel?channel_id=${channelId}`,
-      {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      }
-    );
+    const response = await fetch(`${API_BASE_URL}/api/channels/${channelId}`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
 
     if (!response.ok) {
       const error = await response.json();

@@ -9,9 +9,13 @@ from schema.friend_schema import (
     FriendGetResponse,
 )
 from sqlalchemy.ext.asyncio import AsyncSession
-from usecase.friend import FriendUseCaseIf
+from usecase.friend import FriendTransactionError, FriendUseCaseIf
+from utils.logger_utils import get_logger
 
 router = APIRouter(prefix="/api")
+
+# ロガーを取得
+logger = get_logger(__name__)
 
 
 def get_usecase(injector=Depends(get_injector)) -> FriendUseCaseIf:
@@ -40,8 +44,17 @@ async def create_friend(
 
     try:
         friend = await usecase.create_friend(session, req)
-    except Exception:
-        # ログ出力などの処理を追加
+
+    except FriendTransactionError as e:
+        logger.error(f"フレンド作成ユースケースエラー: {e}")
+        if e.original_error:
+            logger.error(f"詳細なエラー情報: {e.original_error}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="フレンド作成中にエラーが発生しました"
+        )
+
+    except Exception as e:
+        logger.error(f"予期しないエラーが発生しました: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="サーバー内部エラーが発生しました"
         )
@@ -74,6 +87,21 @@ async def get_friends(
     except ValueError:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="無効なユーザーIDです")
 
-    response = await usecase.get_friend_all(session, user_id)
+    try:
+        response = await usecase.get_friend_all(session, user_id)
 
-    return response if response is not None else []
+        return response if response is not None else []
+
+    except FriendTransactionError as e:
+        logger.error(f"フレンド取得ユースケースエラー: {e}")
+        if e.original_error:
+            logger.error(f"詳細なエラー情報: {e.original_error}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="フレンド取得中にエラーが発生しました"
+        )
+
+    except Exception as e:
+        logger.error(f"予期しないエラーが発生しました: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="サーバー内部エラーが発生しました"
+        )

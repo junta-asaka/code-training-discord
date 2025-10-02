@@ -6,7 +6,6 @@ from unittest.mock import AsyncMock
 from dotenv import load_dotenv
 from injector import Injector
 from sqlalchemy import text
-from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 # テストファイルのルートディレクトリからの相対パスでsrcフォルダを指定
@@ -14,7 +13,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), "../src"))
 
 from dependencies import configure
 from domains import Base, User
-from repository.user_repository import UserRepositoryIf
+from repository.user_repository import UserCreateError, UserRepositoryIf
 
 
 class TestUserRepository(unittest.IsolatedAsyncioTestCase):
@@ -37,8 +36,8 @@ class TestUserRepository(unittest.IsolatedAsyncioTestCase):
         # テーブルクリーンアップ処理を実行
         async with self.engine.begin() as conn:
             # 外部キー制約のため、子テーブルから削除
-            await conn.execute(text("DELETE FROM messages"))
             await conn.execute(text("DELETE FROM channels"))
+            await conn.execute(text("DELETE FROM messages"))
             await conn.execute(text("DELETE FROM guild_members"))
             await conn.execute(text("DELETE FROM guilds"))
             await conn.execute(text("DELETE FROM friends"))
@@ -98,6 +97,7 @@ class TestUserRepository(unittest.IsolatedAsyncioTestCase):
 
         async with self.AsyncSessionLocal() as session:
             _ = await self.repository.create_user(session, user_data1)
+            await session.commit()  # テスト用に明示的にcommit
 
         # When / Then - 2回目のユーザー作成（重複）
         # 重要: 新しいUserオブジェクトインスタンスを作成
@@ -109,7 +109,7 @@ class TestUserRepository(unittest.IsolatedAsyncioTestCase):
             description="Test description",
         )
 
-        with self.assertRaises(SQLAlchemyError):
+        with self.assertRaises(UserCreateError):
             async with self.AsyncSessionLocal() as session:
                 _ = await self.repository.create_user(session, user_data2)
 
@@ -131,6 +131,7 @@ class TestUserRepository(unittest.IsolatedAsyncioTestCase):
 
         async with self.AsyncSessionLocal() as session:
             _ = await self.repository.create_user(session, expected_user)
+            await session.commit()  # テスト用に明示的にcommit
 
         # When
         async with self.AsyncSessionLocal() as session:

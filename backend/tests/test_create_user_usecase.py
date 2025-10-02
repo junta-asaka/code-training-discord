@@ -15,7 +15,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), "../src"))
 from dependencies import configure
 from domains import Guild, GuildMember, User
 from schema.user_schema import UserCreateRequest, UserResponse
-from usecase.create_user import CreateUserUseCaseIf
+from usecase.create_user import CreateUserTransactionError, CreateUserUseCaseIf
 from utils.utils import hash_password
 
 
@@ -266,10 +266,10 @@ class TestCreateUserUseCaseImpl(unittest.IsolatedAsyncioTestCase):
         self.use_case.guild_member_repo = mock_guild_member_repository
 
         # When & Then
-        with self.assertRaises(Exception) as context:
+        with self.assertRaises(CreateUserTransactionError) as context:
             await self.use_case.execute(self.mock_session, request)
 
-        self.assertEqual(str(context.exception), "データベースエラー")
+        self.assertEqual(str(context.exception), "予期しないエラーが発生しました")
         mock_user_repository.create_user.assert_called_once()
         # ユーザー作成でエラーが発生するため、ギルド作成は呼ばれない
         mock_guild_repository.create_guild.assert_not_called()

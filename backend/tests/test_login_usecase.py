@@ -219,18 +219,20 @@ class TestLoginUseCaseImpl(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(result["session"].ip_address, None)
         self.assertEqual(result["user"], expected_user)
 
+    @patch("usecase.login.UserRepositoryIf")
     @patch("usecase.login.SessionRepositoryIf")
-    async def test_auth_session_success_with_cookie(self, mock_session_repository_class):
+    async def test_auth_session_success_with_cookie(self, mock_session_repository_class, mock_user_repository_class):
         """
         Given: 有効なセッショントークンをCookieに含むリクエスト
         When: auth_sessionメソッドを呼び出す
-        Then: セッション情報が返されること
+        Then: ユーザー情報が返されること
         """
 
         # Given
         expected_session = Session(
             id=1, user_id=1, refresh_token_hash="test_token", user_agent="TestAgent", ip_address="127.0.0.1"
         )
+        expected_user = User(id=1, username="testuser", email="test@example.com", password_hash="hashed_password")
 
         request = self.create_mock_request(cookies={"session_token": "test_token"})
 
@@ -239,27 +241,37 @@ class TestLoginUseCaseImpl(unittest.IsolatedAsyncioTestCase):
         mock_session_repo.get_session_by_token.return_value = expected_session
         mock_session_repository_class.return_value = mock_session_repo
 
+        mock_user_repo = AsyncMock()
+        mock_user_repo.get_user_by_id.return_value = expected_user
+        mock_user_repository_class.return_value = mock_user_repo
+
         self.use_case.session_repo = mock_session_repo
+        self.use_case.user_repo = mock_user_repo
 
         # When
         result = await self.use_case.auth_session(self.mock_session, request)
 
         # Then
-        self.assertEqual(result, expected_session)
+        self.assertEqual(result, expected_user)
         mock_session_repo.get_session_by_token.assert_called_once_with(self.mock_session, "test_token")
+        mock_user_repo.get_user_by_id.assert_called_once_with(self.mock_session, "1")
 
+    @patch("usecase.login.UserRepositoryIf")
     @patch("usecase.login.SessionRepositoryIf")
-    async def test_auth_session_success_with_authorization_header(self, mock_session_repository_class):
+    async def test_auth_session_success_with_authorization_header(
+        self, mock_session_repository_class, mock_user_repository_class
+    ):
         """
         Given: 有効なセッショントークンをAuthorizationヘッダーに含むリクエスト
         When: auth_sessionメソッドを呼び出す
-        Then: セッション情報が返されること
+        Then: ユーザー情報が返されること
         """
 
         # Given
         expected_session = Session(
             id=1, user_id=1, refresh_token_hash="test_token", user_agent="TestAgent", ip_address="127.0.0.1"
         )
+        expected_user = User(id=1, username="testuser", email="test@example.com", password_hash="hashed_password")
 
         request = self.create_mock_request(headers={"Authorization": "Bearer test_token"})
 
@@ -268,17 +280,26 @@ class TestLoginUseCaseImpl(unittest.IsolatedAsyncioTestCase):
         mock_session_repo.get_session_by_token.return_value = expected_session
         mock_session_repository_class.return_value = mock_session_repo
 
+        mock_user_repo = AsyncMock()
+        mock_user_repo.get_user_by_id.return_value = expected_user
+        mock_user_repository_class.return_value = mock_user_repo
+
         self.use_case.session_repo = mock_session_repo
+        self.use_case.user_repo = mock_user_repo
 
         # When
         result = await self.use_case.auth_session(self.mock_session, request)
 
         # Then
-        self.assertEqual(result, expected_session)
+        self.assertEqual(result, expected_user)
         mock_session_repo.get_session_by_token.assert_called_once_with(self.mock_session, "test_token")
+        mock_user_repo.get_user_by_id.assert_called_once_with(self.mock_session, "1")
 
+    @patch("usecase.login.UserRepositoryIf")
     @patch("usecase.login.SessionRepositoryIf")
-    async def test_auth_session_cookie_priority_over_header(self, mock_session_repository_class):
+    async def test_auth_session_cookie_priority_over_header(
+        self, mock_session_repository_class, mock_user_repository_class
+    ):
         """
         Given: CookieとAuthorizationヘッダーの両方にトークンが含まれるリクエスト
         When: auth_sessionメソッドを呼び出す
@@ -289,6 +310,7 @@ class TestLoginUseCaseImpl(unittest.IsolatedAsyncioTestCase):
         expected_session = Session(
             id=1, user_id=1, refresh_token_hash="cookie_token", user_agent="TestAgent", ip_address="127.0.0.1"
         )
+        expected_user = User(id=1, username="testuser", email="test@example.com", password_hash="hashed_password")
 
         request = self.create_mock_request(
             cookies={"session_token": "cookie_token"}, headers={"Authorization": "Bearer header_token"}
@@ -299,14 +321,20 @@ class TestLoginUseCaseImpl(unittest.IsolatedAsyncioTestCase):
         mock_session_repo.get_session_by_token.return_value = expected_session
         mock_session_repository_class.return_value = mock_session_repo
 
+        mock_user_repo = AsyncMock()
+        mock_user_repo.get_user_by_id.return_value = expected_user
+        mock_user_repository_class.return_value = mock_user_repo
+
         self.use_case.session_repo = mock_session_repo
+        self.use_case.user_repo = mock_user_repo
 
         # When
         result = await self.use_case.auth_session(self.mock_session, request)
 
         # Then
-        self.assertEqual(result, expected_session)
+        self.assertEqual(result, expected_user)
         mock_session_repo.get_session_by_token.assert_called_once_with(self.mock_session, "cookie_token")
+        mock_user_repo.get_user_by_id.assert_called_once_with(self.mock_session, "1")
 
     @patch("usecase.login.SessionRepositoryIf")
     async def test_auth_session_no_token(self, mock_session_repository_class):

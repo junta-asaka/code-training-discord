@@ -36,8 +36,8 @@ class TestGuildRepository(unittest.IsolatedAsyncioTestCase):
         # テーブルクリーンアップ処理を実行
         async with self.engine.begin() as conn:
             # 外部キー制約のため、子テーブルから削除
-            await conn.execute(text("DELETE FROM messages"))
             await conn.execute(text("DELETE FROM channels"))
+            await conn.execute(text("DELETE FROM messages"))
             await conn.execute(text("DELETE FROM guild_members"))
             await conn.execute(text("DELETE FROM guilds"))
             await conn.execute(text("DELETE FROM friends"))

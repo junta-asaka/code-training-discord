@@ -36,8 +36,8 @@ class TestGuildMemberRepository(unittest.IsolatedAsyncioTestCase):
         # テーブルクリーンアップ処理を実行
         async with self.engine.begin() as conn:
             # 外部キー制約のため、子テーブルから削除
-            await conn.execute(text("DELETE FROM messages"))
             await conn.execute(text("DELETE FROM channels"))
+            await conn.execute(text("DELETE FROM messages"))
             await conn.execute(text("DELETE FROM guild_members"))
             await conn.execute(text("DELETE FROM guilds"))
             await conn.execute(text("DELETE FROM friends"))
@@ -126,6 +126,7 @@ class TestGuildMemberRepository(unittest.IsolatedAsyncioTestCase):
         # 最初のギルドメンバーを作成
         async with self.AsyncSessionLocal() as session:
             await self.repository.create_guild_member(session, guild_member)
+            await session.commit()  # テスト用に明示的にcommit
 
         # When: 同じ組み合わせでギルドメンバーを再作成
         duplicate_guild_member = GuildMember(
