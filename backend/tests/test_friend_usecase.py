@@ -13,7 +13,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), "../src"))
 from dependencies import configure
 from domains import Friend, User
 from schema.friend_schema import FriendCreateRequest
-from usecase.friend import FriendUseCaseIf
+from usecase.friend import FriendTransactionError, FriendUseCaseIf
 
 
 class TestFriendUseCaseImpl(unittest.IsolatedAsyncioTestCase):
@@ -421,10 +421,10 @@ class TestFriendUseCaseImpl(unittest.IsolatedAsyncioTestCase):
         self.use_case.guild_member_repo = mock_guild_member_repo
 
         # When & Then
-        with self.assertRaises(Exception) as context:
+        with self.assertRaises(FriendTransactionError) as context:
             await self.use_case.create_friend(self.mock_session, request)
 
-        self.assertEqual(str(context.exception), "データベースエラー")
+        self.assertIn("予期しないエラーが発生しました", str(context.exception))
         mock_friend_repo.create_friend.assert_called_once()
 
     @patch("usecase.friend.ChannelRepositoryIf")
@@ -458,10 +458,10 @@ class TestFriendUseCaseImpl(unittest.IsolatedAsyncioTestCase):
         self.use_case.channel_repo = mock_channel_repo
 
         # When & Then
-        with self.assertRaises(Exception) as context:
+        with self.assertRaises(FriendTransactionError) as context:
             await self.use_case.get_friend_all(self.mock_session, user_id)
 
-        self.assertEqual(str(context.exception), "フレンド取得エラー")
+        self.assertIn("予期しないエラーが発生しました", str(context.exception))
         mock_friend_repo.get_friend_all.assert_called_once_with(self.mock_session, user_id)
 
 

@@ -12,8 +12,9 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 # テストファイルのルートディレクトリからの相対パスでsrcフォルダを指定
 sys.path.append(os.path.join(os.path.dirname(__file__), "../src"))
 
+from api.channel import check_channel_access
 from database import get_session
-from domains import Base, Channel, Guild, Message, User
+from domains import Base, Channel, Guild, GuildMember, Message, User
 from main import app
 
 
@@ -38,8 +39,8 @@ class TestChannelAPI(unittest.IsolatedAsyncioTestCase):
         # テーブルクリーンアップ処理を実行
         async with self.engine.begin() as conn:
             # 外部キー制約のため、子テーブルから削除
-            await conn.execute(text("DELETE FROM messages"))
             await conn.execute(text("DELETE FROM channels"))
+            await conn.execute(text("DELETE FROM messages"))
             await conn.execute(text("DELETE FROM guild_members"))
             await conn.execute(text("DELETE FROM guilds"))
             await conn.execute(text("DELETE FROM friends"))
@@ -51,7 +52,15 @@ class TestChannelAPI(unittest.IsolatedAsyncioTestCase):
             async with self.AsyncSessionLocal() as session:
                 yield session
 
+        # テスト用のチャンネルアクセスチェック関数をオーバーライド（認証をスキップ）
+        async def override_check_channel_access() -> None:
+            # テストでは常にアクセス許可
+            pass
+
         app.dependency_overrides[get_session] = override_get_session
+
+        # チャンネルアクセスチェックをモック
+        app.dependency_overrides[check_channel_access] = override_check_channel_access
 
         # 非同期でAsyncClientを初期化
         self.client = AsyncClient(transport=ASGITransport(app=app), base_url="http://testserver")
@@ -83,6 +92,14 @@ class TestChannelAPI(unittest.IsolatedAsyncioTestCase):
                 owner_user_id=self.test_user_id,
             )
             session.add(test_guild)
+            await session.commit()
+
+            # テスト用ギルドメンバー作成（アクセス権限のため）
+            test_guild_member = GuildMember(
+                guild_id=self.test_guild_id,
+                user_id=self.test_user_id,
+            )
+            session.add(test_guild_member)
             await session.commit()
 
             # メッセージありのチャネル作成
@@ -156,18 +173,18 @@ class TestChannelAPI(unittest.IsolatedAsyncioTestCase):
     async def test_get_channel_success_with_messages(self):
         """
         Given: メッセージが存在するチャネルID
-        When: GET /api/channel にリクエスト
-        Then: 201でチャネル情報とメッセージ一覧が返る
+        When: GET /api/channels にリクエスト
+        Then: 200でチャネル情報とメッセージ一覧が返る
         """
 
         # Given: メッセージが存在するチャネルID
         channel_id = str(self.test_channel_with_messages_id)
 
-        # When: GET /api/channel にリクエスト
-        response = await self.client.get(f"/api/channel?channel_id={channel_id}")
+        # When: GET /api/channels にリクエスト
+        response = await self.client.get(f"/api/channels/{channel_id}")
 
-        # Then: 201でチャネル情報とメッセージ一覧が返る
-        self.assertEqual(response.status_code, 201)
+        # Then: 200でチャネル情報とメッセージ一覧が返る
+        self.assertEqual(response.status_code, 200)
         res_json = response.json()
 
         self.assertEqual(res_json["id"], channel_id)
@@ -189,18 +206,18 @@ class TestChannelAPI(unittest.IsolatedAsyncioTestCase):
     async def test_get_channel_success_empty_messages(self):
         """
         Given: メッセージが存在しないチャネルID
-        When: GET /api/channel にリクエスト
-        Then: 201でチャネル情報と空のメッセージ一覧が返る
+        When: GET /api/channels にリクエスト
+        Then: 200でチャネル情報と空のメッセージ一覧が返る
         """
 
         # Given: メッセージが存在しないチャネルID
         channel_id = str(self.test_channel_empty_id)
 
-        # When: GET /api/channel にリクエスト
-        response = await self.client.get(f"/api/channel?channel_id={channel_id}")
+        # When: GET /api/channels にリクエスト
+        response = await self.client.get(f"/api/channels/{channel_id}")
 
-        # Then: 201でチャネル情報と空のメッセージ一覧が返る
-        self.assertEqual(response.status_code, 201)
+        # Then: 200でチャネル情報と空のメッセージ一覧が返る
+        self.assertEqual(response.status_code, 200)
         res_json = response.json()
 
         self.assertEqual(res_json["id"], channel_id)
@@ -211,20 +228,20 @@ class TestChannelAPI(unittest.IsolatedAsyncioTestCase):
     async def test_get_channel_not_found(self):
         """
         Given: 存在しないチャネルID
-        When: GET /api/channel にリクエスト
-        Then: 500エラーが返る
+        When: GET /api/channels にリクエスト
+        Then: 404エラーが返る
         """
 
         # Given: 存在しないチャネルID
         non_existent_channel_id = str(uuid.uuid4())
 
-        # When: GET /api/channel にリクエスト
-        response = await self.client.get(f"/api/channel?channel_id={non_existent_channel_id}")
+        # When: GET /api/channels にリクエスト
+        response = await self.client.get(f"/api/channels/{non_existent_channel_id}")
 
-        # Then: 500エラーが返る
-        self.assertEqual(response.status_code, 500)
+        # Then: 404エラーが返る
+        self.assertEqual(response.status_code, 404)
         res_json = response.json()
-        self.assertEqual(res_json["detail"], "サーバー内部エラーが発生しました")
+        self.assertEqual(res_json["detail"], "指定されたチャンネルが見つかりません")
 
 
 if __name__ == "__main__":
