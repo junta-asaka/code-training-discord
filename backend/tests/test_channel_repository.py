@@ -7,7 +7,6 @@ from dotenv import load_dotenv
 from injector import Injector
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
-from usecase.friend import CHANNEL_TYPE_TEXT
 
 # テストファイルのルートディレクトリからの相対パスでsrcフォルダを指定
 sys.path.append(os.path.join(os.path.dirname(__file__), "../src"))
@@ -19,6 +18,7 @@ from repository.channel_repository import (
     ChannelNotFoundError,
     ChannelRepositoryIf,
 )
+from usecase.friend import CHANNEL_TYPE_TEXT
 
 
 class TestChannelRepository(unittest.IsolatedAsyncioTestCase):

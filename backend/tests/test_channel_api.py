@@ -8,7 +8,6 @@ from dotenv import load_dotenv
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
-from usecase.friend import CHANNEL_TYPE_TEXT
 
 # テストファイルのルートディレクトリからの相対パスでsrcフォルダを指定
 sys.path.append(os.path.join(os.path.dirname(__file__), "../src"))
@@ -17,6 +16,7 @@ from api.channel import check_channel_access
 from database import get_session
 from domains import Base, Channel, Guild, GuildMember, Message, User
 from main import app
+from usecase.friend import CHANNEL_TYPE_TEXT
 
 
 class TestChannelAPI(unittest.IsolatedAsyncioTestCase):

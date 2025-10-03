@@ -30,7 +30,7 @@ describe("Panels", () => {
       const accountImage = document.querySelector("img");
       expect(accountImage).toBeTruthy();
       expect(accountImage?.getAttribute("src")).toBe("/react-icon.png");
-      expect(accountImage?.getAttribute("alt")).toBe("");
+      expect(accountImage?.getAttribute("alt")).toBe("ユーザーアイコン");
     });
   });
 
