@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from usecase.friend import CHANNEL_TYPE_TEXT
 
 # テストファイルのルートディレクトリからの相対パスでsrcフォルダを指定
 sys.path.append(os.path.join(os.path.dirname(__file__), "../src"))
@@ -106,7 +107,7 @@ class TestMessageAPI(unittest.IsolatedAsyncioTestCase):
             test_channel = Channel(
                 id=self.test_channel_id,
                 guild_id=self.test_guild_id,
-                type="text",
+                type=CHANNEL_TYPE_TEXT,
                 name="general",
                 owner_user_id=self.test_user_id,
             )

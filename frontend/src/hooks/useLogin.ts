@@ -29,7 +29,7 @@ export const useLogin = () => {
       );
       
       // ログイン成功後、元のページまたはTop画面に遷移
-      const from = location.state?.from || '/';
+      const from = location.state?.from || '/channels/@me';
       navigate(from, { replace: true });
     },
     onError: (error) => {

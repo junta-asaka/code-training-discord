@@ -1,16 +1,18 @@
 from abc import ABC, abstractmethod
 
-from domains import Channel, Friend, GuildMember, User
+from domains import Channel, Friend, GuildMember
 from injector import inject, singleton
 from repository.channel_repository import ChannelRepositoryError, ChannelRepositoryIf
 from repository.friend_repository import FriendRepositoryError, FriendRepositoryIf
 from repository.guild_member_repository import GuildMemberRepositoryError, GuildMemberRepositoryIf
 from repository.guild_repository import GuildRepositoryError, GuildRepositoryIf
 from repository.user_repository import UserRepositoryError, UserRepositoryIf
-from schema.friend_schema import FriendCreateRequest
+from schema.friend_schema import FriendCreateRequest, FriendGetResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from usecase.base_exception import BaseMessageUseCaseError
 from utils.logger_utils import get_logger
+
+CHANNEL_TYPE_TEXT = "text"
 
 # ロガーを取得
 logger = get_logger(__name__)
@@ -72,7 +74,7 @@ class FriendUseCaseIf(ABC):
         pass
 
     @abstractmethod
-    async def get_friend_all(self, session: AsyncSession, user_id: str) -> list[User] | None:
+    async def get_friend_all(self, session: AsyncSession, user_id: str) -> list[FriendGetResponse]:
         """すべてのフレンドを取得
 
         Args:
@@ -80,7 +82,7 @@ class FriendUseCaseIf(ABC):
             user_id (str): ユーザーID
 
         Returns:
-            list[User] | None: フレンドのユーザーリスト（失敗時はNone）
+            list[FriendGetResponse]: フレンドのレスポンスリスト
         """
 
         pass
@@ -185,7 +187,7 @@ class FriendUseCaseImpl(FriendUseCaseIf):
 
         return friend_db
 
-    async def get_friend_all(self, session: AsyncSession, user_id: str) -> list[User] | None:
+    async def get_friend_all(self, session: AsyncSession, user_id: str) -> list[FriendGetResponse]:
         """すべてのフレンドを取得
 
         Args:
@@ -193,7 +195,7 @@ class FriendUseCaseImpl(FriendUseCaseIf):
             user_id (str): ユーザーID
 
         Returns:
-            list[User] | None: フレンドのユーザーリスト（失敗時はNone）
+            list[FriendGetResponse]: フレンドのレスポンスリスト
         """
 
         try:
@@ -209,7 +211,30 @@ class FriendUseCaseImpl(FriendUseCaseIf):
                     # 自分がrelated_user_idの場合、user_idが相手
                     user_id_list.append(str(friend.user_id))
 
-            return await self.user_repo.get_users_by_id(session, user_id_list)
+            users = await self.user_repo.get_users_by_id(session, user_id_list)
+
+            # フレンドごとにDM用のチャネルIDを取得する
+            friend_res_list = []
+            channel_name = ""
+            for user in users:
+                related_user_id = str(user.id)
+                channel_db = await self.channel_repo.get_channels_by_user_ids_type_name(
+                    session, [user_id, related_user_id], CHANNEL_TYPE_TEXT, channel_name
+                )
+
+                # FriendGetResponseを作成してリストに追加
+                if channel_db:
+                    friend_response_data = {
+                        "name": user.name,
+                        "username": user.username,
+                        "description": user.description,
+                        "created_at": user.created_at,
+                        "channel_id": channel_db.id,
+                    }
+                    friend_response = FriendGetResponse.model_validate(friend_response_data)
+                    friend_res_list.append(friend_response)
+
+            return friend_res_list
 
         except UserRepositoryError as e:
             raise FriendTransactionError("ユーザー取得中にエラーが発生しました", e)

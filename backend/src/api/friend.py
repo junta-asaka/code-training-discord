@@ -88,11 +88,9 @@ async def get_friends(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="無効なユーザーIDです")
 
     try:
-        users = await usecase.get_friend_all(session, user_id)
-        if users is None:
-            return []
+        response = await usecase.get_friend_all(session, user_id)
 
-        return [FriendGetResponse.model_validate(user) for user in users]
+        return response
 
     except FriendTransactionError as e:
         logger.error(f"フレンド取得ユースケースエラー: {e}")

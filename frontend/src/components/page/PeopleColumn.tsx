@@ -26,6 +26,7 @@ const PeopleColumn = () => {
                 key={`${friend.username}-${index}`}
                 name={friend.name}
                 username={friend.username}
+                channelId={friend.channel_id}
               />
             ))}
         </div>

@@ -16,6 +16,7 @@ from api.channel import check_channel_access
 from database import get_session
 from domains import Base, Channel, Guild, GuildMember, Message, User
 from main import app
+from usecase.friend import CHANNEL_TYPE_TEXT
 
 
 class TestChannelAPI(unittest.IsolatedAsyncioTestCase):
@@ -107,7 +108,7 @@ class TestChannelAPI(unittest.IsolatedAsyncioTestCase):
             test_channel_with_messages = Channel(
                 id=self.test_channel_with_messages_id,
                 guild_id=self.test_guild_id,
-                type="text",
+                type=CHANNEL_TYPE_TEXT,
                 name="general",
                 owner_user_id=self.test_user_id,
             )
@@ -118,7 +119,7 @@ class TestChannelAPI(unittest.IsolatedAsyncioTestCase):
             test_channel_empty = Channel(
                 id=self.test_channel_empty_id,
                 guild_id=self.test_guild_id,
-                type="text",
+                type=CHANNEL_TYPE_TEXT,
                 name="empty-channel",
                 owner_user_id=self.test_user_id,
             )

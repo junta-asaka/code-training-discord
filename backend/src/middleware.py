@@ -23,7 +23,7 @@ async def auth_session(req: Request, call_next):
         return await call_next(req)
 
     # プリフライトリクエスト（OPTIONS）や認証不要のパスをスキップ
-    if req.method == "OPTIONS" or req.url.path in ["/", "/login", "/register", "/docs", "/openapi.json"]:
+    if req.method == "OPTIONS" or req.url.path in ["/login", "/user", "/docs", "/openapi.json"]:
         return await call_next(req)
 
     usecase = LoginUseCaseImpl(user_repo=UserRepositoryImpl(), session_repo=SessionRepositoryImpl())

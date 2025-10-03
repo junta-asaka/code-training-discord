@@ -1,0 +1,32 @@
+.userProfileSidebar {
+  display: flex;
+  flex-direction: column;
+  width: 30%;
+  height: calc(100% - 15px);
+  background-color: #202024;
+  padding-top: 15px;
+  padding-left: 20px;
+  padding-right: 20px;
+
+  .avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    margin-bottom: 10px;
+  }
+
+  .nameSection {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 20px;
+  }
+
+  .infoSection {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 20px;
+    background-color: #2d2e33;
+    padding: 10px;
+    border-radius: 5px;
+  }
+}
