@@ -1,9 +1,16 @@
 from injector import Binder, Injector
+from repository.channel_repository import ChannelRepositoryIf, ChannelRepositoryImpl
 from repository.friend_repository import FriendRepositoryIf, FriendRepositoryImpl
+from repository.guild_member_repository import GuildMemberRepositoryIf, GuildMemberRepositoryImpl
+from repository.guild_repository import GuildRepositoryIf, GuildRepositoryImpl
+from repository.message_repository import MessageRepositoryIf, MessageRepositoryImpl
 from repository.session_repository import SessionRepositoryIf, SessionRepositoryImpl
 from repository.user_repository import UserRepositoryIf, UserRepositoryImpl
+from usecase.channel_access_checker import ChannelAccessCheckerUseCaseIf, ChannelAccessCheckerUseCaseImpl
+from usecase.create_message import CreateMessageUseCaseIf, CreateMessageUseCaseImpl
 from usecase.create_user import CreateUserUseCaseIf, CreateUserUseCaseImpl
 from usecase.friend import FriendUseCaseIf, FriendUseCaseImpl
+from usecase.get_channel_messages import GetChannelMessagesUseCaseIf, GetChannelMessagesUseCaseImpl
 from usecase.login import LoginUseCaseIf, LoginUseCaseImpl
 
 
@@ -20,6 +27,12 @@ def configure(binder: Binder):
     binder.bind(LoginUseCaseIf, to=LoginUseCaseImpl)
     # FriendUseCaseのバインド
     binder.bind(FriendUseCaseIf, to=FriendUseCaseImpl)
+    # ChannelUseCaseのバインド
+    binder.bind(GetChannelMessagesUseCaseIf, to=GetChannelMessagesUseCaseImpl)
+    # CreateMessageUseCaseのバインド
+    binder.bind(CreateMessageUseCaseIf, to=CreateMessageUseCaseImpl)
+    # ChannelAccessCheckerUseCaseのバインド
+    binder.bind(ChannelAccessCheckerUseCaseIf, to=ChannelAccessCheckerUseCaseImpl)
 
     # UserRepositoryのバインド
     binder.bind(UserRepositoryIf, to=UserRepositoryImpl)
@@ -27,6 +40,14 @@ def configure(binder: Binder):
     binder.bind(SessionRepositoryIf, to=SessionRepositoryImpl)
     # FriendRepositoryのバインド
     binder.bind(FriendRepositoryIf, to=FriendRepositoryImpl)
+    # GuildRepositoryのバインド
+    binder.bind(GuildRepositoryIf, to=GuildRepositoryImpl)
+    # GuildMemberRepositoryのバインド
+    binder.bind(GuildMemberRepositoryIf, to=GuildMemberRepositoryImpl)
+    # ChannelRepositoryのバインド
+    binder.bind(ChannelRepositoryIf, to=ChannelRepositoryImpl)
+    # MessageRepositoryのバインド
+    binder.bind(MessageRepositoryIf, to=MessageRepositoryImpl)
 
 
 injector = Injector([configure])

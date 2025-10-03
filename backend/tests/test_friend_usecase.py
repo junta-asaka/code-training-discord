@@ -13,7 +13,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), "../src"))
 from dependencies import configure
 from domains import Friend, User
 from schema.friend_schema import FriendCreateRequest
-from usecase.friend import FriendUseCaseIf
+from usecase.friend import FriendTransactionError, FriendUseCaseIf
 
 
 class TestFriendUseCaseImpl(unittest.IsolatedAsyncioTestCase):
@@ -56,9 +56,19 @@ class TestFriendUseCaseImpl(unittest.IsolatedAsyncioTestCase):
         """モックのFriendCreateRequestオブジェクトを作成"""
         return FriendCreateRequest(username=username, related_username=related_username, type=friend_type)
 
+    @patch("usecase.friend.GuildMemberRepositoryIf")
+    @patch("usecase.friend.GuildRepositoryIf")
+    @patch("usecase.friend.ChannelRepositoryIf")
     @patch("usecase.friend.UserRepositoryIf")
     @patch("usecase.friend.FriendRepositoryIf")
-    async def test_create_friend_success(self, mock_friend_repository_class, mock_user_repository_class):
+    async def test_create_friend_success(
+        self,
+        mock_friend_repository_class,
+        mock_user_repository_class,
+        mock_channel_repository_class,
+        mock_guild_repository_class,
+        mock_guild_member_repository_class,
+    ):
         """
         Given: 有効なフレンド作成リクエスト
         When: create_friendメソッドを呼び出す
@@ -84,8 +94,24 @@ class TestFriendUseCaseImpl(unittest.IsolatedAsyncioTestCase):
         mock_friend_repo.create_friend.return_value = expected_friend
         mock_friend_repository_class.return_value = mock_friend_repo
 
+        mock_channel_repo = AsyncMock()
+        mock_channel_repository_class.return_value = mock_channel_repo
+
+        mock_guild_repo = AsyncMock()
+        mock_guild_me = Mock(id=uuid.uuid4())
+        mock_guild_related = Mock(id=uuid.uuid4())
+        mock_guild_repo.get_guild_by_user_id_name.side_effect = [mock_guild_me, mock_guild_related]
+        mock_guild_repo.create_guild.return_value = Mock(id=uuid.uuid4())
+        mock_guild_repository_class.return_value = mock_guild_repo
+
+        mock_guild_member_repo = AsyncMock()
+        mock_guild_member_repository_class.return_value = mock_guild_member_repo
+
         self.use_case.user_repo = mock_user_repo
         self.use_case.friend_repo = mock_friend_repo
+        self.use_case.channel_repo = mock_channel_repo
+        self.use_case.guild_repo = mock_guild_repo
+        self.use_case.guild_member_repo = mock_guild_member_repo
 
         # When
         result = await self.use_case.create_friend(self.mock_session, request)
@@ -113,9 +139,19 @@ class TestFriendUseCaseImpl(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(created_friend.related_user_id, related_user_id)
         self.assertEqual(created_friend.type, "friend")
 
+    @patch("usecase.friend.GuildMemberRepositoryIf")
+    @patch("usecase.friend.GuildRepositoryIf")
+    @patch("usecase.friend.ChannelRepositoryIf")
     @patch("usecase.friend.UserRepositoryIf")
     @patch("usecase.friend.FriendRepositoryIf")
-    async def test_create_friend_user_not_found(self, mock_friend_repository_class, mock_user_repository_class):
+    async def test_create_friend_user_not_found(
+        self,
+        mock_friend_repository_class,
+        mock_user_repository_class,
+        mock_channel_repository_class,
+        mock_guild_repository_class,
+        mock_guild_member_repository_class,
+    ):
         """
         Given: 存在しない自ユーザー名を含むフレンド作成リクエスト
         When: create_friendメソッドを呼び出す
@@ -133,8 +169,20 @@ class TestFriendUseCaseImpl(unittest.IsolatedAsyncioTestCase):
         mock_friend_repo = AsyncMock()
         mock_friend_repository_class.return_value = mock_friend_repo
 
+        mock_channel_repo = AsyncMock()
+        mock_channel_repository_class.return_value = mock_channel_repo
+
+        mock_guild_repo = AsyncMock()
+        mock_guild_repository_class.return_value = mock_guild_repo
+
+        mock_guild_member_repo = AsyncMock()
+        mock_guild_member_repository_class.return_value = mock_guild_member_repo
+
         self.use_case.user_repo = mock_user_repo
         self.use_case.friend_repo = mock_friend_repo
+        self.use_case.channel_repo = mock_channel_repo
+        self.use_case.guild_repo = mock_guild_repo
+        self.use_case.guild_member_repo = mock_guild_member_repo
 
         # When
         result = await self.use_case.create_friend(self.mock_session, request)
@@ -144,9 +192,19 @@ class TestFriendUseCaseImpl(unittest.IsolatedAsyncioTestCase):
         mock_user_repo.get_user_by_username.assert_called_once_with(self.mock_session, "nonexistuser")
         mock_friend_repo.create_friend.assert_not_called()
 
+    @patch("usecase.friend.GuildMemberRepositoryIf")
+    @patch("usecase.friend.GuildRepositoryIf")
+    @patch("usecase.friend.ChannelRepositoryIf")
     @patch("usecase.friend.UserRepositoryIf")
     @patch("usecase.friend.FriendRepositoryIf")
-    async def test_create_friend_related_user_not_found(self, mock_friend_repository_class, mock_user_repository_class):
+    async def test_create_friend_related_user_not_found(
+        self,
+        mock_friend_repository_class,
+        mock_user_repository_class,
+        mock_channel_repository_class,
+        mock_guild_repository_class,
+        mock_guild_member_repository_class,
+    ):
         """
         Given: 存在しない相手ユーザー名を含むフレンド作成リクエスト
         When: create_friendメソッドを呼び出す
@@ -167,8 +225,20 @@ class TestFriendUseCaseImpl(unittest.IsolatedAsyncioTestCase):
         mock_friend_repo = AsyncMock()
         mock_friend_repository_class.return_value = mock_friend_repo
 
+        mock_channel_repo = AsyncMock()
+        mock_channel_repository_class.return_value = mock_channel_repo
+
+        mock_guild_repo = AsyncMock()
+        mock_guild_repository_class.return_value = mock_guild_repo
+
+        mock_guild_member_repo = AsyncMock()
+        mock_guild_member_repository_class.return_value = mock_guild_member_repo
+
         self.use_case.user_repo = mock_user_repo
         self.use_case.friend_repo = mock_friend_repo
+        self.use_case.channel_repo = mock_channel_repo
+        self.use_case.guild_repo = mock_guild_repo
+        self.use_case.guild_member_repo = mock_guild_member_repo
 
         # When
         result = await self.use_case.create_friend(self.mock_session, request)
@@ -268,9 +338,19 @@ class TestFriendUseCaseImpl(unittest.IsolatedAsyncioTestCase):
         mock_friend_repo.get_friend_all.assert_called_once_with(self.mock_session, user_id)
         mock_user_repo.get_users_by_id.assert_called_once_with(self.mock_session, [])
 
+    @patch("usecase.friend.GuildMemberRepositoryIf")
+    @patch("usecase.friend.GuildRepositoryIf")
+    @patch("usecase.friend.ChannelRepositoryIf")
     @patch("usecase.friend.UserRepositoryIf")
     @patch("usecase.friend.FriendRepositoryIf")
-    async def test_create_friend_repository_error(self, mock_friend_repository_class, mock_user_repository_class):
+    async def test_create_friend_repository_error(
+        self,
+        mock_friend_repository_class,
+        mock_user_repository_class,
+        mock_channel_repository_class,
+        mock_guild_repository_class,
+        mock_guild_member_repository_class,
+    ):
         """
         Given: リポジトリでエラーが発生する場合
         When: create_friendメソッドを呼び出す
@@ -294,14 +374,30 @@ class TestFriendUseCaseImpl(unittest.IsolatedAsyncioTestCase):
         mock_friend_repo.create_friend.side_effect = Exception("データベースエラー")
         mock_friend_repository_class.return_value = mock_friend_repo
 
+        mock_channel_repo = AsyncMock()
+        mock_channel_repository_class.return_value = mock_channel_repo
+
+        mock_guild_repo = AsyncMock()
+        mock_guild_me = Mock(id=uuid.uuid4())
+        mock_guild_related = Mock(id=uuid.uuid4())
+        mock_guild_repo.get_guild_by_user_id_name.side_effect = [mock_guild_me, mock_guild_related]
+        mock_guild_repo.create_guild.return_value = Mock(id=uuid.uuid4())
+        mock_guild_repository_class.return_value = mock_guild_repo
+
+        mock_guild_member_repo = AsyncMock()
+        mock_guild_member_repository_class.return_value = mock_guild_member_repo
+
         self.use_case.user_repo = mock_user_repo
         self.use_case.friend_repo = mock_friend_repo
+        self.use_case.channel_repo = mock_channel_repo
+        self.use_case.guild_repo = mock_guild_repo
+        self.use_case.guild_member_repo = mock_guild_member_repo
 
         # When & Then
-        with self.assertRaises(Exception) as context:
+        with self.assertRaises(FriendTransactionError) as context:
             await self.use_case.create_friend(self.mock_session, request)
 
-        self.assertEqual(str(context.exception), "データベースエラー")
+        self.assertIn("予期しないエラーが発生しました", str(context.exception))
         mock_friend_repo.create_friend.assert_called_once()
 
     @patch("usecase.friend.UserRepositoryIf")
@@ -328,10 +424,10 @@ class TestFriendUseCaseImpl(unittest.IsolatedAsyncioTestCase):
         self.use_case.user_repo = mock_user_repo
 
         # When & Then
-        with self.assertRaises(Exception) as context:
+        with self.assertRaises(FriendTransactionError) as context:
             await self.use_case.get_friend_all(self.mock_session, user_id)
 
-        self.assertEqual(str(context.exception), "フレンド取得エラー")
+        self.assertIn("予期しないエラーが発生しました", str(context.exception))
         mock_friend_repo.get_friend_all.assert_called_once_with(self.mock_session, user_id)
 
 
