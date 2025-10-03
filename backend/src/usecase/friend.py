@@ -12,6 +12,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from usecase.base_exception import BaseMessageUseCaseError
 from utils.logger_utils import get_logger
 
+CHANNEL_TYPE_TEXT = "text"
+
 # ロガーを取得
 logger = get_logger(__name__)
 
@@ -213,12 +215,11 @@ class FriendUseCaseImpl(FriendUseCaseIf):
 
             # フレンドごとにDM用のチャネルIDを取得する
             friend_res_list = []
-            type_name = "text"
             channel_name = ""
             for user in users:
                 related_user_id = str(user.id)
                 channel_db = await self.channel_repo.get_channels_by_user_ids_type_name(
-                    session, [user_id, related_user_id], type_name, channel_name
+                    session, [user_id, related_user_id], CHANNEL_TYPE_TEXT, channel_name
                 )
 
                 # FriendGetResponseを作成してリストに追加

@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 from injector import Injector
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+from usecase.friend import CHANNEL_TYPE_TEXT
 
 # テストファイルのルートディレクトリからの相対パスでsrcフォルダを指定
 sys.path.append(os.path.join(os.path.dirname(__file__), "../src"))
@@ -106,7 +107,7 @@ class TestChannelRepository(unittest.IsolatedAsyncioTestCase):
         owner = await self.create_test_user("Owner", "owner")
 
         channel = Channel(
-            type="text",
+            type=CHANNEL_TYPE_TEXT,
             name="general",
             owner_user_id=uuid.UUID(str(owner.id)),
         )
@@ -118,7 +119,7 @@ class TestChannelRepository(unittest.IsolatedAsyncioTestCase):
         # Then: チャネルが正常に作成される
         self.assertIsNotNone(result)
         self.assertIsNotNone(result.id)
-        self.assertEqual(result.type, "text")
+        self.assertEqual(result.type, CHANNEL_TYPE_TEXT)
         self.assertEqual(result.name, "general")
         self.assertEqual(result.owner_user_id, uuid.UUID(str(owner.id)))
         self.assertIsNotNone(result.created_at)
@@ -136,7 +137,7 @@ class TestChannelRepository(unittest.IsolatedAsyncioTestCase):
 
         # 最初のチャネルを作成
         first_channel = Channel(
-            type="text",
+            type=CHANNEL_TYPE_TEXT,
             name="general",
             owner_user_id=uuid.UUID(str(owner.id)),
         )
@@ -146,7 +147,7 @@ class TestChannelRepository(unittest.IsolatedAsyncioTestCase):
 
         # When: 同じ名前の2つ目のチャネルを作成
         second_channel = Channel(
-            type="text",
+            type=CHANNEL_TYPE_TEXT,
             name="general",  # 同じ名前
             owner_user_id=uuid.UUID(str(owner.id)),
         )
@@ -172,7 +173,7 @@ class TestChannelRepository(unittest.IsolatedAsyncioTestCase):
         nonexistent_user_id = uuid.uuid4()
 
         channel = Channel(
-            type="text",
+            type=CHANNEL_TYPE_TEXT,
             name="test-channel",
             owner_user_id=nonexistent_user_id,
         )
@@ -199,7 +200,7 @@ class TestChannelRepository(unittest.IsolatedAsyncioTestCase):
         # Given: テスト用ユーザーとチャネルを作成
         owner = await self.create_test_user("Owner", "owner")
         channel = Channel(
-            type="text",
+            type=CHANNEL_TYPE_TEXT,
             name="test-channel",
             owner_user_id=uuid.UUID(str(owner.id)),
         )
@@ -216,7 +217,7 @@ class TestChannelRepository(unittest.IsolatedAsyncioTestCase):
         self.assertIsNotNone(result)
         if result is not None:
             self.assertEqual(result.id, created_channel.id)
-            self.assertEqual(result.type, "text")
+            self.assertEqual(result.type, CHANNEL_TYPE_TEXT)
             self.assertEqual(result.name, "test-channel")
             self.assertEqual(result.owner_user_id, uuid.UUID(str(owner.id)))
 
@@ -247,7 +248,7 @@ class TestChannelRepository(unittest.IsolatedAsyncioTestCase):
         # Given: テスト用ユーザーとチャネルを作成
         owner = await self.create_test_user("Owner", "owner")
         channel = Channel(
-            type="text",
+            type=CHANNEL_TYPE_TEXT,
             name="test-channel",
             owner_user_id=uuid.UUID(str(owner.id)),
         )
@@ -313,7 +314,7 @@ class TestChannelRepository(unittest.IsolatedAsyncioTestCase):
         # Given: テスト用ユーザーとチャネルを作成
         owner = await self.create_test_user("Owner", "owner")
         channel = Channel(
-            type="text",
+            type=CHANNEL_TYPE_TEXT,
             name="test-channel",
             owner_user_id=uuid.UUID(str(owner.id)),
         )
