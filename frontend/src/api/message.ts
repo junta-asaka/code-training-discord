@@ -39,7 +39,7 @@ export const createMessageApi = async (
   accessToken: string
 ): Promise<MessageCreateResponse> => {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/message`, {
+    const response = await fetch(`${API_BASE_URL}/api/messages`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
