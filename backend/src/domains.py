@@ -90,11 +90,11 @@ class Channel(Base):
     # ID
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     # サーバーID
-    # guild_id = Column(ForeignKey("guilds.id"), nullable=True)
+    guild_id = Column(ForeignKey("guilds.id"), nullable=True)
     # タイプ
-    type = Column(String, nullable=False)
+    type = Column(String, nullable=False, default="text")
     # チャネル名
-    name = Column(String, nullable=True)
+    name = Column(String, nullable=True, default="")
     # 管理者ユーザーID
     # 外部キー: users.id
     owner_user_id = Column(ForeignKey("users.id"), nullable=False)
@@ -125,7 +125,7 @@ class Message(Base):
     channel_id = Column(ForeignKey("channels.id", ondelete="CASCADE"), nullable=False)
     # 作成者ユーザID
     # 外部キー: users.id
-    author_user_id = Column(ForeignKey("users.id"), nullable=False)
+    user_id = Column(ForeignKey("users.id"), nullable=False)
     # タイプ
     type = Column(String, nullable=False)
     # 内容
@@ -146,4 +146,43 @@ class Message(Base):
     )
 
 
-# TODO: Guild, GuildMemberのモデルも追加
+# モデル: ギルド
+class Guild(Base):
+    __tablename__ = "guilds"
+
+    # ID
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    # ギルド名
+    name = Column(String, nullable=False, default="@me")
+    # 管理者ユーザーID
+    # 外部キー: users.id
+    owner_user_id = Column(ForeignKey("users.id"), nullable=False)
+    # 削除日時
+    deleted_at = Column(DateTime(timezone=True), nullable=True)
+    # 作成日時
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    # 更新日時
+    updated_at = Column(
+        DateTime(timezone=True),
+        server_default=func.now(),  # デフォルト値を現在時刻に設定
+        onupdate=func.now(),  # レコード更新時に現在時刻に更新
+        nullable=False,
+    )
+
+
+# モデル: ギルドメンバー
+class GuildMember(Base):
+    __tablename__ = "guild_members"
+    # 複合ユニーク制約の設定
+    __table_args__ = (UniqueConstraint("guild_id", "user_id"),)
+
+    # ID
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    # ギルドID
+    # 外部キー: guilds.id
+    guild_id = Column(ForeignKey("guilds.id"), nullable=False)
+    # ユーザーID
+    # 外部キー: users.id
+    user_id = Column(ForeignKey("users.id"), nullable=False)
+    # 役職
+    role = Column(String, nullable=False, default="member")

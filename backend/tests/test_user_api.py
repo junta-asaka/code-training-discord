@@ -37,8 +37,10 @@ class TestUserAPI(unittest.IsolatedAsyncioTestCase):
         # テーブルクリーンアップ処理を実行
         async with self.engine.begin() as conn:
             # 外部キー制約のため、子テーブルから削除
-            await conn.execute(text("DELETE FROM messages"))
             await conn.execute(text("DELETE FROM channels"))
+            await conn.execute(text("DELETE FROM messages"))
+            await conn.execute(text("DELETE FROM guild_members"))
+            await conn.execute(text("DELETE FROM guilds"))
             await conn.execute(text("DELETE FROM friends"))
             await conn.execute(text("DELETE FROM sessions"))
             await conn.execute(text("DELETE FROM users"))
@@ -94,6 +96,7 @@ class TestUserAPI(unittest.IsolatedAsyncioTestCase):
         self.assertIn("id", res_json)
         self.assertIn("created_at", res_json)
         self.assertIn("updated_at", res_json)
+        self.assertIn("guild_id", res_json)
 
     async def test_create_user_duplicate_username(self):
         """

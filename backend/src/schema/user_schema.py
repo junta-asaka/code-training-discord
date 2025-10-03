@@ -21,4 +21,5 @@ class UserResponse(BaseModel):
     description: Optional[str] = None
     created_at: datetime
     updated_at: datetime
+    guild_id: UUID
     model_config = ConfigDict(from_attributes=True)

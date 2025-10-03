@@ -13,7 +13,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), "../src"))
 
 from dependencies import configure
 from domains import Base, Friend, User
-from repository.friend_repository import FriendRepositoryIf
+from repository.friend_repository import FriendCreateError, FriendRepositoryIf
 
 
 class TestFriendRepository(unittest.IsolatedAsyncioTestCase):
@@ -36,8 +36,10 @@ class TestFriendRepository(unittest.IsolatedAsyncioTestCase):
         # テーブルクリーンアップ処理を実行
         async with self.engine.begin() as conn:
             # 外部キー制約のため、子テーブルから削除
-            await conn.execute(text("DELETE FROM messages"))
             await conn.execute(text("DELETE FROM channels"))
+            await conn.execute(text("DELETE FROM messages"))
+            await conn.execute(text("DELETE FROM guild_members"))
+            await conn.execute(text("DELETE FROM guilds"))
             await conn.execute(text("DELETE FROM friends"))
             await conn.execute(text("DELETE FROM sessions"))
             await conn.execute(text("DELETE FROM users"))
@@ -127,6 +129,7 @@ class TestFriendRepository(unittest.IsolatedAsyncioTestCase):
         )
         async with self.AsyncSessionLocal() as session:
             await self.repository.create_friend(session, friend_data)
+            await session.commit()  # テスト用に明示的にcommit
 
         # When / Then
         duplicate_friend_data = Friend(
@@ -154,9 +157,16 @@ class TestFriendRepository(unittest.IsolatedAsyncioTestCase):
         )
 
         # When / Then
-        with self.assertRaises(Exception):
+        with self.assertRaises(FriendCreateError) as context:
             async with self.AsyncSessionLocal() as session:
                 await self.repository.create_friend(session, friend_data)
+
+        # エラーメッセージに適切な情報が含まれていることを確認
+        error_message = str(context.exception)
+        self.assertIn("データベース制約違反", error_message)
+
+        # 元の例外が保持されていることを確認
+        self.assertIsNotNone(context.exception.original_error)
 
     async def test_create_friend_nonexistent_related_user_id(self):
         """
@@ -174,9 +184,16 @@ class TestFriendRepository(unittest.IsolatedAsyncioTestCase):
         )
 
         # When / Then
-        with self.assertRaises(Exception):
+        with self.assertRaises(FriendCreateError) as context:
             async with self.AsyncSessionLocal() as session:
                 await self.repository.create_friend(session, friend_data)
+
+        # エラーメッセージに適切な情報が含まれていることを確認
+        error_message = str(context.exception)
+        self.assertIn("データベース制約違反", error_message)
+
+        # 元の例外が保持されていることを確認
+        self.assertIsNotNone(context.exception.original_error)
 
     async def test_get_friend_all_success_with_friends(self):
         """
@@ -200,6 +217,7 @@ class TestFriendRepository(unittest.IsolatedAsyncioTestCase):
         async with self.AsyncSessionLocal() as session:
             await self.repository.create_friend(session, friend1)
             await self.repository.create_friend(session, friend2)
+            await session.commit()  # テスト用に明示的にcommit
 
         # When
         async with self.AsyncSessionLocal() as session:
@@ -274,6 +292,7 @@ class TestFriendRepository(unittest.IsolatedAsyncioTestCase):
         async with self.AsyncSessionLocal() as session:
             await self.repository.create_friend(session, friend1)
             await self.repository.create_friend(session, friend2)
+            await session.commit()  # テスト用に明示的にcommit
 
         # When
         async with self.AsyncSessionLocal() as session:
@@ -307,6 +326,7 @@ class TestFriendRepository(unittest.IsolatedAsyncioTestCase):
         async with self.AsyncSessionLocal() as session:
             await self.repository.create_friend(session, friend1)
             await self.repository.create_friend(session, friend2)
+            await session.commit()  # テスト用に明示的にcommit
 
         # When
         async with self.AsyncSessionLocal() as session:
