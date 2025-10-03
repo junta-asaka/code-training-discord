@@ -10,6 +10,7 @@ import { useParams } from "react-router-dom";
 import { useMessages, useCreateMessage } from "@/hooks/useMessages";
 import { useAuthStore } from "@/stores/authStore";
 import { useState } from "react";
+import toast from "react-hot-toast";
 
 interface ChatContentProps {
   friendUsername?: string; // フレンドのユーザー名（オプション）
@@ -44,6 +45,7 @@ const ChatContent = ({ friendUsername }: ChatContentProps) => {
       setInputMessage("");
     } catch (error) {
       console.error("メッセージ送信に失敗しました:", error);
+      toast.error("メッセージの送信に失敗しました。");
     }
   };
 
