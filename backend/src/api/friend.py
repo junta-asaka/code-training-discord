@@ -90,7 +90,7 @@ async def get_friends(
     try:
         response = await usecase.get_friend_all(session, user_id)
 
-        return response if response is not None else []
+        return response
 
     except FriendTransactionError as e:
         logger.error(f"フレンド取得ユースケースエラー: {e}")

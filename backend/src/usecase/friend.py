@@ -74,7 +74,7 @@ class FriendUseCaseIf(ABC):
         pass
 
     @abstractmethod
-    async def get_friend_all(self, session: AsyncSession, user_id: str) -> list[FriendGetResponse] | None:
+    async def get_friend_all(self, session: AsyncSession, user_id: str) -> list[FriendGetResponse]:
         """すべてのフレンドを取得
 
         Args:
@@ -82,7 +82,7 @@ class FriendUseCaseIf(ABC):
             user_id (str): ユーザーID
 
         Returns:
-            list[FriendGetResponse] | None: フレンドのレスポンスリスト（失敗時はNone）
+            list[FriendGetResponse]: フレンドのレスポンスリスト
         """
 
         pass
@@ -187,7 +187,7 @@ class FriendUseCaseImpl(FriendUseCaseIf):
 
         return friend_db
 
-    async def get_friend_all(self, session: AsyncSession, user_id: str) -> list[FriendGetResponse] | None:
+    async def get_friend_all(self, session: AsyncSession, user_id: str) -> list[FriendGetResponse]:
         """すべてのフレンドを取得
 
         Args:
@@ -195,7 +195,7 @@ class FriendUseCaseImpl(FriendUseCaseIf):
             user_id (str): ユーザーID
 
         Returns:
-            list[FriendGetResponse] | None: フレンドのレスポンスリスト（失敗時はNone）
+            list[FriendGetResponse]: フレンドのレスポンスリスト
         """
 
         try:
