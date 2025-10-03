@@ -3,7 +3,7 @@ import "@/styles/sidebar/Server.scss";
 const Server = () => {
   return (
     <div className="server">
-      <img src="/react-icon.png" alt="" />
+      <img src="/react-icon.png" alt="サーバーアイコン" />
     </div>
   );
 };

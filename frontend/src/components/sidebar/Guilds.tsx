@@ -5,7 +5,7 @@ const Guilds = () => {
   return (
     <nav className="guilds">
       <div className="dmIcon">
-        <img src="/react-icon.png" alt="" />
+        <img src="/react-icon.png" alt="Discordホームアイコン" />
       </div>
 
       <div className="serverList">
