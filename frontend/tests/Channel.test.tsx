@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { render, screen } from "@testing-library/react";
+import { BrowserRouter } from "react-router-dom";
 import Channel from "@/components/sidebar/Channel";
 
 describe("Channel", () => {
@@ -11,7 +12,11 @@ describe("Channel", () => {
       };
 
       // When
-      render(<Channel {...mockProps} />);
+      render(
+        <BrowserRouter>
+          <Channel {...mockProps} />
+        </BrowserRouter>
+      );
 
       // Then
       const nameElement = screen.getByRole("heading", { level: 4 });
@@ -25,7 +30,11 @@ describe("Channel", () => {
       };
 
       // When
-      render(<Channel {...mockProps} />);
+      render(
+        <BrowserRouter>
+          <Channel {...mockProps} />
+        </BrowserRouter>
+      );
 
       // Then
       const nameElement = screen.getByRole("heading", { level: 4 });
@@ -39,7 +48,11 @@ describe("Channel", () => {
       };
 
       // When
-      render(<Channel {...mockProps} />);
+      render(
+        <BrowserRouter>
+          <Channel {...mockProps} />
+        </BrowserRouter>
+      );
 
       // Then
       const nameElement = screen.getByRole("heading", { level: 4 });
@@ -55,7 +68,11 @@ describe("Channel", () => {
       };
 
       // When
-      render(<Channel {...mockProps} />);
+      render(
+        <BrowserRouter>
+          <Channel {...mockProps} />
+        </BrowserRouter>
+      );
 
       // Then
       const channel = document.querySelector(".channel");
@@ -76,10 +93,18 @@ describe("Channel", () => {
       };
 
       // When
-      const { rerender } = render(<Channel {...mockProps} />);
+      const { rerender } = render(
+        <BrowserRouter>
+          <Channel {...mockProps} />
+        </BrowserRouter>
+      );
       const firstRender = screen.getByRole("heading", { level: 4 }).textContent;
 
-      rerender(<Channel {...mockProps} />);
+      rerender(
+        <BrowserRouter>
+          <Channel {...mockProps} />
+        </BrowserRouter>
+      );
       const secondRender = screen.getByRole("heading", {
         level: 4,
       }).textContent;

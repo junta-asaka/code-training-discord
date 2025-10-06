@@ -1,56 +1,64 @@
 .sidebarList {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border-top: #1a1a1e 1px solid;
+  border-left: #1a1a1e 1px solid;
+  border-top-left-radius: 10px;
+  width: 100%;
+
+  .searchBar {
     display: flex;
-    flex-direction: column;
     align-items: center;
-    border-top: #1a1a1e 1px solid;
-    border-left: #1a1a1e 1px solid;
-    border-top-left-radius: 10px;
+    justify-content: center;
+    background-color: #222225;
+    padding: 5px 30px;
+    margin: 3px;
+    margin-top: 10px;
+    border-radius: 5px;
+  }
+
+  .scroller {
+    display: flex;
+    align-items: center;
+    justify-content: center;
     width: 100%;
 
-    .searchBar {
+    .content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 0;
+      align-items: flex-start;
+
+      .privateChannelHeader {
+        width: 93%;
         display: flex;
         align-items: center;
-        justify-content: center;
-        background-color: #222225;
-        padding: 5px 30px;
-        margin: 3px;
-        margin-top: 10px;
-        border-radius: 5px;
-    }
+        justify-content: space-between;
+        margin-top: 30px;
+        padding-left: 10px;
+      }
 
-    .scroller {
+      .chanelButton {
         display: flex;
         align-items: center;
-        justify-content: center;
-        width: 100%;
+        justify-content: flex-start;
+        padding-top: 15px;
+        padding-bottom: 15px;
+        padding-left: 10px;
+        width: 90%;
 
-        .content {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 0;
-            align-items: flex-start;
+        cursor: pointer;
 
-            .privateChannelHeader {
-                width: 93%;
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                margin-top: 30px;
-                padding-left: 10px;
-            }
-
-            .chanelButton {
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                margin-top: 15px;
-                margin-left: 10px;
-
-                .MuiSvgIcon-root {
-                    margin-right: 10px;
-                }
-            }
+        &:hover {
+          background-color: #2d2d30;
         }
+
+        .MuiSvgIcon-root {
+          margin-right: 10px;
+        }
+      }
     }
+  }
 }

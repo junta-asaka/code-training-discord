@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { render, screen } from "@testing-library/react";
+import { BrowserRouter } from "react-router-dom";
 import ListItemContents from "@/components/page/ListItemContents";
 
 describe("ListItemContents", () => {
@@ -12,7 +13,11 @@ describe("ListItemContents", () => {
       };
 
       // When
-      render(<ListItemContents {...mockProps} />);
+      render(
+        <BrowserRouter>
+          <ListItemContents {...mockProps} />
+        </BrowserRouter>
+      );
 
       // Then
       const nameElement = screen.getByRole("heading", { level: 4 });
@@ -30,7 +35,11 @@ describe("ListItemContents", () => {
       };
 
       // When
-      render(<ListItemContents {...mockProps} />);
+      render(
+        <BrowserRouter>
+          <ListItemContents {...mockProps} />
+        </BrowserRouter>
+      );
 
       // Then
       const nameElement = screen.getByRole("heading", { level: 4 });
@@ -50,7 +59,11 @@ describe("ListItemContents", () => {
       };
 
       // When
-      render(<ListItemContents {...mockProps} />);
+      render(
+        <BrowserRouter>
+          <ListItemContents {...mockProps} />
+        </BrowserRouter>
+      );
 
       // Then
       const listItemContents = document.querySelector(".listItemContents");

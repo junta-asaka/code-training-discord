@@ -26,4 +26,5 @@ class FriendGetResponse(BaseModel):
     username: str
     description: Optional[str] = None
     created_at: datetime
+    channel_id: UUID
     model_config = ConfigDict(from_attributes=True)

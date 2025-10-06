@@ -11,7 +11,7 @@ const Panels = () => {
   return (
     <section className="panels">
       <div className="panelAccount">
-        <img src="./react-icon.png" alt="" />
+        <img src="/react-icon.png" alt="ユーザーアイコン" />
         <div className="accountName">
           <h4>{user?.name || "Unknown User"}</h4>
           <span>{user?.username ? `@${user.username}` : "#0000"}</span>

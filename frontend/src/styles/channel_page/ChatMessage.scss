@@ -1,0 +1,46 @@
+.chatMessage {
+  display: flex;
+  align-items: center;
+  width: calc(100% - 40px);
+  margin: 20px;
+
+  .avatar {
+    display: flex;
+    align-items: center;
+    width: 40px;
+    height: 40px;
+    margin-right: 20px;
+  }
+
+  .contents {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    justify-content: flex-start;
+    width: 100%;
+
+    .contentHeader {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      width: 100%;
+
+      h3 {
+        margin-right: 20px;
+      }
+    }
+
+    .messageContent {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      width: 100%;
+
+      span {
+        display: inline-block;
+        width: 100%;
+        word-break: break-all;
+      }
+    }
+  }
+}

@@ -3,6 +3,11 @@
     align-items: center;
     justify-content: space-between;
     margin-top: 10px;
+    cursor: pointer;
+
+    &:hover {
+        background-color: #2d2d30;
+    }
 
     .listItemAccount {
         display: flex;
