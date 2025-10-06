@@ -1,17 +1,24 @@
 .channel {
+  display: flex;
+  align-items: center;
+  margin-top: 15px;
+  margin-left: 10px;
+  list-style: none;
+  width: 90%;
+  padding: 10px;
+  cursor: pointer;
+
+  &:hover {
+    background-color: #2d2d30;
+  }
+
+  .channelAccount {
     display: flex;
     align-items: center;
-    margin-top: 15px;
-    margin-left: 10px;
-    list-style: none;
+    justify-content: center;
 
-    .channelAccount {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-
-        .accountName {
-            margin-left: 10px;
-        }
+    .accountName {
+      margin-left: 10px;
     }
+  }
 }

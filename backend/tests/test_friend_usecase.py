@@ -35,6 +35,7 @@ class TestFriendUseCaseImpl(unittest.IsolatedAsyncioTestCase):
             email=email,
             password_hash="hashed_password",
             description="Test description",
+            created_at="2024-01-01T00:00:00Z",
         )
         return user
 
@@ -250,43 +251,47 @@ class TestFriendUseCaseImpl(unittest.IsolatedAsyncioTestCase):
         mock_user_repo.get_user_by_username.assert_any_call(self.mock_session, "nonexistuser")
         mock_friend_repo.create_friend.assert_not_called()
 
-    @patch("usecase.friend.UserRepositoryIf")
     @patch("usecase.friend.FriendRepositoryIf")
-    async def test_get_friend_all_success(self, mock_friend_repository_class, mock_user_repository_class):
+    async def test_get_friend_all_success(
+        self,
+        mock_friend_repository_class,
+    ):
         """
         Given: 有効なユーザーIDとフレンドが存在する場合
         When: get_friend_allメソッドを呼び出す
-        Then: フレンドのユーザーリストが返されること
+        Then: フレンドのレスポンスリストが返されること
         """
 
         # Given
         user_id = str(uuid.uuid4())
-        friend1_id = uuid.uuid4()
-        friend2_id = uuid.uuid4()
-        related_user1_id = uuid.uuid4()
-        related_user2_id = uuid.uuid4()
+        channel1_id = uuid.uuid4()
+        channel2_id = uuid.uuid4()
 
-        # フレンドのモック
-        friend1 = self.create_mock_friend(friend_id=friend1_id, user_id=user_id, related_user_id=related_user1_id)
-        friend2 = self.create_mock_friend(friend_id=friend2_id, user_id=user_id, related_user_id=related_user2_id)
-        friends = [friend1, friend2]
+        # get_friends_with_detailsから返される行データのモック
+        from unittest.mock import Mock
 
-        # 相手ユーザーのモック
-        related_user1 = self.create_mock_user(user_id=related_user1_id, username="friend1")
-        related_user2 = self.create_mock_user(user_id=related_user2_id, username="friend2")
-        related_users = [related_user1, related_user2]
+        row1 = Mock()
+        row1.user_name = "Test Friend 1"
+        row1.user_username = "friend1"
+        row1.user_description = "Friend 1 description"
+        row1.user_created_at = "2024-01-01T00:00:00Z"
+        row1.channel_id = channel1_id
+
+        row2 = Mock()
+        row2.user_name = "Test Friend 2"
+        row2.user_username = "friend2"
+        row2.user_description = "Friend 2 description"
+        row2.user_created_at = "2024-01-02T00:00:00Z"
+        row2.channel_id = channel2_id
+
+        friend_details = [row1, row2]
 
         # モックの設定
         mock_friend_repo = AsyncMock()
-        mock_friend_repo.get_friend_all.return_value = friends
+        mock_friend_repo.get_friends_with_details.return_value = friend_details
         mock_friend_repository_class.return_value = mock_friend_repo
 
-        mock_user_repo = AsyncMock()
-        mock_user_repo.get_users_by_id.return_value = related_users
-        mock_user_repository_class.return_value = mock_user_repo
-
         self.use_case.friend_repo = mock_friend_repo
-        self.use_case.user_repo = mock_user_repo
 
         # When
         result = await self.use_case.get_friend_all(self.mock_session, user_id)
@@ -295,17 +300,24 @@ class TestFriendUseCaseImpl(unittest.IsolatedAsyncioTestCase):
         self.assertIsNotNone(result)
         if result is not None:
             self.assertEqual(len(result), 2)
+            # FriendGetResponseオブジェクトの属性をチェック
+            self.assertEqual(result[0].name, "Test Friend 1")
             self.assertEqual(result[0].username, "friend1")
+            self.assertEqual(result[0].description, "Friend 1 description")
+            self.assertEqual(result[0].channel_id, channel1_id)
+
+            self.assertEqual(result[1].name, "Test Friend 2")
             self.assertEqual(result[1].username, "friend2")
+            self.assertEqual(result[1].description, "Friend 2 description")
+            self.assertEqual(result[1].channel_id, channel2_id)
 
-        mock_friend_repo.get_friend_all.assert_called_once_with(self.mock_session, user_id)
-        mock_user_repo.get_users_by_id.assert_called_once_with(
-            self.mock_session, [str(related_user1_id), str(related_user2_id)]
-        )
+        mock_friend_repo.get_friends_with_details.assert_called_once_with(self.mock_session, user_id)
 
-    @patch("usecase.friend.UserRepositoryIf")
     @patch("usecase.friend.FriendRepositoryIf")
-    async def test_get_friend_all_empty_list(self, mock_friend_repository_class, mock_user_repository_class):
+    async def test_get_friend_all_empty_list(
+        self,
+        mock_friend_repository_class,
+    ):
         """
         Given: フレンドが存在しないユーザーID
         When: get_friend_allメソッドを呼び出す
@@ -317,15 +329,10 @@ class TestFriendUseCaseImpl(unittest.IsolatedAsyncioTestCase):
 
         # モックの設定
         mock_friend_repo = AsyncMock()
-        mock_friend_repo.get_friend_all.return_value = []  # フレンドが0件
+        mock_friend_repo.get_friends_with_details.return_value = []  # フレンドが0件
         mock_friend_repository_class.return_value = mock_friend_repo
 
-        mock_user_repo = AsyncMock()
-        mock_user_repo.get_users_by_id.return_value = []  # 空のユーザーリスト
-        mock_user_repository_class.return_value = mock_user_repo
-
         self.use_case.friend_repo = mock_friend_repo
-        self.use_case.user_repo = mock_user_repo
 
         # When
         result = await self.use_case.get_friend_all(self.mock_session, user_id)
@@ -335,8 +342,7 @@ class TestFriendUseCaseImpl(unittest.IsolatedAsyncioTestCase):
         if result is not None:
             self.assertEqual(len(result), 0)
 
-        mock_friend_repo.get_friend_all.assert_called_once_with(self.mock_session, user_id)
-        mock_user_repo.get_users_by_id.assert_called_once_with(self.mock_session, [])
+        mock_friend_repo.get_friends_with_details.assert_called_once_with(self.mock_session, user_id)
 
     @patch("usecase.friend.GuildMemberRepositoryIf")
     @patch("usecase.friend.GuildRepositoryIf")
@@ -400,9 +406,11 @@ class TestFriendUseCaseImpl(unittest.IsolatedAsyncioTestCase):
         self.assertIn("予期しないエラーが発生しました", str(context.exception))
         mock_friend_repo.create_friend.assert_called_once()
 
-    @patch("usecase.friend.UserRepositoryIf")
     @patch("usecase.friend.FriendRepositoryIf")
-    async def test_get_friend_all_repository_error(self, mock_friend_repository_class, mock_user_repository_class):
+    async def test_get_friend_all_repository_error(
+        self,
+        mock_friend_repository_class,
+    ):
         """
         Given: フレンドリポジトリでエラーが発生する場合
         When: get_friend_allメソッドを呼び出す
@@ -414,21 +422,17 @@ class TestFriendUseCaseImpl(unittest.IsolatedAsyncioTestCase):
 
         # モックの設定
         mock_friend_repo = AsyncMock()
-        mock_friend_repo.get_friend_all.side_effect = Exception("フレンド取得エラー")
+        mock_friend_repo.get_friends_with_details.side_effect = Exception("フレンド取得エラー")
         mock_friend_repository_class.return_value = mock_friend_repo
 
-        mock_user_repo = AsyncMock()
-        mock_user_repository_class.return_value = mock_user_repo
-
         self.use_case.friend_repo = mock_friend_repo
-        self.use_case.user_repo = mock_user_repo
 
         # When & Then
         with self.assertRaises(FriendTransactionError) as context:
             await self.use_case.get_friend_all(self.mock_session, user_id)
 
         self.assertIn("予期しないエラーが発生しました", str(context.exception))
-        mock_friend_repo.get_friend_all.assert_called_once_with(self.mock_session, user_id)
+        mock_friend_repo.get_friends_with_details.assert_called_once_with(self.mock_session, user_id)
 
 
 if __name__ == "__main__":

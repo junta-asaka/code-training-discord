@@ -144,8 +144,8 @@ class GuildRepositoryImpl(GuildRepositoryIf):
 
         result = await session.execute(
             select(Guild)
-            .join(GuildMember)
-            .join(Channel)
+            .join(GuildMember, Guild.id == GuildMember.guild_id)
+            .join(Channel, Guild.id == Channel.guild_id)
             .where(GuildMember.user_id == member_id, Channel.id == channel_id)
         )
         guild = result.scalars().first()

@@ -25,7 +25,7 @@ export const loginApi = async (data: LoginFormData): Promise<LoginResponse> => {
 
 export const verifySession = async (accessToken: string): Promise<boolean> => {
   try {
-    const response = await fetch(`${API_BASE_URL}/`, {
+    const response = await fetch(`${API_BASE_URL}/auth/verify`, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${accessToken}`,

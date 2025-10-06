@@ -12,7 +12,7 @@ from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 sys.path.append(os.path.join(os.path.dirname(__file__), "../src"))
 
 from dependencies import configure
-from domains import Base, Friend, User
+from domains import Base, Channel, Friend, Guild, User
 from repository.friend_repository import FriendCreateError, FriendRepositoryIf
 
 
@@ -88,6 +88,33 @@ class TestFriendRepository(unittest.IsolatedAsyncioTestCase):
     async def asyncTearDown(self):
         # エンジンを非同期に破棄
         await self.engine.dispose()
+
+    async def create_test_guild(self, user_id: uuid.UUID, name: str = "@me") -> Guild:
+        """テスト用ギルドを作成"""
+        guild = Guild(
+            name=name,
+            owner_user_id=user_id,
+        )
+        async with self.AsyncSessionLocal() as session:
+            session.add(guild)
+            await session.commit()
+            await session.refresh(guild)
+            return guild
+
+    async def create_test_channel(self, guild_id, related_guild_id, owner_user_id: uuid.UUID) -> Channel:
+        """テスト用チャンネルを作成"""
+        channel = Channel(
+            type="text",
+            name="",
+            guild_id=guild_id,
+            related_guild_id=related_guild_id,
+            owner_user_id=owner_user_id,
+        )
+        async with self.AsyncSessionLocal() as session:
+            session.add(channel)
+            await session.commit()
+            await session.refresh(channel)
+            return channel
 
     async def test_create_friend_success(self):
         """
@@ -195,65 +222,103 @@ class TestFriendRepository(unittest.IsolatedAsyncioTestCase):
         # 元の例外が保持されていることを確認
         self.assertIsNotNone(context.exception.original_error)
 
-    async def test_get_friend_all_success_with_friends(self):
+    async def test_get_friends_with_details_multiple_friends(self):
         """
-        Given: ユーザーが複数のフレンドを持っている状態
-        When: get_friend_allメソッドを呼び出す
-        Then: 該当するすべてのフレンドが返されること
+        Given: 複数のフレンド関係が存在する場合
+        When: get_friends_with_detailsメソッドを呼び出す
+        Then: すべてのフレンドの詳細情報が取得されること
         """
 
         # Given
-        friend1 = Friend(
+        friend1_data = Friend(
             user_id=self.user1_id,
             related_user_id=self.user2_id,
             type="friend",
         )
-        friend2 = Friend(
+        friend2_data = Friend(
             user_id=self.user1_id,
             related_user_id=self.user3_id,
             type="friend",
         )
-
         async with self.AsyncSessionLocal() as session:
-            await self.repository.create_friend(session, friend1)
-            await self.repository.create_friend(session, friend2)
-            await session.commit()  # テスト用に明示的にcommit
+            await self.repository.create_friend(session, friend1_data)
+            await self.repository.create_friend(session, friend2_data)
+            await session.commit()
+
+        # ギルドとチャンネルを作成
+        guild1 = await self.create_test_guild(self.user1_id, "@me")
+        guild2 = await self.create_test_guild(self.user2_id, "@me")
+        guild3 = await self.create_test_guild(self.user3_id, "@me")
+
+        await self.create_test_channel(guild1.id, guild2.id, self.user1_id)
+        await self.create_test_channel(guild1.id, guild3.id, self.user1_id)
 
         # When
         async with self.AsyncSessionLocal() as session:
-            result = await self.repository.get_friend_all(session, str(self.user1_id))
+            result = await self.repository.get_friends_with_details(session, str(self.user1_id))
 
         # Then
         self.assertEqual(len(result), 2)
-        user_ids = [friend.related_user_id for friend in result]
-        self.assertIn(self.user2_id, user_ids)
-        self.assertIn(self.user3_id, user_ids)
-        for friend in result:
-            self.assertEqual(friend.user_id, self.user1_id)
-            self.assertEqual(friend.type, "friend")
+        usernames = [row.user_username for row in result]
+        self.assertIn("testuser2", usernames)
+        self.assertIn("testuser3", usernames)
 
-    async def test_get_friend_all_success_empty_list(self):
+    async def test_get_friends_with_details_bidirectional_friendship(self):
         """
-        Given: ユーザーがフレンドを持っていない状態
-        When: get_friend_allメソッドを呼び出す
+        Given: 双方向のフレンド関係が存在する場合
+        When: 両方のユーザーでget_friends_with_detailsメソッドを呼び出す
+        Then: 相互にフレンド情報が取得されること
+        """
+
+        # Given
+        friend_data = Friend(
+            user_id=self.user1_id,
+            related_user_id=self.user2_id,
+            type="friend",
+        )
+
+        async with self.AsyncSessionLocal() as session:
+            await self.repository.create_friend(session, friend_data)
+            await session.commit()
+
+        # ギルドとチャンネルを作成
+        guild1 = await self.create_test_guild(self.user1_id, "@me")
+        guild2 = await self.create_test_guild(self.user2_id, "@me")
+        await self.create_test_channel(guild1.id, guild2.id, self.user1_id)
+
+        # When
+        async with self.AsyncSessionLocal() as session:
+            result1 = await self.repository.get_friends_with_details(session, str(self.user1_id))
+            result2 = await self.repository.get_friends_with_details(session, str(self.user2_id))
+
+        # Then
+        self.assertEqual(len(result1), 1)
+        self.assertEqual(result1[0].user_username, "testuser2")
+
+        self.assertEqual(len(result2), 1)
+        self.assertEqual(result2[0].user_username, "testuser1")
+
+    async def test_get_friends_with_details_no_friends(self):
+        """
+        Given: フレンドが存在しないユーザー
+        When: get_friends_with_detailsメソッドを呼び出す
         Then: 空のリストが返されること
         """
 
         # Given
-        # フレンドが存在しない状態（セットアップで既にクリーンアップ済み）
 
         # When
         async with self.AsyncSessionLocal() as session:
-            result = await self.repository.get_friend_all(session, str(self.user1_id))
+            result = await self.repository.get_friends_with_details(session, str(self.user1_id))
 
         # Then
         self.assertEqual(len(result), 0)
         self.assertIsInstance(result, list)
 
-    async def test_get_friend_all_success_nonexistent_user(self):
+    async def test_get_friends_with_details_nonexistent_user(self):
         """
-        Given: 存在しないuser_idを指定
-        When: get_friend_allメソッドを呼び出す
+        Given: 存在しないユーザーID
+        When: get_friends_with_detailsメソッドを呼び出す
         Then: 空のリストが返されること
         """
 
@@ -262,81 +327,11 @@ class TestFriendRepository(unittest.IsolatedAsyncioTestCase):
 
         # When
         async with self.AsyncSessionLocal() as session:
-            result = await self.repository.get_friend_all(session, nonexistent_user_id)
+            result = await self.repository.get_friends_with_details(session, nonexistent_user_id)
 
         # Then
         self.assertEqual(len(result), 0)
         self.assertIsInstance(result, list)
-
-    async def test_get_friend_all_success_specific_user_only(self):
-        """
-        Given: 複数のユーザーがそれぞれフレンドを持っている状態
-        When: 特定のユーザーでget_friend_allメソッドを呼び出す
-        Then: そのユーザーのフレンドのみが返されること
-        """
-
-        # Given
-        # user1のフレンド
-        friend1 = Friend(
-            user_id=self.user1_id,
-            related_user_id=self.user2_id,
-            type="friend",
-        )
-        # user2のフレンド
-        friend2 = Friend(
-            user_id=self.user2_id,
-            related_user_id=self.user3_id,
-            type="friend",
-        )
-
-        async with self.AsyncSessionLocal() as session:
-            await self.repository.create_friend(session, friend1)
-            await self.repository.create_friend(session, friend2)
-            await session.commit()  # テスト用に明示的にcommit
-
-        # When
-        async with self.AsyncSessionLocal() as session:
-            result = await self.repository.get_friend_all(session, str(self.user1_id))
-
-        # Then
-        self.assertEqual(len(result), 1)
-        self.assertEqual(result[0].user_id, self.user1_id)
-        self.assertEqual(result[0].related_user_id, self.user2_id)
-        self.assertEqual(result[0].type, "friend")
-
-    async def test_get_friend_all_success_different_friend_types(self):
-        """
-        Given: ユーザーが異なるタイプのフレンドを持っている状態
-        When: get_friend_allメソッドを呼び出す
-        Then: タイプに関係なくすべてのフレンドが返されること
-        """
-
-        # Given
-        friend1 = Friend(
-            user_id=self.user1_id,
-            related_user_id=self.user2_id,
-            type="friend",
-        )
-        friend2 = Friend(
-            user_id=self.user1_id,
-            related_user_id=self.user3_id,
-            type="blocked",
-        )
-
-        async with self.AsyncSessionLocal() as session:
-            await self.repository.create_friend(session, friend1)
-            await self.repository.create_friend(session, friend2)
-            await session.commit()  # テスト用に明示的にcommit
-
-        # When
-        async with self.AsyncSessionLocal() as session:
-            result = await self.repository.get_friend_all(session, str(self.user1_id))
-
-        # Then
-        self.assertEqual(len(result), 2)
-        types = [friend.type for friend in result]
-        self.assertIn("friend", types)
-        self.assertIn("blocked", types)
 
 
 if __name__ == "__main__":

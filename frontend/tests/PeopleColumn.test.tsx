@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter } from "react-router-dom";
 import PeopleColumn from "@/components/page/PeopleColumn";
 import { useFriends } from "@/hooks/useFriends";
 import type { Friend } from "@/schemas/friendSchema";
@@ -20,7 +21,9 @@ const TestWrapper = ({ children }: { children: React.ReactNode }) => {
   });
 
   return (
-    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    <BrowserRouter>
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    </BrowserRouter>
   );
 };
 
@@ -81,11 +84,13 @@ describe("PeopleColumn", () => {
           name: "Test User",
           username: "user",
           created_at: "2024-01-01T00:00:00Z",
+          channel_id: "channel-1",
         },
         {
           name: "Test User2",
           username: "user2",
           created_at: "2024-01-02T00:00:00Z",
+          channel_id: "channel-2",
         },
       ];
 
