@@ -1,65 +1,64 @@
 .page {
+  display: flex;
+  flex-direction: column;
+  max-width: 78%;
+  height: calc(100dvh - 32px);
+  flex-grow: 1;
+  background-color: #1a1a1e;
+  color: white;
+
+  .themed {
     display: flex;
-    flex-direction: column;
-    // align-items: center;
-    height: calc(100vh - 32px);
-    flex-grow: 1;
-    background-color: #1a1a1e;
-    color: white;
-    // border-radius: 10px;
+    align-items: center;
+    justify-content: space-between;
+    margin: 5px;
+    height: 40px;
 
-    .themed {
+    .children {
+      display: flex;
+      align-items: center;
+
+      .button {
         display: flex;
         align-items: center;
-        justify-content: space-between;
-        margin: 5px;
-        height: 40px;
+        padding: 1px 5px;
+        cursor: pointer;
+        margin-right: 30px;
+        height: 30px;
+        padding: 1px 10px;
 
-        .children {
-            display: flex;
-            align-items: center;
-
-            .button {
-                display: flex;
-                align-items: center;
-                padding: 1px 5px;
-                cursor: pointer;
-                margin-right: 30px;
-                height: 30px;
-                padding: 1px 10px;
-
-                h4 {
-                    display: block;
-                    align-items: center;
-                    margin: 0 auto;
-                }
-            }
-
-            .friendButton {
-                margin-left: 15px;
-                display: flex;
-                align-items: center;
-
-                h4 {
-                    margin-left: 5px;
-                }
-            }
-
-            .addFriend {
-                background-color: #5865f2;
-                border-radius: 5px;
-            }
+        h4 {
+          display: block;
+          align-items: center;
+          margin: 0 auto;
         }
+      }
 
-        .toolbar {
-            margin-right: 20px;
-        }
-    }
-
-    .tabBody {
-        height: 100%;
+      .friendButton {
+        margin-left: 15px;
         display: flex;
         align-items: center;
-        // justify-content: space-between;
+
+        h4 {
+          margin-left: 5px;
+        }
+      }
+
+      .addFriend {
+        background-color: #5865f2;
+        border-radius: 5px;
+      }
     }
+
+    .toolbar {
+      margin-right: 20px;
+    }
+  }
+
+  .tabBody {
+    height: calc(100% - 40px);
+    display: flex;
+    align-items: center;
+    // justify-content: space-between;
+  }
 }

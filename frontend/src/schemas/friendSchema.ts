@@ -3,6 +3,7 @@ export interface Friend {
   username: string;
   description?: string;
   created_at: string;
+  channel_id: string;
 }
 
 export type FriendsResponse = Friend[];

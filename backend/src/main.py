@@ -1,6 +1,7 @@
 from contextlib import asynccontextmanager
 
 import uvicorn
+from api.auth_verify import router as auth_router
 from api.channel import router as channel_router
 from api.friend import router as friend_router
 from api.login import router as login_router
@@ -52,6 +53,7 @@ app.include_router(login_router)
 app.include_router(friend_router)
 app.include_router(channel_router)
 app.include_router(message_router)
+app.include_router(auth_router)
 
 
 if __name__ == "__main__":

@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, Mock, patch
 
 from injector import Injector
 from sqlalchemy.ext.asyncio import AsyncSession
+from usecase.friend import CHANNEL_TYPE_TEXT
 
 # テストファイルのルートディレクトリからの相対パスでsrcフォルダを指定
 sys.path.append(os.path.join(os.path.dirname(__file__), "../src"))
@@ -34,7 +35,7 @@ class TestChannelUseCaseImpl(unittest.IsolatedAsyncioTestCase):
         channel = Channel(
             id=channel_id,
             guild_id=guild_id,
-            type="text",
+            type=CHANNEL_TYPE_TEXT,
             name=name,
             owner_user_id=uuid.uuid4(),
             last_message_id=None,

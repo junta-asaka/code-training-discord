@@ -1,16 +1,18 @@
 from abc import ABC, abstractmethod
 
-from domains import Channel, Friend, GuildMember, User
+from domains import Channel, Friend, GuildMember
 from injector import inject, singleton
 from repository.channel_repository import ChannelRepositoryError, ChannelRepositoryIf
 from repository.friend_repository import FriendRepositoryError, FriendRepositoryIf
 from repository.guild_member_repository import GuildMemberRepositoryError, GuildMemberRepositoryIf
 from repository.guild_repository import GuildRepositoryError, GuildRepositoryIf
 from repository.user_repository import UserRepositoryError, UserRepositoryIf
-from schema.friend_schema import FriendCreateRequest
+from schema.friend_schema import FriendCreateRequest, FriendGetResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from usecase.base_exception import BaseMessageUseCaseError
 from utils.logger_utils import get_logger
+
+CHANNEL_TYPE_TEXT = "text"
 
 # ロガーを取得
 logger = get_logger(__name__)
@@ -72,7 +74,7 @@ class FriendUseCaseIf(ABC):
         pass
 
     @abstractmethod
-    async def get_friend_all(self, session: AsyncSession, user_id: str) -> list[User] | None:
+    async def get_friend_all(self, session: AsyncSession, user_id: str) -> list[FriendGetResponse]:
         """すべてのフレンドを取得
 
         Args:
@@ -80,7 +82,7 @@ class FriendUseCaseIf(ABC):
             user_id (str): ユーザーID
 
         Returns:
-            list[User] | None: フレンドのユーザーリスト（失敗時はNone）
+            list[FriendGetResponse]: フレンドのレスポンスリスト
         """
 
         pass
@@ -146,18 +148,15 @@ class FriendUseCaseImpl(FriendUseCaseIf):
             # ギルドにフレンドを追加後、それぞれチャネルを作成
             channel_me = Channel(
                 guild_id=guild_db_me.id,
+                related_guild_id=guild_db_related.id,
                 owner_user_id=friend_db.user_id,
             )
             _ = await self.channel_repo.create_channel(session, channel_me)
 
-            channel_related = Channel(
-                guild_id=guild_db_related.id,
-                owner_user_id=friend_db.related_user_id,
-            )
-            _ = await self.channel_repo.create_channel(session, channel_related)
-
             # すべての操作が成功した場合に commit
             await session.commit()
+
+            return friend_db
 
         except UserRepositoryError as e:
             await session.rollback()
@@ -183,9 +182,7 @@ class FriendUseCaseImpl(FriendUseCaseIf):
             await session.rollback()
             raise FriendTransactionError("予期しないエラーが発生しました", e)
 
-        return friend_db
-
-    async def get_friend_all(self, session: AsyncSession, user_id: str) -> list[User] | None:
+    async def get_friend_all(self, session: AsyncSession, user_id: str) -> list[FriendGetResponse]:
         """すべてのフレンドを取得
 
         Args:
@@ -193,26 +190,29 @@ class FriendUseCaseImpl(FriendUseCaseIf):
             user_id (str): ユーザーID
 
         Returns:
-            list[User] | None: フレンドのユーザーリスト（失敗時はNone）
+            list[FriendGetResponse]: フレンドのレスポンスリスト
         """
 
         try:
-            friends = await self.friend_repo.get_friend_all(session, user_id)
+            # JOINを使用してフレンド詳細情報を一度に取得
+            friend_details = await self.friend_repo.get_friends_with_details(session, user_id)
 
-            # 双方向の関係を考慮して相手のユーザーIDを取得
-            user_id_list = []
-            for friend in friends:
-                if str(friend.user_id) == user_id:
-                    # 自分がuser_idの場合、related_user_idが相手
-                    user_id_list.append(str(friend.related_user_id))
-                else:
-                    # 自分がrelated_user_idの場合、user_idが相手
-                    user_id_list.append(str(friend.user_id))
+            # FriendGetResponseのリストを作成
+            friend_res_list = []
+            for row in friend_details:
+                friend_res_list.append(
+                    FriendGetResponse.model_validate(
+                        {
+                            "name": row.user_name,
+                            "username": row.user_username,
+                            "description": row.user_description,
+                            "created_at": row.user_created_at,
+                            "channel_id": row.channel_id,
+                        }
+                    )
+                )
 
-            return await self.user_repo.get_users_by_id(session, user_id_list)
-
-        except UserRepositoryError as e:
-            raise FriendTransactionError("ユーザー取得中にエラーが発生しました", e)
+            return friend_res_list
 
         except FriendRepositoryError as e:
             raise FriendTransactionError("フレンド取得中にエラーが発生しました", e)

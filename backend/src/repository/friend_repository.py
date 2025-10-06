@@ -1,11 +1,12 @@
 from abc import ABC, abstractmethod
 
-from domains import Friend
+from domains import Channel, Friend, Guild, User
 from injector import singleton
 from repository.base_exception import BaseRepositoryError
 from repository.decorators import handle_repository_errors
-from sqlalchemy import or_, select
+from sqlalchemy import Row, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import aliased
 from utils.logger_utils import get_logger
 
 # ロガーを取得
@@ -52,15 +53,15 @@ class FriendRepositoryIf(ABC):
         pass
 
     @abstractmethod
-    async def get_friend_all(self, session: AsyncSession, user_id: str) -> list[Friend]:
-        """すべてのフレンドを取得する
+    async def get_friends_with_details(self, session: AsyncSession, user_id: str) -> list[Row]:
+        """フレンド情報を関連テーブルと結合して取得する
 
         Args:
             session (AsyncSession): データベースセッション
             user_id (str): ユーザーID
 
         Returns:
-            list[Friend]: フレンドリスト
+            list[Row]: フレンド詳細情報のリスト
         """
 
         pass
@@ -93,21 +94,58 @@ class FriendRepositoryImpl(FriendRepositoryIf):
         return friend
 
     @handle_repository_errors(FriendQueryError, "フレンド取得")
-    async def get_friend_all(self, session: AsyncSession, user_id: str) -> list[Friend]:
-        """すべてのフレンドを取得する
+    async def get_friends_with_details(self, session: AsyncSession, user_id: str) -> list[Row]:
+        """フレンド情報を関連テーブルと結合して取得する
 
         Args:
             session (AsyncSession): データベースセッション
             user_id (str): ユーザーID
 
         Returns:
-            list[Friend]: フレンドリスト
+            list[Row]: フレンド詳細情報のリスト
         """
 
-        result = await session.execute(
-            select(Friend)
-            .where(or_(Friend.user_id == user_id, Friend.related_user_id == user_id))
-            .order_by(Friend.created_at.desc())  # 作成日時で降順ソート
+        # エイリアスを作成
+        my_guild = aliased(Guild)
+        friend_guild = aliased(Guild)
+
+        # JOINクエリを構築
+        stmt = (
+            select(
+                User.name.label("user_name"),
+                User.username.label("user_username"),
+                User.description.label("user_description"),
+                User.created_at.label("user_created_at"),
+                Channel.id.label("channel_id"),
+            )
+            .select_from(Friend)
+            .join(
+                User,
+                or_(
+                    # 自分がuser_idの場合、相手はrelated_user_id
+                    (Friend.user_id == user_id) & (User.id == Friend.related_user_id),
+                    # 自分がrelated_user_idの場合、相手はuser_id
+                    (Friend.related_user_id == user_id) & (User.id == Friend.user_id),
+                ),
+            )
+            .join(my_guild, my_guild.owner_user_id == user_id)
+            .join(friend_guild, friend_guild.owner_user_id == User.id)
+            .join(
+                Channel,
+                or_(
+                    # guild_id_me と guild_id_related の組み合わせ
+                    (Channel.guild_id == my_guild.id) & (Channel.related_guild_id == friend_guild.id),
+                    # guild_id_related と guild_id_me の組み合わせ（逆）
+                    (Channel.guild_id == friend_guild.id) & (Channel.related_guild_id == my_guild.id),
+                ),
+            )
+            .where(
+                or_(Friend.user_id == user_id, Friend.related_user_id == user_id)
+                & (my_guild.name == "@me")
+                & (friend_guild.name == "@me")
+            )
+            .order_by(Friend.created_at.desc())
         )
 
-        return list(result.scalars().all())
+        result = await session.execute(stmt)
+        return list(result.fetchall())

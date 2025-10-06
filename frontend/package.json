@@ -8,7 +8,8 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test": "vitest  --ui"
+    "test": "vitest",
+    "test-ui": "vitest  --ui"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
@@ -20,6 +21,7 @@
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-hook-form": "^7.62.0",
+    "react-hot-toast": "^2.6.0",
     "react-router-dom": "^7.8.2",
     "sass": "^1.91.0",
     "zod": "^4.1.7",
