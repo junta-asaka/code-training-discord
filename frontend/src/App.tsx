@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import AuthGuard from "./components/AuthGuard";
 import Top from "./views/Top";
@@ -16,6 +16,8 @@ function App() {
       {/* React RouterのBrowserRouterでアプリ全体をラップ */}
       <BrowserRouter>
         <Routes>
+          {/* ルートパスから/channels/@meにリダイレクト */}
+          <Route path="/" element={<Navigate to="/channels/@me" replace />} />
           {/* 認証ガードを適用 */}
           {/* トップページ */}
           <Route
