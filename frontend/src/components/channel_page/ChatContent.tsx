@@ -23,11 +23,10 @@ const ChatContent = ({ friendUsername }: ChatContentProps) => {
   const { user } = useAuthStore();
   const [inputMessage, setInputMessage] = useState("");
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const submitMessage = async () => {
+    const trimmedMessage = inputMessage.trim();
 
     // 空文字の場合は送信しない
-    const trimmedMessage = inputMessage.trim();
     if (!trimmedMessage || !channelId || !user?.id) {
       return;
     }
@@ -49,14 +48,16 @@ const ChatContent = ({ friendUsername }: ChatContentProps) => {
     }
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await submitMessage();
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      const formEvent = new Event("submit", {
-        bubbles: true,
-        cancelable: true,
-      });
-      handleSubmit(formEvent as unknown as React.FormEvent);
+      // フォームの submit() メソッドを直接呼び出す
+      e.currentTarget.form?.requestSubmit();
     }
   };
 
@@ -89,7 +90,7 @@ const ChatContent = ({ friendUsername }: ChatContentProps) => {
             placeholder="@usernameへメッセージを送信"
             value={inputMessage}
             onChange={(e) => setInputMessage(e.target.value)}
-            onKeyPress={handleKeyPress}
+            onKeyDown={handleKeyDown}
             disabled={createMessage.isPending}
           />
         </div>
