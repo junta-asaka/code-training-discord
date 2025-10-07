@@ -64,7 +64,7 @@ class TestFriendAPI(unittest.IsolatedAsyncioTestCase):
             "password": "testpassword",
             "description": "Test description",
         }
-        response = await self.client.post("/user", json=user_data)
+        response = await self.client.post("/api/user", json=user_data)
         return response.json()
 
     async def _create_test_users(self):

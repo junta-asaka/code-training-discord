@@ -79,7 +79,7 @@ class TestLoginAPI(unittest.IsolatedAsyncioTestCase):
             "password": "testpassword",
             "description": "",
         }
-        await self.client.post("/user", json=user_data)
+        await self.client.post("/api/user", json=user_data)
 
     async def test_post_login_success(self):
         """
@@ -92,7 +92,7 @@ class TestLoginAPI(unittest.IsolatedAsyncioTestCase):
         login_data = {"username": "testuser", "password": "testpassword"}
 
         # When: POST /login にフォームデータでリクエスト
-        response = await self.client.post("/login", data=login_data)
+        response = await self.client.post("/api/login", data=login_data)
 
         # Then: 200でログイン成功レスポンスが返る
         self.assertEqual(response.status_code, 200)
@@ -114,7 +114,7 @@ class TestLoginAPI(unittest.IsolatedAsyncioTestCase):
         login_data = {"username": "testuser", "password": "testpassword"}
 
         # When: POST /login?next=/dashboard にフォームデータでリクエスト
-        response = await self.client.post("/login?next=/dashboard", data=login_data)
+        response = await self.client.post("/api/login?next=/dashboard", data=login_data)
 
         # Then: 200でログイン成功レスポンス（nextパラメータ含む）が返る
         self.assertEqual(response.status_code, 200)
@@ -136,7 +136,7 @@ class TestLoginAPI(unittest.IsolatedAsyncioTestCase):
         login_data = {"username": "nonexistentuser", "password": "testpassword"}
 
         # When: POST /login にフォームデータでリクエスト
-        response = await self.client.post("/login", data=login_data)
+        response = await self.client.post("/api/login", data=login_data)
 
         # Then: 401で認証失敗エラーが返る
         self.assertEqual(response.status_code, 401)
@@ -154,7 +154,7 @@ class TestLoginAPI(unittest.IsolatedAsyncioTestCase):
         login_data = {"username": "testuser", "password": "wrongpassword"}
 
         # When: POST /login にフォームデータでリクエスト
-        response = await self.client.post("/login", data=login_data)
+        response = await self.client.post("/api/login", data=login_data)
 
         # Then: 401で認証失敗エラーが返る
         self.assertEqual(response.status_code, 401)
@@ -172,7 +172,7 @@ class TestLoginAPI(unittest.IsolatedAsyncioTestCase):
         login_data = {"username": "testuser", "password": "wrongpassword"}
 
         # When: POST /login?next=/dashboard にフォームデータでリクエスト
-        response = await self.client.post("/login?next=/dashboard", data=login_data)
+        response = await self.client.post("/api/login?next=/dashboard", data=login_data)
 
         # Then: 401で認証失敗エラー（nextパラメータ含む）が返る
         self.assertEqual(response.status_code, 401)
@@ -191,7 +191,7 @@ class TestLoginAPI(unittest.IsolatedAsyncioTestCase):
         login_data = {"username": "", "password": "testpassword"}
 
         # When: POST /login にフォームデータでリクエスト
-        response = await self.client.post("/login", data=login_data)
+        response = await self.client.post("/api/login", data=login_data)
 
         # Then: 401で認証失敗エラーが返る
         self.assertEqual(response.status_code, 401)
@@ -209,7 +209,7 @@ class TestLoginAPI(unittest.IsolatedAsyncioTestCase):
         login_data = {"username": "testuser", "password": ""}
 
         # When: POST /login にフォームデータでリクエスト
-        response = await self.client.post("/login", data=login_data)
+        response = await self.client.post("/api/login", data=login_data)
 
         # Then: 401で認証失敗エラーが返る
         self.assertEqual(response.status_code, 401)
@@ -227,7 +227,7 @@ class TestLoginAPI(unittest.IsolatedAsyncioTestCase):
         login_data = {"password": "testpassword"}
 
         # When: POST /login にフォームデータでリクエスト
-        response = await self.client.post("/login", data=login_data)
+        response = await self.client.post("/api/login", data=login_data)
 
         # Then: 422でバリデーションエラーが返る
         self.assertEqual(response.status_code, 422)
@@ -243,7 +243,7 @@ class TestLoginAPI(unittest.IsolatedAsyncioTestCase):
         login_data = {"username": "testuser"}
 
         # When: POST /login にフォームデータでリクエスト
-        response = await self.client.post("/login", data=login_data)
+        response = await self.client.post("/api/login", data=login_data)
 
         # Then: 422でバリデーションエラーが返る
         self.assertEqual(response.status_code, 422)

@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from usecase.login import LoginTransactionError, LoginUseCaseIf
 from utils.logger_utils import get_logger
 
-router = APIRouter()
+router = APIRouter(prefix="/api")
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/login")
 
