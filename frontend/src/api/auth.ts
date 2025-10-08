@@ -24,17 +24,12 @@ export const loginApi = async (data: LoginFormData): Promise<LoginResponse> => {
 };
 
 export const verifySession = async (accessToken: string): Promise<boolean> => {
-  try {
-    const response = await fetch(`${API_BASE_URL}/auth/verify`, {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    });
+  const response = await fetch(`${API_BASE_URL}/auth/verify`, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
 
-    return response.ok;
-  } catch (error) {
-    console.error("セッション認証エラー:", error);
-    return false;
-  }
+  return response.ok;
 };

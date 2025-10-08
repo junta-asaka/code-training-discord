@@ -17,8 +17,5 @@ export const useRegister = () => {
         },
       });
     },
-    onError: (error) => {
-      console.error("登録エラー:", error.message);
-    },
   });
 };

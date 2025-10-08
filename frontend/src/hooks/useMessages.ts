@@ -45,8 +45,5 @@ export const useCreateMessage = () => {
         queryKey: ["messages", variables.channel_id],
       });
     },
-    onError: (error) => {
-      console.error("メッセージ送信エラー:", error);
-    },
   });
 };

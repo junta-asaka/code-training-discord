@@ -32,8 +32,5 @@ export const useLogin = () => {
       const from = location.state?.from || "/channels/@me";
       navigate(from, { replace: true });
     },
-    onError: (error) => {
-      console.error("ログインエラー:", error.message);
-    },
   });
 };

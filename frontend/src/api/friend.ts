@@ -7,27 +7,22 @@ export const getFriendsApi = async (
   userId: string,
   accessToken: string
 ): Promise<FriendsResponse> => {
-  try {
-    const response = await fetch(
-      `${API_BASE_URL}/api/friends?user_id=${userId}`,
-      {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      }
-    );
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(
-        error.detail?.message || "フレンド一覧の取得に失敗しました"
-      );
+  const response = await fetch(
+    `${API_BASE_URL}/api/friends?user_id=${userId}`,
+    {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
     }
+  );
 
-    return response.json();
-  } catch (error) {
-    console.error("フレンド一覧取得エラー:", error);
-    throw error;
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(
+      error.detail?.message || "フレンド一覧の取得に失敗しました"
+    );
   }
+
+  return response.json();
 };
