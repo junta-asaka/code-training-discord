@@ -24,7 +24,6 @@ dev = ["pytest>=8.4.2", "pytest-cov>=7.0.0"]
 legacy_tox_ini = """
 [tox]
 envlist = py312
-log_file = tox.log
 
 [testenv]
 runner = uv-venv-runner
