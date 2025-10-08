@@ -1,17 +1,17 @@
-import { useQuery } from '@tanstack/react-query';
-import { getFriendsApi } from '../api/friend';
-import { useAuthStore } from '../stores/authStore';
-import type { FriendsResponse } from '../schemas/friendSchema';
+import { useQuery } from "@tanstack/react-query";
+import { getFriendsApi } from "../api/friend";
+import { useAuthStore } from "../stores/authStore";
+import type { FriendsResponse } from "../schemas/friendSchema";
 
 // フレンド一覧取得のカスタムフック
 export const useFriends = () => {
   const { user, accessToken } = useAuthStore();
 
   return useQuery<FriendsResponse>({
-    queryKey: ['friends', user?.id],
+    queryKey: ["friends", user?.id],
     queryFn: () => {
       if (!user?.id || !accessToken) {
-        throw new Error('ユーザー情報またはアクセストークンがありません');
+        throw new Error("ユーザー情報またはアクセストークンがありません");
       }
       return getFriendsApi(user.id, accessToken);
     },
