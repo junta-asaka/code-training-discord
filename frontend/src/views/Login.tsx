@@ -1,10 +1,12 @@
 import { useForm } from "react-hook-form";
+import { useNavigate } from "react-router-dom";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { loginSchema, type LoginFormData } from "../schemas/loginSchema";
 import { useLogin } from "../hooks/useLogin";
 import "../styles/views/Login.scss";
 
 const Login = () => {
+  const navigate = useNavigate();
   // useForm: フォームの状態管理とバリデーションを簡単に行うためのライブラリ
   // zodResolver: ZodスキーマをReact Hook Formのバリデーションに統合するための関数
   // loginSchema: ログインフォームのバリデーションスキーマ
@@ -74,7 +76,14 @@ const Login = () => {
 
         <div className="login-footer">
           <p>
-            アカウントをお持ちでない方は <a href="/register">新規登録</a>
+            アカウントをお持ちでない方は{" "}
+            <button
+              type="button"
+              className="link-button"
+              onClick={() => navigate("/register")}
+            >
+              新規登録
+            </button>
           </p>
         </div>
       </div>

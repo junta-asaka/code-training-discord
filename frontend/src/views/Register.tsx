@@ -1,4 +1,5 @@
 import { useForm } from "react-hook-form";
+import { useNavigate } from "react-router-dom";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   registerSchema,
@@ -8,6 +9,7 @@ import { useRegister } from "../hooks/useRegister";
 import "../styles/views/Register.scss";
 
 const Register = () => {
+  const navigate = useNavigate();
   const {
     register,
     handleSubmit,
@@ -112,7 +114,14 @@ const Register = () => {
 
         <div className="footer">
           <p>
-            すでにアカウントをお持ちの方は <a href="/login">ログイン</a>
+            すでにアカウントをお持ちの方は{" "}
+            <button
+              type="button"
+              className="link-button"
+              onClick={() => navigate("/login")}
+            >
+              ログイン
+            </button>
           </p>
         </div>
       </div>
