@@ -10,7 +10,7 @@ export const registerApi = async (
   data: RegisterFormData
 ): Promise<RegisterResponse> => {
   // 登録用のペイロードを作成
-  const payload = {
+  const payload: Omit<RegisterFormData, "confirmPassword"> = {
     name: data.name,
     username: data.username,
     email: data.email,
