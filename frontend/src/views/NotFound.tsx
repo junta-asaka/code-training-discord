@@ -1,8 +1,11 @@
+import { useNavigate } from "react-router-dom";
 import "../styles/views/NotFound.scss";
 
 const NotFound = () => {
+  const navigate = useNavigate();
+
   const handleGoHome = () => {
-    window.location.href = "/channels/@me";
+    navigate("/channels/@me");
   };
 
   const handleGoBack = () => {
