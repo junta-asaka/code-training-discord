@@ -64,14 +64,6 @@ const Login = () => {
           >
             {loginMutation.isPending ? "ログイン中..." : "ログイン"}
           </button>
-
-          {loginMutation.isError && (
-            <p className="error-message">
-              {loginMutation.error instanceof Error
-                ? loginMutation.error.message
-                : "ログインに失敗しました"}
-            </p>
-          )}
         </form>
 
         <div className="login-footer">

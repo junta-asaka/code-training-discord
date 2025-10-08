@@ -17,7 +17,7 @@ export const loginApi = async (data: LoginFormData): Promise<LoginResponse> => {
 
   if (!response.ok) {
     const error = await response.json();
-    throw new Error(error.detail?.message || "ログインに失敗しました");
+    throw new Error(error.detail.message);
   }
 
   return response.json();

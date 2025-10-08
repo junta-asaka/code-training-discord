@@ -102,14 +102,6 @@ const Register = () => {
           >
             {registerMutation.isPending ? "登録中..." : "アカウント作成"}
           </button>
-
-          {registerMutation.isError && (
-            <p className="error-message">
-              {registerMutation.error instanceof Error
-                ? registerMutation.error.message
-                : "登録に失敗しました"}
-            </p>
-          )}
         </form>
 
         <div className="footer">

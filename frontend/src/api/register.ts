@@ -27,7 +27,7 @@ export const registerApi = async (
 
   if (!response.ok) {
     const error = await response.json();
-    throw new Error(error.detail?.message || "登録に失敗しました");
+    throw new Error(error.detail.message);
   }
 
   return response.json();
