@@ -9,7 +9,7 @@ from utils.logger_utils import get_logger
 
 router = APIRouter(prefix="/api")
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/login")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/login")
 
 # ロガーを取得
 logger = get_logger(__name__)
