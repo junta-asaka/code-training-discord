@@ -5,12 +5,15 @@ import { MemoryRouter } from "react-router-dom";
 import Login from "@/views/Login";
 import { useAuthStore } from "@/stores/authStore";
 import * as authApi from "@/api/auth";
+import toast from "react-hot-toast";
 import type { LoginResponse } from "@/schemas/loginSchema";
 
 // モック設定
 vi.mock("@/api/auth");
+vi.mock("react-hot-toast");
 
 const mockedAuthApi = vi.mocked(authApi);
+const mockedToast = vi.mocked(toast);
 
 // テスト用のコンポーネントラッパー
 const TestWrapper = ({ children }: { children: React.ReactNode }) => {
@@ -35,6 +38,9 @@ describe("Login", () => {
 
     // モックをリセット
     vi.clearAllMocks();
+
+    // toastモックの設定
+    mockedToast.error = vi.fn();
   });
   describe("レンダリングテスト", () => {
     it("given: Loginコンポーネント, when: 初期レンダリング, then: 必要な要素が表示される", () => {
@@ -60,7 +66,7 @@ describe("Login", () => {
         screen.getByText("アカウントをお持ちでない方は")
       ).toBeInTheDocument();
       expect(
-        screen.getByRole("link", { name: "新規登録" })
+        screen.getByRole("button", { name: "新規登録" })
       ).toBeInTheDocument();
       const usernameInput =
         screen.getByPlaceholderText("ユーザー名を入力してください");
@@ -217,7 +223,9 @@ describe("Login", () => {
 
       // Then
       await waitFor(() => {
-        expect(screen.getByText(errorMessage)).toBeInTheDocument();
+        expect(mockedToast.error).toHaveBeenCalledWith(
+          `ログインに失敗しました -> ${errorMessage}`
+        );
       });
 
       // 認証ストアが更新されていないか確認
@@ -248,7 +256,9 @@ describe("Login", () => {
 
       // Then
       await waitFor(() => {
-        expect(screen.getByText("ログインに失敗しました")).toBeInTheDocument();
+        expect(mockedToast.error).toHaveBeenCalledWith(
+          "ログインに失敗しました -> 不明なエラーが発生しました"
+        );
       });
     });
   });
