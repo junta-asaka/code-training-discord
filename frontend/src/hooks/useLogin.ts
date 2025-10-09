@@ -1,7 +1,8 @@
-import { useMutation } from '@tanstack/react-query';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { loginApi } from '../api/auth';
-import { useAuthStore } from '../stores/authStore';
+import { useMutation } from "@tanstack/react-query";
+import { useNavigate, useLocation } from "react-router-dom";
+import toast from "react-hot-toast";
+import { loginApi } from "../api/auth";
+import { useAuthStore } from "../stores/authStore";
 
 // ログイン処理のカスタムフック
 export const useLogin = () => {
@@ -27,13 +28,16 @@ export const useLogin = () => {
         },
         response.access_token
       );
-      
+
       // ログイン成功後、元のページまたはTop画面に遷移
-      const from = location.state?.from || '/channels/@me';
+      const from = location.state?.from || "/channels/@me";
       navigate(from, { replace: true });
     },
     onError: (error) => {
-      console.error('ログインエラー:', error.message);
+      // ログイン失敗時にtoast通知
+      const errorMessage =
+        error instanceof Error ? error.message : "不明なエラーが発生しました";
+      toast.error(`ログインに失敗しました -> ${errorMessage}`);
     },
   });
 };

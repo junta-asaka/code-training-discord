@@ -1,8 +1,8 @@
-import { vi } from 'vitest';
-import '@testing-library/jest-dom';
+import { vi } from "vitest";
+import "@testing-library/jest-dom";
 
 // Zustand persistのモック
-Object.defineProperty(window, 'localStorage', {
+Object.defineProperty(window, "localStorage", {
   value: {
     getItem: vi.fn(),
     setItem: vi.fn(),
@@ -13,4 +13,4 @@ Object.defineProperty(window, 'localStorage', {
 });
 
 // CSS modules のモック
-vi.mock('@/styles/sidebar/Panels.scss', () => ({}));
+vi.mock("@/styles/sidebar/Panels.scss", () => ({}));
