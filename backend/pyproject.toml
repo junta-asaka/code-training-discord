@@ -23,7 +23,7 @@ dev = ["pytest>=8.4.2", "pytest-cov>=7.0.0"]
 [tool.tox]
 legacy_tox_ini = """
 [tox]
-envlist = py312
+envlist = lint, mypy, py312
 
 [testenv]
 runner = uv-venv-runner
@@ -44,6 +44,16 @@ commands =
     coverage report
     coverage html
 depends = py312
+
+[testenv:lint]
+deps = ruff
+commands = 
+    ruff check --fix
+    ruff format src tests
+
+[testenv:mypy]
+deps = mypy
+commands = mypy src tests --ignore-missing-imports --strict-optional --disallow-untyped-defs
 """
 
 [tool.pytest.ini_options]
