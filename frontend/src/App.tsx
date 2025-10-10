@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import AuthGuard from "./components/AuthGuard";
 import Top from "./views/Top";
 import Login from "./views/Login";
+import Register from "./views/Register";
 import NotFound from "./views/NotFound";
 import { Toaster } from "react-hot-toast";
 
@@ -48,6 +49,8 @@ function App() {
           />
           {/* ログインページ */}
           <Route path="/login" element={<Login />} />
+          {/* 登録ページ */}
+          <Route path="/register" element={<Register />} />
           {/* 404ページ */}
           <Route path="*" element={<NotFound />} />
         </Routes>

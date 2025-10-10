@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from usecase.create_user import CreateUserTransactionError, CreateUserUseCaseIf
 from utils.logger_utils import get_logger
 
-router = APIRouter()
+router = APIRouter(prefix="/api")
 
 # ロガーを取得
 logger = get_logger(__name__)

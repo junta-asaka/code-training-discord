@@ -42,8 +42,7 @@ const ChatContent = ({ friendUsername }: ChatContentProps) => {
 
       // 送信後、入力フィールドをクリア
       setInputMessage("");
-    } catch (error) {
-      console.error("メッセージ送信に失敗しました:", error);
+    } catch {
       toast.error("メッセージの送信に失敗しました。");
     }
   };
