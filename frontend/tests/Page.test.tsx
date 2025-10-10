@@ -4,9 +4,11 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter } from "react-router-dom";
 import Page from "@/components/page/Page";
 import { useCreateFriend } from "@/hooks/useFriends";
+import toast from "react-hot-toast";
 
 // モック設定
 vi.mock("@/hooks/useFriends");
+vi.mock("react-hot-toast");
 vi.mock("@/components/page/PeopleColumn", () => ({
   default: ({
     onSearchValueChange,
@@ -104,10 +106,6 @@ describe("Page", () => {
       const username = "testuser";
       mockMutateAsync.mockResolvedValue(undefined);
 
-      // window.alertをモック
-      const mockAlert = vi.fn();
-      vi.stubGlobal("alert", mockAlert);
-
       render(
         <TestWrapper>
           <Page />
@@ -125,18 +123,12 @@ describe("Page", () => {
       // Then
       await waitFor(() => {
         expect(mockMutateAsync).toHaveBeenCalledWith(username);
-        expect(mockAlert).toHaveBeenCalledWith("フレンドを追加しました");
+        expect(toast.success).toHaveBeenCalledWith("フレンドを追加しました");
       });
-
-      // モックをクリア
-      vi.unstubAllGlobals();
     });
 
     it("given: 空のユーザー名, when: フレンドに追加ボタンクリック, then: エラーメッセージが表示されAPIが呼ばれない", async () => {
       // Given
-      const mockAlert = vi.fn();
-      vi.stubGlobal("alert", mockAlert);
-
       render(
         <TestWrapper>
           <Page />
@@ -149,14 +141,11 @@ describe("Page", () => {
 
       // Then
       await waitFor(() => {
-        expect(mockAlert).toHaveBeenCalledWith(
+        expect(toast.error).toHaveBeenCalledWith(
           "追加するフレンドのユーザー名を入力してください"
         );
         expect(mockMutateAsync).not.toHaveBeenCalled();
       });
-
-      // モックをクリア
-      vi.unstubAllGlobals();
     });
 
     it("given: APIエラー, when: フレンド追加実行, then: エラーメッセージが表示される", async () => {
@@ -165,12 +154,6 @@ describe("Page", () => {
       const username = "nonexistentuser";
       mockMutateAsync.mockRejectedValue(new Error(errorMessage));
 
-      const mockAlert = vi.fn();
-      const mockConsoleError = vi
-        .spyOn(console, "error")
-        .mockImplementation(() => {});
-      vi.stubGlobal("alert", mockAlert);
-
       render(
         <TestWrapper>
           <Page />
@@ -188,16 +171,8 @@ describe("Page", () => {
       // Then
       await waitFor(() => {
         expect(mockMutateAsync).toHaveBeenCalledWith(username);
-        expect(mockConsoleError).toHaveBeenCalledWith(
-          "フレンド追加エラー:",
-          new Error(errorMessage)
-        );
-        expect(mockAlert).toHaveBeenCalledWith(errorMessage);
+        expect(toast.error).toHaveBeenCalledWith(errorMessage);
       });
-
-      // モックをクリア
-      vi.unstubAllGlobals();
-      mockConsoleError.mockRestore();
     });
   });
 

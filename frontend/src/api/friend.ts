@@ -33,26 +33,21 @@ export const createFriendApi = async (
   relatedUsername: string,
   accessToken: string
 ): Promise<void> => {
-  try {
-    const response = await fetch(`${API_BASE_URL}/api/friend`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${accessToken}`,
-      },
-      body: JSON.stringify({
-        username,
-        related_username: relatedUsername,
-        type: "friend",
-      }),
-    });
+  const response = await fetch(`${API_BASE_URL}/api/friend`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify({
+      username,
+      related_username: relatedUsername,
+      type: "friend",
+    }),
+  });
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.detail || "フレンドの追加に失敗しました");
-    }
-  } catch (error) {
-    console.error("フレンド追加エラー:", error);
-    throw error;
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.detail || "フレンドの追加に失敗しました");
   }
 };

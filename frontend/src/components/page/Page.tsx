@@ -5,6 +5,7 @@ import NowPlayingColumn from "./NowPlayingColumn";
 import "@/styles/page/Page.scss";
 import { useState } from "react";
 import { useCreateFriend } from "../../hooks/useFriends";
+import toast from "react-hot-toast";
 
 const Page = () => {
   const [searchUsername, setSearchUsername] = useState("");
@@ -12,7 +13,7 @@ const Page = () => {
 
   const handleAddFriend = async () => {
     if (!searchUsername.trim()) {
-      alert("追加するフレンドのユーザー名を入力してください");
+      toast.error("追加するフレンドのユーザー名を入力してください");
       return;
     }
 
@@ -22,13 +23,12 @@ const Page = () => {
 
     try {
       await createFriendMutation.mutateAsync(searchUsername.trim());
-      alert("フレンドを追加しました");
+      toast.success("フレンドを追加しました");
       setSearchUsername(""); // 成功時に検索値をクリア
     } catch (error) {
-      console.error("フレンド追加エラー:", error);
       const errorMessage =
         error instanceof Error ? error.message : "フレンドの追加に失敗しました";
-      alert(errorMessage);
+      toast.error(errorMessage);
     }
   };
   return (
