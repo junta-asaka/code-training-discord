@@ -31,7 +31,10 @@ class TestCreateUserUseCaseImpl(unittest.IsolatedAsyncioTestCase):
     @patch("usecase.create_user.GuildRepositoryIf")
     @patch("usecase.create_user.UserRepositoryIf")
     async def test_execute_success(
-        self, mock_user_repository_class, mock_guild_repository_class, mock_guild_member_repository_class
+        self,
+        mock_user_repository_class,
+        mock_guild_repository_class,
+        mock_guild_member_repository_class,
     ):
         """
         Given: 有効なユーザー作成リクエスト
@@ -84,7 +87,9 @@ class TestCreateUserUseCaseImpl(unittest.IsolatedAsyncioTestCase):
         mock_guild_repository_class.return_value = mock_guild_repository
 
         mock_guild_member_repository = AsyncMock()
-        mock_guild_member_repository.create_guild_member.return_value = expected_guild_member
+        mock_guild_member_repository.create_guild_member.return_value = (
+            expected_guild_member
+        )
         mock_guild_member_repository_class.return_value = mock_guild_member_repository
 
         # リポジトリをモックに置き換え
@@ -116,7 +121,9 @@ class TestCreateUserUseCaseImpl(unittest.IsolatedAsyncioTestCase):
         # パスワードのソルトを取得
         salt_b64, _ = created_password.split("$")
         # ソルトとパスワードを用いて、ハッシュ化を再現
-        recreated_hash = await hash_password(str(expected_user.password_hash), base64.b64decode(salt_b64))
+        recreated_hash = await hash_password(
+            str(expected_user.password_hash), base64.b64decode(salt_b64)
+        )
 
         self.assertEqual(created_user.name, expected_user.name)
         self.assertEqual(created_user.username, expected_user.username)
@@ -132,7 +139,10 @@ class TestCreateUserUseCaseImpl(unittest.IsolatedAsyncioTestCase):
     @patch("usecase.create_user.GuildRepositoryIf")
     @patch("usecase.create_user.UserRepositoryIf")
     async def test_execute_with_empty_description(
-        self, mock_user_repository_class, mock_guild_repository_class, mock_guild_member_repository_class
+        self,
+        mock_user_repository_class,
+        mock_guild_repository_class,
+        mock_guild_member_repository_class,
     ):
         """
         Given: 説明が空のユーザー作成リクエスト
@@ -185,7 +195,9 @@ class TestCreateUserUseCaseImpl(unittest.IsolatedAsyncioTestCase):
         mock_guild_repository_class.return_value = mock_guild_repository
 
         mock_guild_member_repository = AsyncMock()
-        mock_guild_member_repository.create_guild_member.return_value = expected_guild_member
+        mock_guild_member_repository.create_guild_member.return_value = (
+            expected_guild_member
+        )
         mock_guild_member_repository_class.return_value = mock_guild_member_repository
 
         # リポジトリをモックに置き換え
@@ -217,7 +229,9 @@ class TestCreateUserUseCaseImpl(unittest.IsolatedAsyncioTestCase):
         # パスワードのソルトを取得
         salt_b64, _ = created_password.split("$")
         # ソルトとパスワードを用いて、ハッシュ化を再現
-        recreated_hash = await hash_password(str(expected_user.password_hash), base64.b64decode(salt_b64))
+        recreated_hash = await hash_password(
+            str(expected_user.password_hash), base64.b64decode(salt_b64)
+        )
 
         self.assertEqual(created_user.name, expected_user.name)
         self.assertEqual(created_user.username, expected_user.username)
@@ -232,7 +246,10 @@ class TestCreateUserUseCaseImpl(unittest.IsolatedAsyncioTestCase):
     @patch("usecase.create_user.GuildRepositoryIf")
     @patch("usecase.create_user.UserRepositoryIf")
     async def test_execute_repository_error(
-        self, mock_user_repository_class, mock_guild_repository_class, mock_guild_member_repository_class
+        self,
+        mock_user_repository_class,
+        mock_guild_repository_class,
+        mock_guild_member_repository_class,
     ):
         """
         Given: リポジトリでエラーが発生する場合
@@ -278,7 +295,10 @@ class TestCreateUserUseCaseImpl(unittest.IsolatedAsyncioTestCase):
     @patch("usecase.create_user.GuildRepositoryIf")
     @patch("usecase.create_user.UserRepositoryIf")
     async def test_password_hashing_integration(
-        self, mock_user_repository_class, mock_guild_repository_class, mock_guild_member_repository_class
+        self,
+        mock_user_repository_class,
+        mock_guild_repository_class,
+        mock_guild_member_repository_class,
     ):
         """
         Given: 同じパスワードを持つ複数のリクエスト

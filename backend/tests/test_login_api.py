@@ -53,7 +53,9 @@ class TestLoginAPI(unittest.IsolatedAsyncioTestCase):
         app.dependency_overrides[get_session] = override_get_session
 
         # 非同期でAsyncClientを初期化
-        self.client = AsyncClient(transport=ASGITransport(app=app), base_url="http://testserver")
+        self.client = AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://testserver"
+        )
 
         # テスト用ユーザーを事前に作成
         await self._create_test_user()

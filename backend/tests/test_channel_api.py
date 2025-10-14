@@ -64,7 +64,9 @@ class TestChannelAPI(unittest.IsolatedAsyncioTestCase):
         app.dependency_overrides[check_channel_access] = override_check_channel_access
 
         # 非同期でAsyncClientを初期化
-        self.client = AsyncClient(transport=ASGITransport(app=app), base_url="http://testserver")
+        self.client = AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://testserver"
+        )
 
         # テスト用データを事前に作成
         await self._create_test_data()

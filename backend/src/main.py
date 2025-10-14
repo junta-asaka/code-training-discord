@@ -1,4 +1,5 @@
 from contextlib import asynccontextmanager
+from typing import AsyncGenerator
 
 import uvicorn
 from api.auth_verify import router as auth_router
@@ -18,7 +19,7 @@ logger = get_logger(__name__)
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """アプリケーションのライフサイクル管理"""
     # 起動時の処理
     logger.info("アプリケーション起動処理を開始します")

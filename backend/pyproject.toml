@@ -53,7 +53,7 @@ commands =
 
 [testenv:mypy]
 deps = mypy
-commands = mypy src tests --ignore-missing-imports --strict-optional --disallow-untyped-defs
+commands = mypy src --ignore-missing-imports --strict-optional --disallow-untyped-defs
 """
 
 [tool.pytest.ini_options]

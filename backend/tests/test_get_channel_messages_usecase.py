@@ -15,7 +15,10 @@ sys.path.append(os.path.join(os.path.dirname(__file__), "../src"))
 from dependencies import configure
 from domains import Channel
 from schema.channel_schema import ChannelGetResponse
-from usecase.get_channel_messages import GetChannelMessagesUseCaseIf, GetChannelMessageTransactionError
+from usecase.get_channel_messages import (
+    GetChannelMessagesUseCaseIf,
+    GetChannelMessageTransactionError,
+)
 
 
 class TestChannelUseCaseImpl(unittest.IsolatedAsyncioTestCase):
@@ -46,7 +49,12 @@ class TestChannelUseCaseImpl(unittest.IsolatedAsyncioTestCase):
         return channel
 
     def create_mock_message(
-        self, message_id=None, channel_id=None, user_id=None, content="Test message", referenced_message_id=None
+        self,
+        message_id=None,
+        channel_id=None,
+        user_id=None,
+        content="Test message",
+        referenced_message_id=None,
     ):
         """モックのMessageオブジェクトを作成"""
         if message_id is None:
@@ -71,7 +79,9 @@ class TestChannelUseCaseImpl(unittest.IsolatedAsyncioTestCase):
 
     @patch("usecase.get_channel_messages.ChannelRepositoryIf")
     @patch("usecase.get_channel_messages.MessageRepositoryIf")
-    async def test_execute_success_with_messages(self, mock_message_repository_class, mock_channel_repository_class):
+    async def test_execute_success_with_messages(
+        self, mock_message_repository_class, mock_channel_repository_class
+    ):
         """
         Given: 有効なチャネルIDとメッセージが存在する
         When: executeメソッドを呼び出す
@@ -84,15 +94,21 @@ class TestChannelUseCaseImpl(unittest.IsolatedAsyncioTestCase):
         test_user_id = uuid.uuid4()
 
         expected_channel = self.create_mock_channel(
-            channel_id=uuid.UUID(test_channel_id), guild_id=test_guild_id, name="general"
+            channel_id=uuid.UUID(test_channel_id),
+            guild_id=test_guild_id,
+            name="general",
         )
 
         expected_messages = [
             self.create_mock_message(
-                channel_id=uuid.UUID(test_channel_id), user_id=test_user_id, content="Hello, world!"
+                channel_id=uuid.UUID(test_channel_id),
+                user_id=test_user_id,
+                content="Hello, world!",
             ),
             self.create_mock_message(
-                channel_id=uuid.UUID(test_channel_id), user_id=test_user_id, content="How are you?"
+                channel_id=uuid.UUID(test_channel_id),
+                user_id=test_user_id,
+                content="How are you?",
             ),
         ]
 
@@ -121,8 +137,12 @@ class TestChannelUseCaseImpl(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(result.messages[1].content, "How are you?")
 
         # モックメソッドの呼び出し確認
-        mock_channel_repo.get_channel_by_id.assert_called_once_with(self.mock_session, test_channel_id)
-        mock_message_repo.get_message_by_channel_id.assert_called_once_with(self.mock_session, test_channel_id)
+        mock_channel_repo.get_channel_by_id.assert_called_once_with(
+            self.mock_session, test_channel_id
+        )
+        mock_message_repo.get_message_by_channel_id.assert_called_once_with(
+            self.mock_session, test_channel_id
+        )
 
     @patch("usecase.get_channel_messages.ChannelRepositoryIf")
     @patch("usecase.get_channel_messages.MessageRepositoryIf")
@@ -140,7 +160,9 @@ class TestChannelUseCaseImpl(unittest.IsolatedAsyncioTestCase):
         test_guild_id = uuid.uuid4()
 
         expected_channel = self.create_mock_channel(
-            channel_id=uuid.UUID(test_channel_id), guild_id=test_guild_id, name="empty-channel"
+            channel_id=uuid.UUID(test_channel_id),
+            guild_id=test_guild_id,
+            name="empty-channel",
         )
 
         expected_messages = []  # 空のメッセージリスト
@@ -168,12 +190,18 @@ class TestChannelUseCaseImpl(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(len(result.messages), 0)
 
         # モックメソッドの呼び出し確認
-        mock_channel_repo.get_channel_by_id.assert_called_once_with(self.mock_session, test_channel_id)
-        mock_message_repo.get_message_by_channel_id.assert_called_once_with(self.mock_session, test_channel_id)
+        mock_channel_repo.get_channel_by_id.assert_called_once_with(
+            self.mock_session, test_channel_id
+        )
+        mock_message_repo.get_message_by_channel_id.assert_called_once_with(
+            self.mock_session, test_channel_id
+        )
 
     @patch("usecase.get_channel_messages.ChannelRepositoryIf")
     @patch("usecase.get_channel_messages.MessageRepositoryIf")
-    async def test_execute_channel_not_found(self, mock_message_repository_class, mock_channel_repository_class):
+    async def test_execute_channel_not_found(
+        self, mock_message_repository_class, mock_channel_repository_class
+    ):
         """
         Given: 存在しないチャネルID
         When: executeメソッドを呼び出す
@@ -201,13 +229,17 @@ class TestChannelUseCaseImpl(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(str(context.exception), "予期しないエラーが発生しました")
 
         # モックメソッドの呼び出し確認
-        mock_channel_repo.get_channel_by_id.assert_called_once_with(self.mock_session, test_channel_id)
+        mock_channel_repo.get_channel_by_id.assert_called_once_with(
+            self.mock_session, test_channel_id
+        )
         # チャネル取得でエラーが発生した場合、メッセージ取得は呼ばれない
         mock_message_repo.get_message_by_channel_id.assert_not_called()
 
     @patch("usecase.get_channel_messages.ChannelRepositoryIf")
     @patch("usecase.get_channel_messages.MessageRepositoryIf")
-    async def test_execute_message_repository_error(self, mock_message_repository_class, mock_channel_repository_class):
+    async def test_execute_message_repository_error(
+        self, mock_message_repository_class, mock_channel_repository_class
+    ):
         """
         Given: 有効なチャネルIDだがメッセージ取得でエラーが発生
         When: executeメソッドを呼び出す
@@ -219,7 +251,9 @@ class TestChannelUseCaseImpl(unittest.IsolatedAsyncioTestCase):
         test_guild_id = uuid.uuid4()
 
         expected_channel = self.create_mock_channel(
-            channel_id=uuid.UUID(test_channel_id), guild_id=test_guild_id, name="error-channel"
+            channel_id=uuid.UUID(test_channel_id),
+            guild_id=test_guild_id,
+            name="error-channel",
         )
 
         # モックの設定
@@ -228,7 +262,9 @@ class TestChannelUseCaseImpl(unittest.IsolatedAsyncioTestCase):
         mock_channel_repository_class.return_value = mock_channel_repo
 
         mock_message_repo = AsyncMock()
-        mock_message_repo.get_message_by_channel_id.side_effect = Exception("Database connection error")
+        mock_message_repo.get_message_by_channel_id.side_effect = Exception(
+            "Database connection error"
+        )
         mock_message_repository_class.return_value = mock_message_repo
 
         self.use_case.channel_repo = mock_channel_repo
@@ -241,8 +277,12 @@ class TestChannelUseCaseImpl(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(str(context.exception), "予期しないエラーが発生しました")
 
         # モックメソッドの呼び出し確認
-        mock_channel_repo.get_channel_by_id.assert_called_once_with(self.mock_session, test_channel_id)
-        mock_message_repo.get_message_by_channel_id.assert_called_once_with(self.mock_session, test_channel_id)
+        mock_channel_repo.get_channel_by_id.assert_called_once_with(
+            self.mock_session, test_channel_id
+        )
+        mock_message_repo.get_message_by_channel_id.assert_called_once_with(
+            self.mock_session, test_channel_id
+        )
 
 
 if __name__ == "__main__":

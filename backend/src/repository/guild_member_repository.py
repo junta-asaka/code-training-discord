@@ -31,7 +31,9 @@ class GuildMemberRepositoryIf(ABC):
     """
 
     @abstractmethod
-    async def create_guild_member(self, session: AsyncSession, guild_member: GuildMember) -> GuildMember:
+    async def create_guild_member(
+        self, session: AsyncSession, guild_member: GuildMember
+    ) -> GuildMember:
         """ギルドメンバーを作成する
 
         Args:
@@ -54,7 +56,9 @@ class GuildMemberRepositoryImpl(GuildMemberRepositoryIf):
     """
 
     @handle_repository_errors(GuildMemberCreateError, "ギルドメンバー作成")
-    async def create_guild_member(self, session: AsyncSession, guild_member: GuildMember) -> GuildMember:
+    async def create_guild_member(
+        self, session: AsyncSession, guild_member: GuildMember
+    ) -> GuildMember:
         """ギルドメンバーを作成する
 
         Args:

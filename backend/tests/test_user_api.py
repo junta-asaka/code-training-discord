@@ -53,7 +53,9 @@ class TestUserAPI(unittest.IsolatedAsyncioTestCase):
         app.dependency_overrides[get_session] = override_get_session
 
         # 非同期でAsyncClientを初期化
-        self.client = AsyncClient(transport=ASGITransport(app=app), base_url="http://testserver")
+        self.client = AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://testserver"
+        )
 
     async def asyncTearDown(self):
         # テスト環境変数をクリーンアップ

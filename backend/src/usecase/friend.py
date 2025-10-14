@@ -4,7 +4,10 @@ from domains import Channel, Friend, GuildMember
 from injector import inject, singleton
 from repository.channel_repository import ChannelRepositoryError, ChannelRepositoryIf
 from repository.friend_repository import FriendRepositoryError, FriendRepositoryIf
-from repository.guild_member_repository import GuildMemberRepositoryError, GuildMemberRepositoryIf
+from repository.guild_member_repository import (
+    GuildMemberRepositoryError,
+    GuildMemberRepositoryIf,
+)
 from repository.guild_repository import GuildRepositoryError, GuildRepositoryIf
 from repository.user_repository import UserRepositoryError, UserRepositoryIf
 from schema.friend_schema import FriendCreateRequest, FriendGetResponse
@@ -60,7 +63,9 @@ class FriendUseCaseIf(ABC):
         self.channel_repo: ChannelRepositoryIf = channel_repo
 
     @abstractmethod
-    async def create_friend(self, session: AsyncSession, req: FriendCreateRequest) -> Friend | None:
+    async def create_friend(
+        self, session: AsyncSession, req: FriendCreateRequest
+    ) -> Friend | None:
         """フレンド作成
 
         Args:
@@ -74,7 +79,9 @@ class FriendUseCaseIf(ABC):
         pass
 
     @abstractmethod
-    async def get_friend_all(self, session: AsyncSession, user_id: str) -> list[FriendGetResponse]:
+    async def get_friend_all(
+        self, session: AsyncSession, user_id: str
+    ) -> list[FriendGetResponse]:
         """すべてのフレンドを取得
 
         Args:
@@ -96,7 +103,9 @@ class FriendUseCaseImpl(FriendUseCaseIf):
         FriendUseCaseIf (_type_): フレンドユースケースインターフェース
     """
 
-    async def create_friend(self, session: AsyncSession, req: FriendCreateRequest) -> Friend | None:
+    async def create_friend(
+        self, session: AsyncSession, req: FriendCreateRequest
+    ) -> Friend | None:
         """フレンド作成
 
         Args:
@@ -116,7 +125,9 @@ class FriendUseCaseImpl(FriendUseCaseIf):
 
             # 相手ユーザーの取得
             related_username = req.related_username
-            related_user = await self.user_repo.get_user_by_username(session, related_username)
+            related_user = await self.user_repo.get_user_by_username(
+                session, related_username
+            )
             if not related_user:
                 return None
 
@@ -129,12 +140,16 @@ class FriendUseCaseImpl(FriendUseCaseIf):
             friend_db = await self.friend_repo.create_friend(session, friend)
 
             # フレンド追加後、お互いのギルドにフレンドを追加
-            guild_db_me = await self.guild_repo.get_guild_by_user_id_name(session, str(friend_db.user_id), "@me")
+            guild_db_me = await self.guild_repo.get_guild_by_user_id_name(
+                session, str(friend_db.user_id), "@me"
+            )
             guild_member_me = GuildMember(
                 user_id=friend_db.related_user_id,
                 guild_id=guild_db_me.id,
             )
-            _ = await self.guild_member_repo.create_guild_member(session, guild_member_me)
+            _ = await self.guild_member_repo.create_guild_member(
+                session, guild_member_me
+            )
 
             guild_db_related = await self.guild_repo.get_guild_by_user_id_name(
                 session, str(friend_db.related_user_id), "@me"
@@ -143,7 +158,9 @@ class FriendUseCaseImpl(FriendUseCaseIf):
                 user_id=friend_db.user_id,
                 guild_id=guild_db_related.id,
             )
-            _ = await self.guild_member_repo.create_guild_member(session, guild_member_related)
+            _ = await self.guild_member_repo.create_guild_member(
+                session, guild_member_related
+            )
 
             # ギルドにフレンドを追加後、それぞれチャネルを作成
             channel_me = Channel(
@@ -172,7 +189,9 @@ class FriendUseCaseImpl(FriendUseCaseIf):
 
         except GuildMemberRepositoryError as e:
             await session.rollback()
-            raise FriendTransactionError("ギルドメンバー作成中にエラーが発生しました", e)
+            raise FriendTransactionError(
+                "ギルドメンバー作成中にエラーが発生しました", e
+            )
 
         except ChannelRepositoryError as e:
             await session.rollback()
@@ -182,7 +201,9 @@ class FriendUseCaseImpl(FriendUseCaseIf):
             await session.rollback()
             raise FriendTransactionError("予期しないエラーが発生しました", e)
 
-    async def get_friend_all(self, session: AsyncSession, user_id: str) -> list[FriendGetResponse]:
+    async def get_friend_all(
+        self, session: AsyncSession, user_id: str
+    ) -> list[FriendGetResponse]:
         """すべてのフレンドを取得
 
         Args:
@@ -195,7 +216,9 @@ class FriendUseCaseImpl(FriendUseCaseIf):
 
         try:
             # JOINを使用してフレンド詳細情報を一度に取得
-            friend_details = await self.friend_repo.get_friends_with_details(session, user_id)
+            friend_details = await self.friend_repo.get_friends_with_details(
+                session, user_id
+            )
 
             # FriendGetResponseのリストを作成
             friend_res_list = []

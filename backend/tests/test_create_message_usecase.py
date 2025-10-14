@@ -54,7 +54,12 @@ class TestCreateMessageUseCaseImpl(unittest.IsolatedAsyncioTestCase):
         return message
 
     def create_mock_message_request(
-        self, channel_id=None, user_id=None, message_type="default", content="Test message", referenced_message_id=None
+        self,
+        channel_id=None,
+        user_id=None,
+        message_type="default",
+        content="Test message",
+        referenced_message_id=None,
     ):
         """モックのMessageCreateRequestオブジェクトを作成"""
         if channel_id is None:
@@ -72,7 +77,9 @@ class TestCreateMessageUseCaseImpl(unittest.IsolatedAsyncioTestCase):
 
     @patch("usecase.create_message.ChannelRepositoryIf")
     @patch("usecase.create_message.MessageRepositoryIf")
-    async def test_execute_success(self, mock_message_repository_class, mock_channel_repository_class):
+    async def test_execute_success(
+        self, mock_message_repository_class, mock_channel_repository_class
+    ):
         """
         Given: 有効なメッセージ作成リクエスト
         When: executeメソッドを呼び出す
@@ -85,7 +92,10 @@ class TestCreateMessageUseCaseImpl(unittest.IsolatedAsyncioTestCase):
         user_id = uuid.uuid4()
 
         request = self.create_mock_message_request(
-            channel_id=channel_id, user_id=user_id, message_type="default", content="Test message"
+            channel_id=channel_id,
+            user_id=user_id,
+            message_type="default",
+            content="Test message",
         )
 
         expected_message = self.create_mock_message(
@@ -131,7 +141,9 @@ class TestCreateMessageUseCaseImpl(unittest.IsolatedAsyncioTestCase):
 
     @patch("usecase.create_message.ChannelRepositoryIf")
     @patch("usecase.create_message.MessageRepositoryIf")
-    async def test_execute_message_repository_error(self, mock_message_repository_class, mock_channel_repository_class):
+    async def test_execute_message_repository_error(
+        self, mock_message_repository_class, mock_channel_repository_class
+    ):
         """
         Given: メッセージリポジトリでエラーが発生する状況
         When: executeメソッドを呼び出す
@@ -142,7 +154,9 @@ class TestCreateMessageUseCaseImpl(unittest.IsolatedAsyncioTestCase):
         channel_id = uuid.uuid4()
         user_id = uuid.uuid4()
 
-        request = self.create_mock_message_request(channel_id=channel_id, user_id=user_id)
+        request = self.create_mock_message_request(
+            channel_id=channel_id, user_id=user_id
+        )
 
         # モックの設定 - メッセージ作成でエラーを発生させる
         mock_message_repo = AsyncMock()
@@ -170,7 +184,9 @@ class TestCreateMessageUseCaseImpl(unittest.IsolatedAsyncioTestCase):
 
     @patch("usecase.create_message.ChannelRepositoryIf")
     @patch("usecase.create_message.MessageRepositoryIf")
-    async def test_execute_channel_repository_error(self, mock_message_repository_class, mock_channel_repository_class):
+    async def test_execute_channel_repository_error(
+        self, mock_message_repository_class, mock_channel_repository_class
+    ):
         """
         Given: チャネルリポジトリでエラーが発生する状況
         When: executeメソッドを呼び出す
@@ -182,9 +198,13 @@ class TestCreateMessageUseCaseImpl(unittest.IsolatedAsyncioTestCase):
         channel_id = uuid.uuid4()
         user_id = uuid.uuid4()
 
-        request = self.create_mock_message_request(channel_id=channel_id, user_id=user_id)
+        request = self.create_mock_message_request(
+            channel_id=channel_id, user_id=user_id
+        )
 
-        expected_message = self.create_mock_message(message_id=message_id, channel_id=channel_id, user_id=user_id)
+        expected_message = self.create_mock_message(
+            message_id=message_id, channel_id=channel_id, user_id=user_id
+        )
 
         # モックの設定 - チャネル更新でエラーを発生させる
         mock_message_repo = AsyncMock()
@@ -192,7 +212,9 @@ class TestCreateMessageUseCaseImpl(unittest.IsolatedAsyncioTestCase):
         mock_message_repository_class.return_value = mock_message_repo
 
         mock_channel_repo = AsyncMock()
-        mock_channel_repo.update_last_message_id.side_effect = Exception("Channel update error")
+        mock_channel_repo.update_last_message_id.side_effect = Exception(
+            "Channel update error"
+        )
         mock_channel_repository_class.return_value = mock_channel_repo
 
         # リポジトリをモックに置き換え

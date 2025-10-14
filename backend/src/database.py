@@ -1,8 +1,9 @@
 import os
 from typing import AsyncGenerator
-from dotenv import load_dotenv
-from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
+
 from domains import Base
+from dotenv import load_dotenv
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 # .envファイルの内容を読み込見込む
 load_dotenv()
@@ -22,6 +23,6 @@ async def get_session() -> AsyncGenerator[AsyncSession, None]:
         yield session
 
 
-async def create_tables():
+async def create_tables() -> None:
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)

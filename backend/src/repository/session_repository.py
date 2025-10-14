@@ -38,7 +38,9 @@ class SessionRepositoryIf(ABC):
     """
 
     @abstractmethod
-    async def create_session(self, session: AsyncSession, session_data: Session) -> Session:
+    async def create_session(
+        self, session: AsyncSession, session_data: Session
+    ) -> Session:
         """セッションを作成する
 
         Args:
@@ -75,7 +77,9 @@ class SessionRepositoryImpl(SessionRepositoryIf):
     """
 
     @handle_repository_errors(SessionCreateError, "セッション作成")
-    async def create_session(self, session: AsyncSession, session_data: Session) -> Session:
+    async def create_session(
+        self, session: AsyncSession, session_data: Session
+    ) -> Session:
         """セッションを作成する
 
         Args:
@@ -104,6 +108,8 @@ class SessionRepositoryImpl(SessionRepositoryIf):
             Session: 取得されたセッション
         """
 
-        result = await session.execute(select(Session).where(Session.refresh_token_hash == token))
+        result = await session.execute(
+            select(Session).where(Session.refresh_token_hash == token)
+        )
 
         return result.scalars().first()
