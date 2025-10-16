@@ -6,14 +6,32 @@ import "@/styles/page/Page.scss";
 import { useState } from "react";
 import { useCreateFriend } from "../../hooks/useFriends";
 import toast from "react-hot-toast";
+import { z, ZodError } from "zod";
+
+// フレンド追加用のユーザー名バリデーションスキーマ
+const friendUsernameSchema = z
+  .string()
+  .min(1, "追加するフレンドのユーザー名を入力してください")
+  .max(50, "ユーザーIDは50文字以内で入力してください")
+  .regex(
+    /^[a-zA-Z0-9_-]+$/,
+    "ユーザーIDは英数字、アンダースコア、ハイフンのみ使用できます"
+  );
 
 const Page = () => {
-  const [searchUsername, setSearchUsername] = useState("");
+  const [searchUserName, setSearchUserName] = useState("");
   const createFriendMutation = useCreateFriend();
 
   const handleAddFriend = async () => {
-    if (!searchUsername.trim()) {
-      toast.error("追加するフレンドのユーザー名を入力してください");
+    // ユーザー名のバリデーション
+    try {
+      friendUsernameSchema.parse(searchUserName);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        toast.error(error.issues[0].message);
+      } else {
+        toast.error("ユーザー名の形式が正しくありません");
+      }
       return;
     }
 
@@ -22,9 +40,9 @@ const Page = () => {
     }
 
     try {
-      await createFriendMutation.mutateAsync(searchUsername.trim());
+      await createFriendMutation.mutateAsync(searchUserName.trim());
       toast.success("フレンドを追加しました");
-      setSearchUsername(""); // 成功時に検索値をクリア
+      setSearchUserName(""); // 成功時に検索値をクリア
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "フレンドの追加に失敗しました";
@@ -58,7 +76,7 @@ const Page = () => {
         </div>
       </div>
       <div className="tabBody">
-        <PeopleColumn onSearchValueChange={setSearchUsername} />
+        <PeopleColumn onSearchValueChange={setSearchUserName} />
         <NowPlayingColumn />
       </div>
     </div>
