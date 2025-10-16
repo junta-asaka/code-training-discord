@@ -23,7 +23,13 @@ class TestLoginUseCaseImpl(unittest.IsolatedAsyncioTestCase):
         self.use_case = injector.get(LoginUseCaseIf)
         self.mock_session = Mock(spec=AsyncSession)
 
-    def create_mock_request(self, user_agent="TestAgent", client_host="127.0.0.1", cookies=None, headers=None):
+    def create_mock_request(
+        self,
+        user_agent="TestAgent",
+        client_host="127.0.0.1",
+        cookies=None,
+        headers=None,
+    ):
         """モックのRequestオブジェクトを作成"""
         request = Mock(spec=Request)
         request.headers = Mock()
@@ -36,7 +42,9 @@ class TestLoginUseCaseImpl(unittest.IsolatedAsyncioTestCase):
         request.client = Mock()
         request.client.host = client_host
         request.cookies = Mock()
-        request.cookies.get = Mock(side_effect=lambda key: cookies.get(key) if cookies else None)
+        request.cookies.get = Mock(
+            side_effect=lambda key: cookies.get(key) if cookies else None
+        )
 
         return request
 
@@ -52,7 +60,10 @@ class TestLoginUseCaseImpl(unittest.IsolatedAsyncioTestCase):
     @patch("usecase.login.SessionRepositoryIf")
     @patch("usecase.login.verify_password")
     async def test_create_session_success(
-        self, mock_verify_password, mock_session_repository_class, mock_user_repository_class
+        self,
+        mock_verify_password,
+        mock_session_repository_class,
+        mock_user_repository_class,
     ):
         """
         Given: 有効なユーザー認証情報
@@ -61,9 +72,18 @@ class TestLoginUseCaseImpl(unittest.IsolatedAsyncioTestCase):
         """
 
         # Given
-        expected_user = User(id=1, username="testuser", email="test@example.com", password_hash="hashed_password")
+        expected_user = User(
+            id=1,
+            username="testuser",
+            email="test@example.com",
+            password_hash="hashed_password",
+        )
         expected_session = Session(
-            id=1, user_id=1, refresh_token_hash="test_token", user_agent="TestAgent", ip_address="127.0.0.1"
+            id=1,
+            user_id=1,
+            refresh_token_hash="test_token",
+            user_agent="TestAgent",
+            ip_address="127.0.0.1",
         )
 
         form_data = self.create_mock_form_data()
@@ -84,14 +104,18 @@ class TestLoginUseCaseImpl(unittest.IsolatedAsyncioTestCase):
         self.use_case.session_repo = mock_session_repo
 
         # When
-        result = await self.use_case.create_session(self.mock_session, request, form_data)
+        result = await self.use_case.create_session(
+            self.mock_session, request, form_data
+        )
 
         # Then
         self.assertIsNotNone(result["session"])
         self.assertEqual(result["session"].id, expected_session.id)
         self.assertEqual(result["user"], expected_user)
         # assert_called_once_with: 指定した引数で1回呼ばれたかどうかを確認
-        mock_user_repo.get_user_by_username.assert_called_once_with(self.mock_session, "testuser")
+        mock_user_repo.get_user_by_username.assert_called_once_with(
+            self.mock_session, "testuser"
+        )
         mock_verify_password.assert_called_once_with("hashed_password", "testpass")
         # assert_called_once: 引数に関係なく1回呼ばれたかどうかを確認
         mock_session_repo.create_session.assert_called_once()
@@ -100,7 +124,10 @@ class TestLoginUseCaseImpl(unittest.IsolatedAsyncioTestCase):
     @patch("usecase.login.SessionRepositoryIf")
     @patch("usecase.login.verify_password")
     async def test_create_session_invalid_user(
-        self, mock_verify_password, mock_session_repository_class, mock_user_repository_class
+        self,
+        mock_verify_password,
+        mock_session_repository_class,
+        mock_user_repository_class,
     ):
         """
         Given: 存在しないユーザー名
@@ -124,19 +151,26 @@ class TestLoginUseCaseImpl(unittest.IsolatedAsyncioTestCase):
         self.use_case.session_repo = mock_session_repo
 
         # When
-        result = await self.use_case.create_session(self.mock_session, request, form_data)
+        result = await self.use_case.create_session(
+            self.mock_session, request, form_data
+        )
 
         # Then
         self.assertIsNone(result["session"])
         self.assertIsNone(result["user"])
-        mock_user_repo.get_user_by_username.assert_called_once_with(self.mock_session, "nonexist")
+        mock_user_repo.get_user_by_username.assert_called_once_with(
+            self.mock_session, "nonexist"
+        )
         mock_verify_password.assert_not_called()
 
     @patch("usecase.login.UserRepositoryIf")
     @patch("usecase.login.SessionRepositoryIf")
     @patch("usecase.login.verify_password")
     async def test_create_session_invalid_password(
-        self, mock_verify_password, mock_session_repository_class, mock_user_repository_class
+        self,
+        mock_verify_password,
+        mock_session_repository_class,
+        mock_user_repository_class,
     ):
         """
         Given: 有効なユーザー名だが無効なパスワード
@@ -145,7 +179,12 @@ class TestLoginUseCaseImpl(unittest.IsolatedAsyncioTestCase):
         """
 
         # Given
-        expected_user = User(id=1, username="testuser", email="test@example.com", password_hash="hashed_password")
+        expected_user = User(
+            id=1,
+            username="testuser",
+            email="test@example.com",
+            password_hash="hashed_password",
+        )
         form_data = self.create_mock_form_data(password="wrong_password")
         request = self.create_mock_request()
 
@@ -163,20 +202,30 @@ class TestLoginUseCaseImpl(unittest.IsolatedAsyncioTestCase):
         self.use_case.session_repo = mock_session_repo
 
         # When
-        result = await self.use_case.create_session(self.mock_session, request, form_data)
+        result = await self.use_case.create_session(
+            self.mock_session, request, form_data
+        )
 
         # Then
         self.assertIsNone(result["session"])
         self.assertEqual(result["user"], expected_user)
-        mock_user_repo.get_user_by_username.assert_called_once_with(self.mock_session, "testuser")
-        mock_verify_password.assert_called_once_with("hashed_password", "wrong_password")
+        mock_user_repo.get_user_by_username.assert_called_once_with(
+            self.mock_session, "testuser"
+        )
+        mock_verify_password.assert_called_once_with(
+            "hashed_password", "wrong_password"
+        )
 
     @patch("usecase.login.UserRepositoryIf")
     @patch("usecase.login.SessionRepositoryIf")
     @patch("usecase.login.verify_password")
     @patch("usecase.login.create_access_token")
     async def test_create_session_with_no_client(
-        self, mock_create_access_token, mock_verify_password, mock_session_repository_class, mock_user_repository_class
+        self,
+        mock_create_access_token,
+        mock_verify_password,
+        mock_session_repository_class,
+        mock_user_repository_class,
     ):
         """
         Given: 有効な認証情報だがclientが存在しないリクエスト
@@ -185,9 +234,18 @@ class TestLoginUseCaseImpl(unittest.IsolatedAsyncioTestCase):
         """
 
         # Given
-        expected_user = User(id=1, username="testuser", email="test@example.com", password_hash="hashed_password")
+        expected_user = User(
+            id=1,
+            username="testuser",
+            email="test@example.com",
+            password_hash="hashed_password",
+        )
         expected_session = Session(
-            id=1, user_id=1, refresh_token_hash="test_token", user_agent="TestAgent", ip_address=None
+            id=1,
+            user_id=1,
+            refresh_token_hash="test_token",
+            user_agent="TestAgent",
+            ip_address=None,
         )
 
         form_data = self.create_mock_form_data()
@@ -212,7 +270,9 @@ class TestLoginUseCaseImpl(unittest.IsolatedAsyncioTestCase):
         self.use_case.session_repo = mock_session_repo
 
         # When
-        result = await self.use_case.create_session(self.mock_session, request, form_data)
+        result = await self.use_case.create_session(
+            self.mock_session, request, form_data
+        )
 
         # Then
         self.assertIsNotNone(result["session"])
@@ -221,7 +281,9 @@ class TestLoginUseCaseImpl(unittest.IsolatedAsyncioTestCase):
 
     @patch("usecase.login.UserRepositoryIf")
     @patch("usecase.login.SessionRepositoryIf")
-    async def test_auth_session_success_with_cookie(self, mock_session_repository_class, mock_user_repository_class):
+    async def test_auth_session_success_with_cookie(
+        self, mock_session_repository_class, mock_user_repository_class
+    ):
         """
         Given: 有効なセッショントークンをCookieに含むリクエスト
         When: auth_sessionメソッドを呼び出す
@@ -230,9 +292,18 @@ class TestLoginUseCaseImpl(unittest.IsolatedAsyncioTestCase):
 
         # Given
         expected_session = Session(
-            id=1, user_id=1, refresh_token_hash="test_token", user_agent="TestAgent", ip_address="127.0.0.1"
+            id=1,
+            user_id=1,
+            refresh_token_hash="test_token",
+            user_agent="TestAgent",
+            ip_address="127.0.0.1",
         )
-        expected_user = User(id=1, username="testuser", email="test@example.com", password_hash="hashed_password")
+        expected_user = User(
+            id=1,
+            username="testuser",
+            email="test@example.com",
+            password_hash="hashed_password",
+        )
 
         request = self.create_mock_request(cookies={"session_token": "test_token"})
 
@@ -253,7 +324,9 @@ class TestLoginUseCaseImpl(unittest.IsolatedAsyncioTestCase):
 
         # Then
         self.assertEqual(result, expected_user)
-        mock_session_repo.get_session_by_token.assert_called_once_with(self.mock_session, "test_token")
+        mock_session_repo.get_session_by_token.assert_called_once_with(
+            self.mock_session, "test_token"
+        )
         mock_user_repo.get_user_by_id.assert_called_once_with(self.mock_session, "1")
 
     @patch("usecase.login.UserRepositoryIf")
@@ -269,11 +342,22 @@ class TestLoginUseCaseImpl(unittest.IsolatedAsyncioTestCase):
 
         # Given
         expected_session = Session(
-            id=1, user_id=1, refresh_token_hash="test_token", user_agent="TestAgent", ip_address="127.0.0.1"
+            id=1,
+            user_id=1,
+            refresh_token_hash="test_token",
+            user_agent="TestAgent",
+            ip_address="127.0.0.1",
         )
-        expected_user = User(id=1, username="testuser", email="test@example.com", password_hash="hashed_password")
+        expected_user = User(
+            id=1,
+            username="testuser",
+            email="test@example.com",
+            password_hash="hashed_password",
+        )
 
-        request = self.create_mock_request(headers={"Authorization": "Bearer test_token"})
+        request = self.create_mock_request(
+            headers={"Authorization": "Bearer test_token"}
+        )
 
         # モックの設定
         mock_session_repo = AsyncMock()
@@ -292,7 +376,9 @@ class TestLoginUseCaseImpl(unittest.IsolatedAsyncioTestCase):
 
         # Then
         self.assertEqual(result, expected_user)
-        mock_session_repo.get_session_by_token.assert_called_once_with(self.mock_session, "test_token")
+        mock_session_repo.get_session_by_token.assert_called_once_with(
+            self.mock_session, "test_token"
+        )
         mock_user_repo.get_user_by_id.assert_called_once_with(self.mock_session, "1")
 
     @patch("usecase.login.UserRepositoryIf")
@@ -308,12 +394,22 @@ class TestLoginUseCaseImpl(unittest.IsolatedAsyncioTestCase):
 
         # Given
         expected_session = Session(
-            id=1, user_id=1, refresh_token_hash="cookie_token", user_agent="TestAgent", ip_address="127.0.0.1"
+            id=1,
+            user_id=1,
+            refresh_token_hash="cookie_token",
+            user_agent="TestAgent",
+            ip_address="127.0.0.1",
         )
-        expected_user = User(id=1, username="testuser", email="test@example.com", password_hash="hashed_password")
+        expected_user = User(
+            id=1,
+            username="testuser",
+            email="test@example.com",
+            password_hash="hashed_password",
+        )
 
         request = self.create_mock_request(
-            cookies={"session_token": "cookie_token"}, headers={"Authorization": "Bearer header_token"}
+            cookies={"session_token": "cookie_token"},
+            headers={"Authorization": "Bearer header_token"},
         )
 
         # モックの設定
@@ -333,7 +429,9 @@ class TestLoginUseCaseImpl(unittest.IsolatedAsyncioTestCase):
 
         # Then
         self.assertEqual(result, expected_user)
-        mock_session_repo.get_session_by_token.assert_called_once_with(self.mock_session, "cookie_token")
+        mock_session_repo.get_session_by_token.assert_called_once_with(
+            self.mock_session, "cookie_token"
+        )
         mock_user_repo.get_user_by_id.assert_called_once_with(self.mock_session, "1")
 
     @patch("usecase.login.SessionRepositoryIf")
@@ -359,7 +457,9 @@ class TestLoginUseCaseImpl(unittest.IsolatedAsyncioTestCase):
 
         # Then
         self.assertIsNone(result)
-        mock_session_repo.get_session_by_token.assert_called_once_with(self.mock_session, "")
+        mock_session_repo.get_session_by_token.assert_called_once_with(
+            self.mock_session, ""
+        )
 
     @patch("usecase.login.SessionRepositoryIf")
     async def test_auth_session_invalid_token(self, mock_session_repository_class):
@@ -384,10 +484,14 @@ class TestLoginUseCaseImpl(unittest.IsolatedAsyncioTestCase):
 
         # Then
         self.assertIsNone(result)
-        mock_session_repo.get_session_by_token.assert_called_once_with(self.mock_session, "invalid_token")
+        mock_session_repo.get_session_by_token.assert_called_once_with(
+            self.mock_session, "invalid_token"
+        )
 
     @patch("usecase.login.SessionRepositoryIf")
-    async def test_auth_session_malformed_authorization_header(self, mock_session_repository_class):
+    async def test_auth_session_malformed_authorization_header(
+        self, mock_session_repository_class
+    ):
         """
         Given: 不正な形式のAuthorizationヘッダーを含むリクエスト
         When: auth_sessionメソッドを呼び出す
@@ -410,7 +514,9 @@ class TestLoginUseCaseImpl(unittest.IsolatedAsyncioTestCase):
         # Then
         self.assertIsNone(result)
         # "Bearer "が含まれていないため、そのまま使用される
-        mock_session_repo.get_session_by_token.assert_called_once_with(self.mock_session, "Invalid token")
+        mock_session_repo.get_session_by_token.assert_called_once_with(
+            self.mock_session, "Invalid token"
+        )
 
 
 if __name__ == "__main__":

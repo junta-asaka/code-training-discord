@@ -2,6 +2,7 @@ from database import get_session
 from dependencies import get_injector
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from injector import Injector
 from schema.login_schema import LoginResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from usecase.login import LoginTransactionError, LoginUseCaseIf
@@ -15,7 +16,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/login")
 logger = get_logger(__name__)
 
 
-def get_usecase(injector=Depends(get_injector)) -> LoginUseCaseIf:
+def get_usecase(injector: Injector = Depends(get_injector)) -> LoginUseCaseIf:
     return injector.get(LoginUseCaseIf)
 
 
@@ -45,20 +46,30 @@ async def login(
     next_param = req.query_params.get("next")
 
     try:
-        result_usecase: dict | None = await usecase.create_session(session, req, form_data)
+        result_usecase: dict | None = await usecase.create_session(
+            session, req, form_data
+        )
 
     except LoginTransactionError as e:
         logger.error(f"ログイン処理中にエラーが発生: {e}")
         if e.original_error:
             logger.error(f"詳細なエラー情報: {e.original_error}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="ログイン中にエラーが発生しました"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="ログイン中にエラーが発生しました",
         )
 
     except Exception as e:
         logger.error(f"予期しないエラーが発生しました: {e}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="サーバー内部エラーが発生しました"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="サーバー内部エラーが発生しました",
+        )
+
+    if result_usecase is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="ログインに失敗しました",
         )
 
     user = result_usecase.get("user")
@@ -69,7 +80,9 @@ async def login(
         error_detail = {"message": "Unauthorized"}
         if next_param:
             error_detail["next"] = next_param
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=error_detail)
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail=error_detail
+        )
 
     # LoginResponseに必要なフィールドのみを抽出
     login_response_data = {

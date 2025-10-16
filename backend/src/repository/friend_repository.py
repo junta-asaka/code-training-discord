@@ -53,7 +53,9 @@ class FriendRepositoryIf(ABC):
         pass
 
     @abstractmethod
-    async def get_friends_with_details(self, session: AsyncSession, user_id: str) -> list[Row]:
+    async def get_friends_with_details(
+        self, session: AsyncSession, user_id: str
+    ) -> list[Row]:
         """フレンド情報を関連テーブルと結合して取得する
 
         Args:
@@ -94,7 +96,9 @@ class FriendRepositoryImpl(FriendRepositoryIf):
         return friend
 
     @handle_repository_errors(FriendQueryError, "フレンド取得")
-    async def get_friends_with_details(self, session: AsyncSession, user_id: str) -> list[Row]:
+    async def get_friends_with_details(
+        self, session: AsyncSession, user_id: str
+    ) -> list[Row]:
         """フレンド情報を関連テーブルと結合して取得する
 
         Args:
@@ -134,9 +138,11 @@ class FriendRepositoryImpl(FriendRepositoryIf):
                 Channel,
                 or_(
                     # guild_id_me と guild_id_related の組み合わせ
-                    (Channel.guild_id == my_guild.id) & (Channel.related_guild_id == friend_guild.id),
+                    (Channel.guild_id == my_guild.id)
+                    & (Channel.related_guild_id == friend_guild.id),
                     # guild_id_related と guild_id_me の組み合わせ（逆）
-                    (Channel.guild_id == friend_guild.id) & (Channel.related_guild_id == my_guild.id),
+                    (Channel.guild_id == friend_guild.id)
+                    & (Channel.related_guild_id == my_guild.id),
                 ),
             )
             .where(

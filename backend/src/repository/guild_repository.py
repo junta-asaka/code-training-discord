@@ -53,7 +53,9 @@ class GuildRepositoryIf(ABC):
         pass
 
     @abstractmethod
-    async def get_guild_by_user_id_name(self, session: AsyncSession, user_id: str, name: str) -> Guild:
+    async def get_guild_by_user_id_name(
+        self, session: AsyncSession, user_id: str, name: str
+    ) -> Guild:
         """idとギルド名からギルドを取得する
 
         Args:
@@ -111,7 +113,9 @@ class GuildRepositoryImpl(GuildRepositoryIf):
         return guild
 
     @handle_repository_errors(GuildQueryError, "ギルド取得")
-    async def get_guild_by_user_id_name(self, session: AsyncSession, user_id: str, name: str) -> Guild:
+    async def get_guild_by_user_id_name(
+        self, session: AsyncSession, user_id: str, name: str
+    ) -> Guild:
         """idとギルド名からギルドを取得する
 
         Args:
@@ -123,7 +127,9 @@ class GuildRepositoryImpl(GuildRepositoryIf):
             Guild: ギルド情報
         """
 
-        result = await session.execute(select(Guild).where(Guild.owner_user_id == user_id, Guild.name == name))
+        result = await session.execute(
+            select(Guild).where(Guild.owner_user_id == user_id, Guild.name == name)
+        )
 
         return result.scalars().first()
 
@@ -151,8 +157,12 @@ class GuildRepositoryImpl(GuildRepositoryIf):
         guild = result.scalars().first()
 
         if guild:
-            logger.info(f"ギルドが見つかりました: member_id={member_id}, channel_id={channel_id}")
+            logger.info(
+                f"ギルドが見つかりました: member_id={member_id}, channel_id={channel_id}"
+            )
         else:
-            logger.info(f"ギルドが見つかりませんでした: member_id={member_id}, channel_id={channel_id}")
+            logger.info(
+                f"ギルドが見つかりませんでした: member_id={member_id}, channel_id={channel_id}"
+            )
 
         return guild

@@ -1,0 +1,33 @@
+repos:
+  # バックエンドのtox
+  - repo: local
+    hooks:
+      - id: backend-tox
+        name: Backend Tox
+        entry: powershell -Command "cd backend; tox"
+        language: system
+        files: '^backend/.*\.(py)$'
+        pass_filenames: false
+        stages: [pre-commit]
+
+  # フロントエンドのESLint
+  - repo: local
+    hooks:
+      - id: frontend-eslint
+        name: Frontend ESLint
+        entry: powershell -Command "cd frontend; pnpm run lint"
+        language: system
+        files: '^frontend/src/.*\.(ts|tsx|js|jsx|vue)$'
+        pass_filenames: false
+        stages: [pre-commit]
+
+  # フロントエンドのpnpmテスト
+  - repo: local
+    hooks:
+      - id: frontend-pnpm-test
+        name: Frontend PNPM Tests
+        entry: powershell -Command "cd frontend; pnpm run test"
+        language: system
+        files: '^frontend/.*\.(ts|tsx|js|jsx|vue)$'
+        pass_filenames: false
+        stages: [pre-commit]

@@ -1,6 +1,7 @@
 from database import get_session
 from dependencies import get_injector
 from fastapi import APIRouter, Depends, HTTPException, status
+from injector import Injector
 from schema.user_schema import UserCreateRequest, UserResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from usecase.create_user import CreateUserTransactionError, CreateUserUseCaseIf
@@ -12,7 +13,7 @@ router = APIRouter(prefix="/api")
 logger = get_logger(__name__)
 
 
-def get_usecase(injector=Depends(get_injector)) -> CreateUserUseCaseIf:
+def get_usecase(injector: Injector = Depends(get_injector)) -> CreateUserUseCaseIf:
     return injector.get(CreateUserUseCaseIf)
 
 
@@ -31,10 +32,14 @@ async def create_user(
         logger.error(f"ユーザー作成ユースケースエラー: {e}")
         if e.original_error:
             logger.error(f"詳細なエラー情報: {e.original_error}")
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="ユーザー作成中にエラーが発生しました")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="ユーザー作成中にエラーが発生しました",
+        )
 
     except Exception as e:
         logger.error(f"予期しないエラーが発生しました: {e}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="サーバー内部エラーが発生しました"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="サーバー内部エラーが発生しました",
         )
