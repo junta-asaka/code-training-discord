@@ -1,20 +1,29 @@
 from injector import Binder, Injector
 from repository.channel_repository import ChannelRepositoryIf, ChannelRepositoryImpl
 from repository.friend_repository import FriendRepositoryIf, FriendRepositoryImpl
-from repository.guild_member_repository import GuildMemberRepositoryIf, GuildMemberRepositoryImpl
+from repository.guild_member_repository import (
+    GuildMemberRepositoryIf,
+    GuildMemberRepositoryImpl,
+)
 from repository.guild_repository import GuildRepositoryIf, GuildRepositoryImpl
 from repository.message_repository import MessageRepositoryIf, MessageRepositoryImpl
 from repository.session_repository import SessionRepositoryIf, SessionRepositoryImpl
 from repository.user_repository import UserRepositoryIf, UserRepositoryImpl
-from usecase.channel_access_checker import ChannelAccessCheckerUseCaseIf, ChannelAccessCheckerUseCaseImpl
+from usecase.channel_access_checker import (
+    ChannelAccessCheckerUseCaseIf,
+    ChannelAccessCheckerUseCaseImpl,
+)
 from usecase.create_message import CreateMessageUseCaseIf, CreateMessageUseCaseImpl
 from usecase.create_user import CreateUserUseCaseIf, CreateUserUseCaseImpl
 from usecase.friend import FriendUseCaseIf, FriendUseCaseImpl
-from usecase.get_channel_messages import GetChannelMessagesUseCaseIf, GetChannelMessagesUseCaseImpl
+from usecase.get_channel_messages import (
+    GetChannelMessagesUseCaseIf,
+    GetChannelMessagesUseCaseImpl,
+)
 from usecase.login import LoginUseCaseIf, LoginUseCaseImpl
 
 
-def configure(binder: Binder):
+def configure(binder: Binder) -> None:
     """DI紐づけ
 
     Args:
@@ -53,5 +62,5 @@ def configure(binder: Binder):
 injector = Injector([configure])
 
 
-def get_injector():
+def get_injector() -> Injector:
     return injector

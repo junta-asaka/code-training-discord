@@ -1,5 +1,5 @@
 from functools import wraps
-from typing import Type
+from typing import Any, Callable, Type
 
 from repository.base_exception import BaseRepositoryError
 from sqlalchemy.exc import IntegrityError, OperationalError, SQLAlchemyError
@@ -8,7 +8,9 @@ from utils.logger_utils import get_logger
 logger = get_logger(__name__)
 
 
-def handle_repository_errors(error_class: Type[Exception], operation_name: str):
+def handle_repository_errors(
+    error_class: Type[Exception], operation_name: str
+) -> Callable[..., Any]:
     """リポジトリ操作のエラーハンドリングデコレータ
 
     Args:
@@ -16,11 +18,11 @@ def handle_repository_errors(error_class: Type[Exception], operation_name: str):
         operation_name (str): 操作名
     """
 
-    def decorator(func):
+    def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
         """リポジトリ操作のエラーハンドリングデコレータ"""
 
         @wraps(func)
-        async def wrapper(*args, **kwargs):
+        async def wrapper(*args: Any, **kwargs: Any) -> Any:
             try:
                 return await func(*args, **kwargs)
 

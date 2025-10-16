@@ -18,7 +18,9 @@ class ChannelAccessCheckerUseCaseIf(ABC):
     """
 
     @inject
-    def __init__(self, channel_repo: ChannelRepositoryIf, guild_repo: GuildRepositoryIf) -> None:
+    def __init__(
+        self, channel_repo: ChannelRepositoryIf, guild_repo: GuildRepositoryIf
+    ) -> None:
         """コンストラクタ
 
         Args:
@@ -30,7 +32,9 @@ class ChannelAccessCheckerUseCaseIf(ABC):
         self.guild_repo = guild_repo
 
     @abstractmethod
-    async def execute(self, request: Request, channel_id: str, session: AsyncSession) -> None:
+    async def execute(
+        self, request: Request, channel_id: str, session: AsyncSession
+    ) -> None:
         """チャンネルアクセス権限を検証し、権限がない場合は例外を発生させる
 
         Args:
@@ -53,7 +57,9 @@ class ChannelAccessCheckerUseCaseImpl(ChannelAccessCheckerUseCaseIf):
         ChannelAccessCheckerUseCaseIf (_type_): チャンネルアクセス権限チェックユースケースのインターフェース
     """
 
-    async def execute(self, request: Request, channel_id: str, session: AsyncSession) -> None:
+    async def execute(
+        self, request: Request, channel_id: str, session: AsyncSession
+    ) -> None:
         """チャンネルアクセス権限を検証し、権限がない場合は例外を発生させる
 
         Args:
@@ -69,10 +75,14 @@ class ChannelAccessCheckerUseCaseImpl(ChannelAccessCheckerUseCaseIf):
         user = getattr(request.state, "user", None)
         if not user:
             logger.warning("認証されていないユーザーがチャンネルアクセスを試行")
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="認証が必要です")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED, detail="認証が必要です"
+            )
 
         ### チャンネルアクセス権限をチェック
-        logger.info(f"チャンネルアクセス権限チェック - ユーザーID: {user.id}, チャンネルID: {channel_id}")
+        logger.info(
+            f"チャンネルアクセス権限チェック - ユーザーID: {user.id}, チャンネルID: {channel_id}"
+        )
 
         # チャンネルが存在するかチェック
         try:
@@ -81,45 +91,62 @@ class ChannelAccessCheckerUseCaseImpl(ChannelAccessCheckerUseCaseIf):
         except ChannelRepositoryError as e:
             logger.error(f"チャンネル情報の取得中にエラーが発生: {e}")
             raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="サーバーエラーが発生しました"
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="サーバーエラーが発生しました",
             )
 
         except Exception as e:
             # その他の予期しないエラー
             logger.error(f"予期しないエラーが発生: {e}")
             raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="サーバーエラーが発生しました"
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="サーバーエラーが発生しました",
             )
 
         if not channel_db:
-            logger.warning(f"存在しないチャンネルID {channel_id} へのアクセスが試行されました")
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="指定されたチャンネルは存在しません")
+            logger.warning(
+                f"存在しないチャンネルID {channel_id} へのアクセスが試行されました"
+            )
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="指定されたチャンネルは存在しません",
+            )
 
         if bool(channel_db.deleted_at):
-            logger.warning(f"ユーザー {user.id} がチャンネル {channel_id} へのアクセスを拒否されました")
+            logger.warning(
+                f"ユーザー {user.id} がチャンネル {channel_id} へのアクセスを拒否されました"
+            )
             raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN, detail="このチャンネルへのアクセス権限がありません"
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="このチャンネルへのアクセス権限がありません",
             )
 
         # チャンネルが属するギルドのメンバーかどうかをチェック
         try:
-            guild_db = await self.guild_repo.get_guild_by_member_channel(session, user.id, channel_id)
+            guild_db = await self.guild_repo.get_guild_by_member_channel(
+                session, user.id, channel_id
+            )
 
         except GuildRepositoryError as e:
             logger.error(f"ギルド情報の取得中にエラーが発生: {e}")
             raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="サーバーエラーが発生しました"
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="サーバーエラーが発生しました",
             )
 
         except Exception as e:
             # その他の予期しないエラー
             logger.error(f"予期しないエラーが発生: {e}")
             raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="サーバーエラーが発生しました"
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="サーバーエラーが発生しました",
             )
 
         if not guild_db:
-            logger.warning(f"ユーザー {user.id} がチャンネル {channel_id} へのアクセスを拒否されました")
+            logger.warning(
+                f"ユーザー {user.id} がチャンネル {channel_id} へのアクセスを拒否されました"
+            )
             raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN, detail="このチャンネルへのアクセス権限がありません"
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="このチャンネルへのアクセス権限がありません",
             )

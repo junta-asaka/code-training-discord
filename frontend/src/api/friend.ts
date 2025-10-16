@@ -26,3 +26,28 @@ export const getFriendsApi = async (
 
   return response.json();
 };
+
+// createFriend: フレンド追加APIを呼び出す関数
+export const createFriendApi = async (
+  username: string,
+  relatedUsername: string,
+  accessToken: string
+): Promise<void> => {
+  const response = await fetch(`${API_BASE_URL}/api/friend`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify({
+      username,
+      related_username: relatedUsername,
+      type: "friend",
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.detail || "フレンドの追加に失敗しました");
+  }
+};

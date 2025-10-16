@@ -65,7 +65,9 @@ class ChannelRepositoryIf(ABC):
         pass
 
     @abstractmethod
-    async def get_channel_by_id(self, session: AsyncSession, channel_id: str) -> Optional[Channel]:
+    async def get_channel_by_id(
+        self, session: AsyncSession, channel_id: str
+    ) -> Optional[Channel]:
         """チャンネルIDからチャンネルを取得する
 
         Args:
@@ -80,7 +82,9 @@ class ChannelRepositoryIf(ABC):
 
     # last_message_idの更新メソッド
     @abstractmethod
-    async def update_last_message_id(self, session: AsyncSession, channel_id: str, last_message_id: str) -> None:
+    async def update_last_message_id(
+        self, session: AsyncSession, channel_id: str, last_message_id: str
+    ) -> None:
         """チャンネルのlast_message_idを更新する
 
         Args:
@@ -115,12 +119,16 @@ class ChannelRepositoryImpl(ChannelRepositoryIf):
         session.add(channel)
         await session.flush()  # commit の代わりに flush を使用（IDを取得するため）
         await session.refresh(channel)
-        logger.info(f"チャンネルが正常に作成されました: channel_id={channel.id}, guild_id={channel.guild_id}")
+        logger.info(
+            f"チャンネルが正常に作成されました: channel_id={channel.id}, guild_id={channel.guild_id}"
+        )
 
         return channel
 
     @handle_repository_errors(ChannelQueryError, "チャンネルIDによるチャンネル取得")
-    async def get_channel_by_id(self, session: AsyncSession, channel_id: str) -> Optional[Channel]:
+    async def get_channel_by_id(
+        self, session: AsyncSession, channel_id: str
+    ) -> Optional[Channel]:
         """チャンネルIDからチャンネルを取得する
 
         Args:
@@ -142,7 +150,9 @@ class ChannelRepositoryImpl(ChannelRepositoryIf):
         return channel
 
     @handle_repository_errors(ChannelUpdateError, "チャンネルのlast_message_id更新")
-    async def update_last_message_id(self, session: AsyncSession, channel_id: str, last_message_id: str) -> None:
+    async def update_last_message_id(
+        self, session: AsyncSession, channel_id: str, last_message_id: str
+    ) -> None:
         """チャンネルのlast_message_idを更新する
 
         Args:
@@ -155,7 +165,9 @@ class ChannelRepositoryImpl(ChannelRepositoryIf):
         """
 
         result = await session.execute(
-            update(Channel).where(Channel.id == channel_id).values(last_message_id=last_message_id)
+            update(Channel)
+            .where(Channel.id == channel_id)
+            .values(last_message_id=last_message_id)
         )
 
         # 更新された行数をチェック

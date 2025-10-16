@@ -5,9 +5,11 @@ import { MemoryRouter } from "react-router-dom";
 import Register from "@/views/Register";
 import * as registerApi from "@/api/register";
 import type { RegisterResponse } from "@/schemas/registerSchema";
+import toast from "react-hot-toast";
 
 // モック設定
 vi.mock("@/api/register");
+vi.mock("react-hot-toast");
 
 const mockedRegisterApi = vi.mocked(registerApi);
 
@@ -68,7 +70,7 @@ describe("Register", () => {
         screen.getByText("すでにアカウントをお持ちの方は")
       ).toBeInTheDocument();
       expect(
-        screen.getByRole("link", { name: "ログイン" })
+        screen.getByRole("button", { name: "ログイン" })
       ).toBeInTheDocument();
 
       // プレースホルダーテキストの確認
@@ -145,10 +147,10 @@ describe("Register", () => {
         target: { value: "test@example.com" },
       });
       fireEvent.change(screen.getByLabelText("パスワード"), {
-        target: { value: "password123" },
+        target: { value: "password123+" },
       });
       fireEvent.change(screen.getByLabelText("パスワード確認"), {
-        target: { value: "password123" },
+        target: { value: "password123+" },
       });
       fireEvent.click(screen.getByRole("button", { name: "アカウント作成" }));
 
@@ -180,10 +182,10 @@ describe("Register", () => {
         target: { value: "test@example.com" },
       });
       fireEvent.change(screen.getByLabelText("パスワード"), {
-        target: { value: "password123" },
+        target: { value: "password123+" },
       });
       fireEvent.change(screen.getByLabelText("パスワード確認"), {
-        target: { value: "password123" },
+        target: { value: "password123+" },
       });
       fireEvent.click(screen.getByRole("button", { name: "アカウント作成" }));
 
@@ -214,10 +216,10 @@ describe("Register", () => {
         target: { value: "test@example.com" },
       });
       fireEvent.change(screen.getByLabelText("パスワード"), {
-        target: { value: "password123" },
+        target: { value: "password123+" },
       });
       fireEvent.change(screen.getByLabelText("パスワード確認"), {
-        target: { value: "password123" },
+        target: { value: "password123+" },
       });
       fireEvent.click(screen.getByRole("button", { name: "アカウント作成" }));
 
@@ -250,7 +252,7 @@ describe("Register", () => {
         target: { value: "test@example.com" },
       });
       fireEvent.change(screen.getByLabelText("パスワード"), {
-        target: { value: "password" }, // 数字なし
+        target: { value: "password" }, // 数字と特殊文字なし
       });
       fireEvent.change(screen.getByLabelText("パスワード確認"), {
         target: { value: "password" },
@@ -260,7 +262,9 @@ describe("Register", () => {
       // Then
       await waitFor(() => {
         expect(
-          screen.getByText("パスワードは英字と数字を含む必要があります")
+          screen.getByText(
+            "パスワードは英字、数字、特殊文字（-_+=/@）を含む必要があります"
+          )
         ).toBeInTheDocument();
       });
     });
@@ -284,10 +288,10 @@ describe("Register", () => {
         target: { value: "test@example.com" },
       });
       fireEvent.change(screen.getByLabelText("パスワード"), {
-        target: { value: "password123" },
+        target: { value: "password123+" },
       });
       fireEvent.change(screen.getByLabelText("パスワード確認"), {
-        target: { value: "password456" }, // 異なるパスワード
+        target: { value: "password456+" }, // 異なるパスワード
       });
       fireEvent.click(screen.getByRole("button", { name: "アカウント作成" }));
 
@@ -329,10 +333,10 @@ describe("Register", () => {
         target: { value: "test@example.com" },
       });
       fireEvent.change(screen.getByLabelText("パスワード"), {
-        target: { value: "password123" },
+        target: { value: "password123+" },
       });
       fireEvent.change(screen.getByLabelText("パスワード確認"), {
-        target: { value: "password123" },
+        target: { value: "password123+" },
       });
       fireEvent.click(screen.getByRole("button", { name: "アカウント作成" }));
 
@@ -342,8 +346,8 @@ describe("Register", () => {
           name: "テストユーザー",
           username: "testuser",
           email: "test@example.com",
-          password: "password123",
-          confirmPassword: "password123",
+          password: "password123+",
+          confirmPassword: "password123+",
         });
       });
 
@@ -380,16 +384,18 @@ describe("Register", () => {
         target: { value: "test@example.com" },
       });
       fireEvent.change(screen.getByLabelText("パスワード"), {
-        target: { value: "password123" },
+        target: { value: "password123+" },
       });
       fireEvent.change(screen.getByLabelText("パスワード確認"), {
-        target: { value: "password123" },
+        target: { value: "password123+" },
       });
       fireEvent.click(screen.getByRole("button", { name: "アカウント作成" }));
 
       // Then
       await waitFor(() => {
-        expect(screen.getByText(errorMessage)).toBeInTheDocument();
+        expect(toast.error).toHaveBeenCalledWith(
+          `登録に失敗しました -> ${errorMessage}`
+        );
       });
 
       // 画面遷移が実行されていないか確認
@@ -417,16 +423,18 @@ describe("Register", () => {
         target: { value: "test@example.com" },
       });
       fireEvent.change(screen.getByLabelText("パスワード"), {
-        target: { value: "password123" },
+        target: { value: "password123+" },
       });
       fireEvent.change(screen.getByLabelText("パスワード確認"), {
-        target: { value: "password123" },
+        target: { value: "password123+" },
       });
       fireEvent.click(screen.getByRole("button", { name: "アカウント作成" }));
 
       // Then
       await waitFor(() => {
-        expect(screen.getByText("登録に失敗しました")).toBeInTheDocument();
+        expect(toast.error).toHaveBeenCalledWith(
+          "登録に失敗しました -> 不明なエラーが発生しました"
+        );
       });
     });
   });
@@ -457,10 +465,10 @@ describe("Register", () => {
         target: { value: "test@example.com" },
       });
       fireEvent.change(screen.getByLabelText("パスワード"), {
-        target: { value: "password123" },
+        target: { value: "password123+" },
       });
       fireEvent.change(screen.getByLabelText("パスワード確認"), {
-        target: { value: "password123" },
+        target: { value: "password123+" },
       });
       fireEvent.click(screen.getByRole("button", { name: "アカウント作成" }));
 
@@ -517,10 +525,10 @@ describe("Register", () => {
         target: { value: "test@example.com" },
       });
       fireEvent.change(screen.getByLabelText("パスワード"), {
-        target: { value: "password123" },
+        target: { value: "password123+" },
       });
       fireEvent.change(screen.getByLabelText("パスワード確認"), {
-        target: { value: "password123" },
+        target: { value: "password123+" },
       });
 
       // 最初の送信
