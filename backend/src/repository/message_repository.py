@@ -52,7 +52,9 @@ class MessageRepositoryIf(ABC):
         pass
 
     @abstractmethod
-    async def get_message_by_channel_id(self, session: AsyncSession, channel_id: str) -> list[Message]:
+    async def get_message_by_channel_id(
+        self, session: AsyncSession, channel_id: str
+    ) -> list[Message]:
         """チャネルIDからメッセージを取得する
 
         Args:
@@ -89,12 +91,16 @@ class MessageRepositoryImpl(MessageRepositoryIf):
         session.add(message)
         await session.flush()  # commit の代わりに flush を使用（IDを取得するため）
         await session.refresh(message)
-        logger.info(f"メッセージが正常に作成されました: message_id={message.id}, channel_id={message.channel_id}")
+        logger.info(
+            f"メッセージが正常に作成されました: message_id={message.id}, channel_id={message.channel_id}"
+        )
 
         return message
 
     @handle_repository_errors(MessageQueryError, "メッセージ取得")
-    async def get_message_by_channel_id(self, session: AsyncSession, channel_id: str) -> list[Message]:
+    async def get_message_by_channel_id(
+        self, session: AsyncSession, channel_id: str
+    ) -> list[Message]:
         """チャネルIDからメッセージを取得する
 
         Args:
@@ -106,9 +112,13 @@ class MessageRepositoryImpl(MessageRepositoryIf):
         """
 
         result = await session.execute(
-            select(Message).where(Message.channel_id == channel_id).order_by(Message.created_at)
+            select(Message)
+            .where(Message.channel_id == channel_id)
+            .order_by(Message.created_at)
         )
         messages = list(result.scalars().all())
-        logger.info(f"チャネル {channel_id} のメッセージを {len(messages)} 件取得しました")
+        logger.info(
+            f"チャネル {channel_id} のメッセージを {len(messages)} 件取得しました"
+        )
 
         return messages

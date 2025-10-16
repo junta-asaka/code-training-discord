@@ -220,7 +220,9 @@ class TestMessageRepository(unittest.IsolatedAsyncioTestCase):
 
         # When: チャネルIDでメッセージを取得
         async with self.AsyncSessionLocal() as session:
-            result = await self.repository.get_message_by_channel_id(session, str(channel.id))
+            result = await self.repository.get_message_by_channel_id(
+                session, str(channel.id)
+            )
 
         # Then: メッセージが作成日時順に取得される
         self.assertEqual(len(result), 3)
@@ -244,7 +246,9 @@ class TestMessageRepository(unittest.IsolatedAsyncioTestCase):
 
         # When: 存在しないチャネルIDでメッセージを取得
         async with self.AsyncSessionLocal() as session:
-            result = await self.repository.get_message_by_channel_id(session, str(nonexistent_channel_id))
+            result = await self.repository.get_message_by_channel_id(
+                session, str(nonexistent_channel_id)
+            )
 
         # Then: 空のリストが返される
         self.assertEqual(len(result), 0)

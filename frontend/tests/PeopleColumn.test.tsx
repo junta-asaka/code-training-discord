@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter } from "react-router-dom";
 import PeopleColumn from "@/components/page/PeopleColumn";
@@ -35,6 +35,7 @@ describe("PeopleColumn", () => {
   describe("ローディング状態の場合", () => {
     it("given: フレンド一覧がローディング中の場合, when: コンポーネントをレンダリングする, then: ローディングメッセージが表示される", () => {
       // Given
+      const mockOnSearchValueChange = vi.fn();
       mockUseFriends.mockReturnValue({
         data: undefined,
         isLoading: true,
@@ -44,7 +45,7 @@ describe("PeopleColumn", () => {
       // When
       render(
         <TestWrapper>
-          <PeopleColumn />
+          <PeopleColumn onSearchValueChange={mockOnSearchValueChange} />
         </TestWrapper>
       );
 
@@ -57,6 +58,7 @@ describe("PeopleColumn", () => {
   describe("エラー状態の場合", () => {
     it("given: フレンド一覧の取得でエラーが発生した場合, when: コンポーネントをレンダリングする, then: エラーメッセージが表示される", () => {
       // Given
+      const mockOnSearchValueChange = vi.fn();
       mockUseFriends.mockReturnValue({
         data: undefined,
         isLoading: false,
@@ -66,7 +68,7 @@ describe("PeopleColumn", () => {
       // When
       render(
         <TestWrapper>
-          <PeopleColumn />
+          <PeopleColumn onSearchValueChange={mockOnSearchValueChange} />
         </TestWrapper>
       );
 
@@ -79,6 +81,7 @@ describe("PeopleColumn", () => {
   describe("フレンド一覧が正常に取得できた場合", () => {
     it("given: フレンド一覧が正常に取得できた場合, when: コンポーネントをレンダリングする, then: フレンド一覧が表示される", () => {
       // Given
+      const mockOnSearchValueChange = vi.fn();
       const mockFriends: Friend[] = [
         {
           name: "Test User",
@@ -103,7 +106,7 @@ describe("PeopleColumn", () => {
       // When
       render(
         <TestWrapper>
-          <PeopleColumn />
+          <PeopleColumn onSearchValueChange={mockOnSearchValueChange} />
         </TestWrapper>
       );
 
@@ -123,6 +126,7 @@ describe("PeopleColumn", () => {
   describe("フレンド一覧が空の場合", () => {
     it("given: フレンド一覧が空配列の場合, when: コンポーネントをレンダリングする, then: フレンドアイテムが表示されない", () => {
       // Given
+      const mockOnSearchValueChange = vi.fn();
       mockUseFriends.mockReturnValue({
         data: [] as Friend[],
         isLoading: false,
@@ -132,7 +136,7 @@ describe("PeopleColumn", () => {
       // When
       render(
         <TestWrapper>
-          <PeopleColumn />
+          <PeopleColumn onSearchValueChange={mockOnSearchValueChange} />
         </TestWrapper>
       );
 
@@ -145,6 +149,7 @@ describe("PeopleColumn", () => {
   describe("CSSクラスの適用", () => {
     it("given: コンポーネントがレンダリングされた時, when: DOM構造を確認する, then: 適切なCSSクラスが適用されている", () => {
       // Given
+      const mockOnSearchValueChange = vi.fn();
       mockUseFriends.mockReturnValue({
         data: [] as Friend[],
         isLoading: false,
@@ -154,7 +159,7 @@ describe("PeopleColumn", () => {
       // When
       render(
         <TestWrapper>
-          <PeopleColumn />
+          <PeopleColumn onSearchValueChange={mockOnSearchValueChange} />
         </TestWrapper>
       );
 
@@ -170,6 +175,34 @@ describe("PeopleColumn", () => {
       expect(peopleList).toBeTruthy();
       expect(sectionTitle).toBeTruthy();
       expect(peopleListItem).toBeTruthy();
+    });
+  });
+
+  describe("検索機能", () => {
+    it("given: 検索フィールドが表示されている時, when: 検索値を入力する, then: onSearchValueChangeコールバックが呼ばれ、入力値が表示される", () => {
+      // Given
+      const mockOnSearchValueChange = vi.fn();
+      mockUseFriends.mockReturnValue({
+        data: [] as Friend[],
+        isLoading: false,
+        error: null,
+      } as unknown as ReturnType<typeof useFriends>);
+
+      render(
+        <TestWrapper>
+          <PeopleColumn onSearchValueChange={mockOnSearchValueChange} />
+        </TestWrapper>
+      );
+
+      const searchInput = screen.getByPlaceholderText("検索");
+
+      // When
+      fireEvent.change(searchInput, { target: { value: "testuser" } });
+
+      // Then
+      expect(mockOnSearchValueChange).toHaveBeenCalledWith("testuser");
+      expect(mockOnSearchValueChange).toHaveBeenCalledTimes(1);
+      expect((searchInput as HTMLInputElement).value).toBe("testuser");
     });
   });
 });

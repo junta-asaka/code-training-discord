@@ -101,7 +101,9 @@ class TestFriendRepository(unittest.IsolatedAsyncioTestCase):
             await session.refresh(guild)
             return guild
 
-    async def create_test_channel(self, guild_id, related_guild_id, owner_user_id: uuid.UUID) -> Channel:
+    async def create_test_channel(
+        self, guild_id, related_guild_id, owner_user_id: uuid.UUID
+    ) -> Channel:
         """テスト用チャンネルを作成"""
         channel = Channel(
             type="text",
@@ -255,7 +257,9 @@ class TestFriendRepository(unittest.IsolatedAsyncioTestCase):
 
         # When
         async with self.AsyncSessionLocal() as session:
-            result = await self.repository.get_friends_with_details(session, str(self.user1_id))
+            result = await self.repository.get_friends_with_details(
+                session, str(self.user1_id)
+            )
 
         # Then
         self.assertEqual(len(result), 2)
@@ -288,8 +292,12 @@ class TestFriendRepository(unittest.IsolatedAsyncioTestCase):
 
         # When
         async with self.AsyncSessionLocal() as session:
-            result1 = await self.repository.get_friends_with_details(session, str(self.user1_id))
-            result2 = await self.repository.get_friends_with_details(session, str(self.user2_id))
+            result1 = await self.repository.get_friends_with_details(
+                session, str(self.user1_id)
+            )
+            result2 = await self.repository.get_friends_with_details(
+                session, str(self.user2_id)
+            )
 
         # Then
         self.assertEqual(len(result1), 1)
@@ -309,7 +317,9 @@ class TestFriendRepository(unittest.IsolatedAsyncioTestCase):
 
         # When
         async with self.AsyncSessionLocal() as session:
-            result = await self.repository.get_friends_with_details(session, str(self.user1_id))
+            result = await self.repository.get_friends_with_details(
+                session, str(self.user1_id)
+            )
 
         # Then
         self.assertEqual(len(result), 0)
@@ -327,7 +337,9 @@ class TestFriendRepository(unittest.IsolatedAsyncioTestCase):
 
         # When
         async with self.AsyncSessionLocal() as session:
-            result = await self.repository.get_friends_with_details(session, nonexistent_user_id)
+            result = await self.repository.get_friends_with_details(
+                session, nonexistent_user_id
+            )
 
         # Then
         self.assertEqual(len(result), 0)

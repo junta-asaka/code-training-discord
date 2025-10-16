@@ -57,7 +57,9 @@ class TestChannelRepository(unittest.IsolatedAsyncioTestCase):
         # エンジンを非同期に破棄
         await self.engine.dispose()
 
-    async def create_test_user(self, name: str = "Test User", username: str = "testuser") -> User:
+    async def create_test_user(
+        self, name: str = "Test User", username: str = "testuser"
+    ) -> User:
         """テスト用ユーザーを作成"""
         user = User(
             name=name,
@@ -72,7 +74,9 @@ class TestChannelRepository(unittest.IsolatedAsyncioTestCase):
             await session.refresh(user)
             return user
 
-    async def create_test_guild(self, owner_user_id: uuid.UUID, name: str = "Test Guild") -> Guild:
+    async def create_test_guild(
+        self, owner_user_id: uuid.UUID, name: str = "Test Guild"
+    ) -> Guild:
         """テスト用ギルドを作成"""
         guild = Guild(
             name=name,
@@ -84,7 +88,9 @@ class TestChannelRepository(unittest.IsolatedAsyncioTestCase):
             await session.refresh(guild)
             return guild
 
-    async def create_test_guild_member(self, guild_id: uuid.UUID, user_id: uuid.UUID) -> GuildMember:
+    async def create_test_guild_member(
+        self, guild_id: uuid.UUID, user_id: uuid.UUID
+    ) -> GuildMember:
         """テスト用ギルドメンバーを作成"""
         guild_member = GuildMember(
             guild_id=guild_id,
@@ -168,7 +174,9 @@ class TestChannelRepository(unittest.IsolatedAsyncioTestCase):
             owner_user_id=uuid.UUID(str(owner.id)),
         )
         async with self.AsyncSessionLocal() as session:
-            second_result = await self.repository.create_channel(session, second_channel)
+            second_result = await self.repository.create_channel(
+                session, second_channel
+            )
             await session.commit()  # テスト用に明示的にcommit
 
         # Then: 両方のチャネルが正常に作成される（異なるID）
@@ -227,7 +235,9 @@ class TestChannelRepository(unittest.IsolatedAsyncioTestCase):
 
         # When: チャネルIDでチャネルを取得
         async with self.AsyncSessionLocal() as session:
-            result = await self.repository.get_channel_by_id(session, str(created_channel.id))
+            result = await self.repository.get_channel_by_id(
+                session, str(created_channel.id)
+            )
 
         # Then: 正しいチャネルが取得される
         self.assertIsNotNone(result)
@@ -249,7 +259,9 @@ class TestChannelRepository(unittest.IsolatedAsyncioTestCase):
 
         # When: 存在しないチャネルIDでチャネルを取得
         async with self.AsyncSessionLocal() as session:
-            result = await self.repository.get_channel_by_id(session, nonexistent_channel_id)
+            result = await self.repository.get_channel_by_id(
+                session, nonexistent_channel_id
+            )
 
         # Then: Noneが返される
         self.assertIsNone(result)
@@ -274,16 +286,22 @@ class TestChannelRepository(unittest.IsolatedAsyncioTestCase):
             await session.commit()  # テスト用に明示的にcommit
 
         # 実際のメッセージを作成
-        message = await self.create_test_message(uuid.UUID(str(created_channel.id)), uuid.UUID(str(owner.id)))
+        message = await self.create_test_message(
+            uuid.UUID(str(created_channel.id)), uuid.UUID(str(owner.id))
+        )
 
         # When: last_message_idを更新
         async with self.AsyncSessionLocal() as session:
-            await self.repository.update_last_message_id(session, str(created_channel.id), str(message.id))
+            await self.repository.update_last_message_id(
+                session, str(created_channel.id), str(message.id)
+            )
             await session.commit()
 
         # Then: チャネルのlast_message_idが更新されていることを確認
         async with self.AsyncSessionLocal() as session:
-            updated_channel = await self.repository.get_channel_by_id(session, str(created_channel.id))
+            updated_channel = await self.repository.get_channel_by_id(
+                session, str(created_channel.id)
+            )
 
         self.assertIsNotNone(updated_channel)
         if updated_channel is not None:
@@ -309,7 +327,9 @@ class TestChannelRepository(unittest.IsolatedAsyncioTestCase):
             await session.commit()
 
         # 実際のメッセージを作成
-        message = await self.create_test_message(uuid.UUID(str(temp_channel.id)), uuid.UUID(str(owner.id)))
+        message = await self.create_test_message(
+            uuid.UUID(str(temp_channel.id)), uuid.UUID(str(owner.id))
+        )
 
         # 存在しないチャネルIDを生成
         nonexistent_channel_id = str(uuid.uuid4())
@@ -317,7 +337,9 @@ class TestChannelRepository(unittest.IsolatedAsyncioTestCase):
         # When/Then: ChannelNotFoundErrorが発生する
         with self.assertRaises(ChannelNotFoundError):
             async with self.AsyncSessionLocal() as session:
-                await self.repository.update_last_message_id(session, nonexistent_channel_id, str(message.id))
+                await self.repository.update_last_message_id(
+                    session, nonexistent_channel_id, str(message.id)
+                )
 
     async def test_update_last_message_id_multiple_updates(self):
         """
@@ -340,35 +362,51 @@ class TestChannelRepository(unittest.IsolatedAsyncioTestCase):
 
         # 複数のメッセージを作成
         first_message = await self.create_test_message(
-            uuid.UUID(str(created_channel.id)), uuid.UUID(str(owner.id)), "First message"
+            uuid.UUID(str(created_channel.id)),
+            uuid.UUID(str(owner.id)),
+            "First message",
         )
         second_message = await self.create_test_message(
-            uuid.UUID(str(created_channel.id)), uuid.UUID(str(owner.id)), "Second message"
+            uuid.UUID(str(created_channel.id)),
+            uuid.UUID(str(owner.id)),
+            "Second message",
         )
         final_message = await self.create_test_message(
-            uuid.UUID(str(created_channel.id)), uuid.UUID(str(owner.id)), "Final message"
+            uuid.UUID(str(created_channel.id)),
+            uuid.UUID(str(owner.id)),
+            "Final message",
         )
 
         # When: 複数回更新
         async with self.AsyncSessionLocal() as session:
-            await self.repository.update_last_message_id(session, str(created_channel.id), str(first_message.id))
+            await self.repository.update_last_message_id(
+                session, str(created_channel.id), str(first_message.id)
+            )
             await session.commit()
 
         async with self.AsyncSessionLocal() as session:
-            await self.repository.update_last_message_id(session, str(created_channel.id), str(second_message.id))
+            await self.repository.update_last_message_id(
+                session, str(created_channel.id), str(second_message.id)
+            )
             await session.commit()
 
         async with self.AsyncSessionLocal() as session:
-            await self.repository.update_last_message_id(session, str(created_channel.id), str(final_message.id))
+            await self.repository.update_last_message_id(
+                session, str(created_channel.id), str(final_message.id)
+            )
             await session.commit()
 
         # Then: 最後に設定されたメッセージIDが保存されていることを確認
         async with self.AsyncSessionLocal() as session:
-            updated_channel = await self.repository.get_channel_by_id(session, str(created_channel.id))
+            updated_channel = await self.repository.get_channel_by_id(
+                session, str(created_channel.id)
+            )
 
         self.assertIsNotNone(updated_channel)
         if updated_channel is not None:
-            self.assertEqual(str(updated_channel.last_message_id), str(final_message.id))
+            self.assertEqual(
+                str(updated_channel.last_message_id), str(final_message.id)
+            )
 
 
 if __name__ == "__main__":

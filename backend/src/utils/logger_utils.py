@@ -8,7 +8,7 @@ import logging
 import logging.config
 import os
 from pathlib import Path
-from typing import Optional
+from typing import Dict, Optional
 
 
 class LoggerManager:
@@ -19,10 +19,12 @@ class LoggerManager:
     """
 
     _initialized = False
-    _loggers = {}
+    _loggers: Dict[str, logging.Logger] = {}
 
     @classmethod
-    def setup_logging(cls, config_path: Optional[str] = None, env_key: str = "LOG_CONFIG") -> None:
+    def setup_logging(
+        cls, config_path: Optional[str] = None, env_key: str = "LOG_CONFIG"
+    ) -> None:
         """ログ設定を初期化
 
         Args:
@@ -62,7 +64,9 @@ class LoggerManager:
         cls._initialized = True
 
     @classmethod
-    def _resolve_config_path(cls, config_path: Optional[str], env_key: str) -> Optional[Path]:
+    def _resolve_config_path(
+        cls, config_path: Optional[str], env_key: str
+    ) -> Optional[Path]:
         """設定ファイルパスを解決"""
         # 1. 直接指定されたパス
         if config_path:
@@ -119,7 +123,11 @@ class LoggerManager:
 
         if name not in cls._loggers:
             # appロガーを使用するか、標準ロガーを使用するかを判定
-            if name.startswith("api.") or name.startswith("usecase.") or name.startswith("repository."):
+            if (
+                name.startswith("api.")
+                or name.startswith("usecase.")
+                or name.startswith("repository.")
+            ):
                 logger = logging.getLogger("app")
             else:
                 logger = logging.getLogger(name)
@@ -156,7 +164,9 @@ def get_logger(name: str = __name__) -> logging.Logger:
     return LoggerManager.get_logger(name)
 
 
-def setup_logging(config_path: Optional[str] = None, env_key: str = "LOG_CONFIG") -> None:
+def setup_logging(
+    config_path: Optional[str] = None, env_key: str = "LOG_CONFIG"
+) -> None:
     """ログ設定を初期化するためのヘルパー関数
 
     Args:

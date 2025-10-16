@@ -31,7 +31,9 @@ async def verify_password(stored_password: str, provided_password: str) -> bool:
         salt_b64, hash_b64 = stored_password.split("$")
         salt = base64.b64decode(salt_b64)
         expected_hash = base64.b64decode(hash_b64)
-        new_hash = hashlib.pbkdf2_hmac("sha256", provided_password.encode(), salt, 100_000)
+        new_hash = hashlib.pbkdf2_hmac(
+            "sha256", provided_password.encode(), salt, 100_000
+        )
 
         return new_hash == expected_hash
 
@@ -39,7 +41,9 @@ async def verify_password(stored_password: str, provided_password: str) -> bool:
         return False
 
 
-def create_access_token(data: dict, expires_delta: Union[timedelta, None] = None):
+def create_access_token(
+    data: dict, expires_delta: Union[timedelta, None] = None
+) -> str:
     to_encode = data.copy()
     if expires_delta:
         expire = datetime.now(timezone.utc) + expires_delta
@@ -50,7 +54,7 @@ def create_access_token(data: dict, expires_delta: Union[timedelta, None] = None
     return encoded_jwt
 
 
-async def is_test_env():
+async def is_test_env() -> bool:
     """テスト環境かどうかを判定する
 
     Returns:

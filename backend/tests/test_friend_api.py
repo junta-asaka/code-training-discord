@@ -53,7 +53,9 @@ class TestFriendAPI(unittest.IsolatedAsyncioTestCase):
         app.dependency_overrides[get_session] = override_get_session
 
         # 非同期でAsyncClientを初期化
-        self.client = AsyncClient(transport=ASGITransport(app=app), base_url="http://testserver")
+        self.client = AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://testserver"
+        )
 
     async def _create_test_user(self, name: str, username: str, email: str) -> dict:
         """テスト用ユーザーを作成し、レスポンスを返す"""
@@ -69,9 +71,15 @@ class TestFriendAPI(unittest.IsolatedAsyncioTestCase):
 
     async def _create_test_users(self):
         """テスト用ユーザーを複数作成"""
-        self.user1 = await self._create_test_user("Test User 1", "testuser1", "test1@example.com")
-        self.user2 = await self._create_test_user("Test User 2", "testuser2", "test2@example.com")
-        self.user3 = await self._create_test_user("Test User 3", "testuser3", "test3@example.com")
+        self.user1 = await self._create_test_user(
+            "Test User 1", "testuser1", "test1@example.com"
+        )
+        self.user2 = await self._create_test_user(
+            "Test User 2", "testuser2", "test2@example.com"
+        )
+        self.user3 = await self._create_test_user(
+            "Test User 3", "testuser3", "test3@example.com"
+        )
 
     async def asyncTearDown(self):
         # テスト環境変数をクリーンアップ
@@ -95,7 +103,11 @@ class TestFriendAPI(unittest.IsolatedAsyncioTestCase):
         # Given: テスト用ユーザーを事前に作成
         await self._create_test_users()
 
-        friend_data = {"username": "testuser1", "related_username": "testuser2", "type": "friend"}
+        friend_data = {
+            "username": "testuser1",
+            "related_username": "testuser2",
+            "type": "friend",
+        }
 
         # When: POST /api/friend にリクエスト
         response = await self.client.post("/api/friend", json=friend_data)
@@ -117,7 +129,11 @@ class TestFriendAPI(unittest.IsolatedAsyncioTestCase):
         """
 
         # Given: 存在しないユーザーでフレンド作成を試行
-        friend_data = {"username": "nonexistentuser", "related_username": "testuser2", "type": "friend"}
+        friend_data = {
+            "username": "nonexistentuser",
+            "related_username": "testuser2",
+            "type": "friend",
+        }
 
         # When: POST /api/friend にリクエスト
         response = await self.client.post("/api/friend", json=friend_data)
@@ -167,7 +183,11 @@ class TestFriendAPI(unittest.IsolatedAsyncioTestCase):
         """
 
         # Given: 空のusername
-        friend_data = {"username": "", "related_username": "testuser2", "type": "friend"}
+        friend_data = {
+            "username": "",
+            "related_username": "testuser2",
+            "type": "friend",
+        }
 
         # When: POST /api/friend にリクエスト
         response = await self.client.post("/api/friend", json=friend_data)
@@ -188,10 +208,20 @@ class TestFriendAPI(unittest.IsolatedAsyncioTestCase):
 
         # user1とuser2, user3をフレンドにする
         await self.client.post(
-            "/api/friend", json={"username": "testuser1", "related_username": "testuser2", "type": "friend"}
+            "/api/friend",
+            json={
+                "username": "testuser1",
+                "related_username": "testuser2",
+                "type": "friend",
+            },
         )
         await self.client.post(
-            "/api/friend", json={"username": "testuser1", "related_username": "testuser3", "type": "friend"}
+            "/api/friend",
+            json={
+                "username": "testuser1",
+                "related_username": "testuser3",
+                "type": "friend",
+            },
         )
 
         # When: GET /api/friends にリクエスト

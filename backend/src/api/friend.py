@@ -3,6 +3,7 @@ from uuid import UUID
 from database import get_session
 from dependencies import get_injector
 from fastapi import APIRouter, Depends, HTTPException, status
+from injector import Injector
 from schema.friend_schema import (
     FriendCreateRequest,
     FriendCreateResponse,
@@ -18,11 +19,13 @@ router = APIRouter(prefix="/api")
 logger = get_logger(__name__)
 
 
-def get_usecase(injector=Depends(get_injector)) -> FriendUseCaseIf:
+def get_usecase(injector: Injector = Depends(get_injector)) -> FriendUseCaseIf:
     return injector.get(FriendUseCaseIf)
 
 
-@router.post("/friend", response_model=FriendCreateResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/friend", response_model=FriendCreateResponse, status_code=status.HTTP_201_CREATED
+)
 async def create_friend(
     req: FriendCreateRequest,
     session: AsyncSession = Depends(get_session),
@@ -50,22 +53,28 @@ async def create_friend(
         if e.original_error:
             logger.error(f"詳細なエラー情報: {e.original_error}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="フレンド作成中にエラーが発生しました"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="フレンド作成中にエラーが発生しました",
         )
 
     except Exception as e:
         logger.error(f"予期しないエラーが発生しました: {e}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="サーバー内部エラーが発生しました"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="サーバー内部エラーが発生しました",
         )
 
     if not friend:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Failed to create friend")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Failed to create friend"
+        )
 
     return FriendCreateResponse.model_validate(friend)
 
 
-@router.get("/friends", response_model=list[FriendGetResponse], status_code=status.HTTP_200_OK)
+@router.get(
+    "/friends", response_model=list[FriendGetResponse], status_code=status.HTTP_200_OK
+)
 async def get_friends(
     user_id: str,
     session: AsyncSession = Depends(get_session),
@@ -85,7 +94,9 @@ async def get_friends(
     try:
         UUID(user_id)
     except ValueError:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="無効なユーザーIDです")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="無効なユーザーIDです"
+        )
 
     try:
         response = await usecase.get_friend_all(session, user_id)
@@ -97,11 +108,13 @@ async def get_friends(
         if e.original_error:
             logger.error(f"詳細なエラー情報: {e.original_error}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="フレンド取得中にエラーが発生しました"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="フレンド取得中にエラーが発生しました",
         )
 
     except Exception as e:
         logger.error(f"予期しないエラーが発生しました: {e}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="サーバー内部エラーが発生しました"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="サーバー内部エラーが発生しました",
         )

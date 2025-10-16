@@ -175,11 +175,15 @@ class TestSessionRepository(unittest.IsolatedAsyncioTestCase):
         )
 
         async with self.AsyncSessionLocal() as session:
-            created_session = await self.repository.create_session(session, expected_session)
+            created_session = await self.repository.create_session(
+                session, expected_session
+            )
 
         # When
         async with self.AsyncSessionLocal() as session:
-            result = await self.repository.get_session_by_token(session, "refresh_token_hash")
+            result = await self.repository.get_session_by_token(
+                session, "refresh_token_hash"
+            )
 
         # Then
         self.assertIsNotNone(result)
@@ -199,7 +203,9 @@ class TestSessionRepository(unittest.IsolatedAsyncioTestCase):
 
         # Given / When
         async with self.AsyncSessionLocal() as session:
-            result = await self.repository.get_session_by_token(session, "refresh_token_hash")
+            result = await self.repository.get_session_by_token(
+                session, "refresh_token_hash"
+            )
 
         # Then
         self.assertIsNone(result)
@@ -246,11 +252,15 @@ class TestSessionRepository(unittest.IsolatedAsyncioTestCase):
             _ = await self.repository.create_session(session, session_data_1)
 
         async with self.AsyncSessionLocal() as session:
-            created_session_2 = await self.repository.create_session(session, session_data_2)
+            created_session_2 = await self.repository.create_session(
+                session, session_data_2
+            )
 
         # When
         async with self.AsyncSessionLocal() as session:
-            result = await self.repository.get_session_by_token(session, "refresh_token_hash_2")
+            result = await self.repository.get_session_by_token(
+                session, "refresh_token_hash_2"
+            )
 
         # Then
         self.assertIsNotNone(result)

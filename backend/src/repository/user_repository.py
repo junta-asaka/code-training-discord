@@ -77,7 +77,9 @@ class UserRepositoryIf(ABC):
         pass
 
     @abstractmethod
-    async def get_users_by_id(self, session: AsyncSession, user_id_list: list[str]) -> list[User]:
+    async def get_users_by_id(
+        self, session: AsyncSession, user_id_list: list[str]
+    ) -> list[User]:
         """複数のユーザーを取得する
 
         Args:
@@ -150,7 +152,9 @@ class UserRepositoryImpl(UserRepositoryIf):
         return result.scalars().first()
 
     @handle_repository_errors(UserQueryError, "複数ユーザー取得")
-    async def get_users_by_id(self, session: AsyncSession, user_id_list: list[str]) -> list[User]:
+    async def get_users_by_id(
+        self, session: AsyncSession, user_id_list: list[str]
+    ) -> list[User]:
         """複数のユーザーを取得する
 
         Args:

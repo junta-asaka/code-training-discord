@@ -45,7 +45,9 @@ class CreateMessageUseCaseIf(ABC):
     """
 
     @inject
-    def __init__(self, message_repo: MessageRepositoryIf, channel_repo: ChannelRepositoryIf) -> None:
+    def __init__(
+        self, message_repo: MessageRepositoryIf, channel_repo: ChannelRepositoryIf
+    ) -> None:
         """メッセージ作成ユースケース初期化
 
         Args:
@@ -57,7 +59,9 @@ class CreateMessageUseCaseIf(ABC):
         self.channel_repo = channel_repo
 
     @abstractmethod
-    async def execute(self, session: AsyncSession, req: MessageCreateRequest) -> MessageResponse:
+    async def execute(
+        self, session: AsyncSession, req: MessageCreateRequest
+    ) -> MessageResponse:
         """メッセージ作成処理の実行
 
         Args:
@@ -79,7 +83,9 @@ class CreateMessageUseCaseImpl(CreateMessageUseCaseIf):
         CreateMessageUseCaseIf (_type_): メッセージ作成ユースケースのインターフェース
     """
 
-    async def execute(self, session: AsyncSession, req: MessageCreateRequest) -> MessageResponse:
+    async def execute(
+        self, session: AsyncSession, req: MessageCreateRequest
+    ) -> MessageResponse:
         """メッセージを作成し、チャネルの最終メッセージIDを更新する
 
         Args:
@@ -107,7 +113,9 @@ class CreateMessageUseCaseImpl(CreateMessageUseCaseIf):
             message_db = await self.message_repo.create_message(session, message)
 
             # チャネルの最終メッセージIDを更新（commit はまだ行わない）
-            await self.channel_repo.update_last_message_id(session, str(message_db.channel_id), str(message_db.id))
+            await self.channel_repo.update_last_message_id(
+                session, str(message_db.channel_id), str(message_db.id)
+            )
 
             # 両方の操作が成功した場合に commit
             await session.commit()
@@ -116,19 +124,27 @@ class CreateMessageUseCaseImpl(CreateMessageUseCaseIf):
 
         except ChannelRepoNotFoundError as e:
             await session.rollback()
-            raise ChannelNotFoundError(f"指定されたチャンネル（ID: {req.channel_id}）が存在しません", e)
+            raise ChannelNotFoundError(
+                f"指定されたチャンネル（ID: {req.channel_id}）が存在しません", e
+            )
 
         except MessageRepositoryError as e:
             # リポジトリ層のエラーをユースケース層のエラーに変換
             await session.rollback()
             if isinstance(e.original_error, IntegrityError):
-                raise ChannelNotFoundError(f"指定されたチャンネル（ID: {req.channel_id}）が存在しません", e)
-            raise CreateMessageTransactionError("メッセージの作成中にエラーが発生しました", e)
+                raise ChannelNotFoundError(
+                    f"指定されたチャンネル（ID: {req.channel_id}）が存在しません", e
+                )
+            raise CreateMessageTransactionError(
+                "メッセージの作成中にエラーが発生しました", e
+            )
 
         except ChannelRepositoryError as e:
             # チャネルの更新に失敗した場合
             await session.rollback()
-            raise CreateMessageTransactionError("チャネルの更新中にエラーが発生しました", e)
+            raise CreateMessageTransactionError(
+                "チャネルの更新中にエラーが発生しました", e
+            )
 
         except Exception as e:
             # その他の予期しないエラー

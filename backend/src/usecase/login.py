@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from datetime import timedelta
 
-from domains import Session
+from domains import Session, User
 from fastapi import Request
 from fastapi.security import OAuth2PasswordRequestForm
 from injector import inject, singleton
@@ -36,7 +36,9 @@ class LoginUseCaseIf(ABC):
     """
 
     @inject
-    def __init__(self, user_repo: UserRepositoryIf, session_repo: SessionRepositoryIf) -> None:
+    def __init__(
+        self, user_repo: UserRepositoryIf, session_repo: SessionRepositoryIf
+    ) -> None:
         """ログインユースケースの初期化
 
         Args:
@@ -48,7 +50,9 @@ class LoginUseCaseIf(ABC):
         self.session_repo: SessionRepositoryIf = session_repo
 
     @abstractmethod
-    async def create_session(self, session: AsyncSession, req: Request, form_data: OAuth2PasswordRequestForm) -> dict:
+    async def create_session(
+        self, session: AsyncSession, req: Request, form_data: OAuth2PasswordRequestForm
+    ) -> dict:
         """セッションを作成する
 
         Args:
@@ -63,7 +67,7 @@ class LoginUseCaseIf(ABC):
         pass
 
     @abstractmethod
-    async def auth_session(self, session: AsyncSession, req: Request) -> Session | None:
+    async def auth_session(self, session: AsyncSession, req: Request) -> User | None:
         """セッションを認証する
 
         Args:
@@ -85,7 +89,9 @@ class LoginUseCaseImpl(LoginUseCaseIf):
         LoginUseCaseIf (_type_): ログインユースケースインターフェース
     """
 
-    async def create_session(self, session: AsyncSession, req: Request, form_data: OAuth2PasswordRequestForm) -> dict:
+    async def create_session(
+        self, session: AsyncSession, req: Request, form_data: OAuth2PasswordRequestForm
+    ) -> dict:
         """セッションを作成する
 
         Args:
@@ -99,8 +105,12 @@ class LoginUseCaseImpl(LoginUseCaseIf):
 
         try:
             # ユーザーの認証
-            user = await self.user_repo.get_user_by_username(session, form_data.username)
-            if not user or (not await verify_password(str(user.password_hash), form_data.password)):
+            user = await self.user_repo.get_user_by_username(
+                session, form_data.username
+            )
+            if not user or (
+                not await verify_password(str(user.password_hash), form_data.password)
+            ):
                 return {
                     "session": None,
                     "user": user,
@@ -108,7 +118,9 @@ class LoginUseCaseImpl(LoginUseCaseIf):
 
             # access_tokenの生成
             access_token_expires = timedelta(minutes=30)
-            access_token = create_access_token(data={"sub": user.username}, expires_delta=access_token_expires)
+            access_token = create_access_token(
+                data={"sub": user.username}, expires_delta=access_token_expires
+            )
 
             # sessionの保存
             session_db = Session(
@@ -118,10 +130,12 @@ class LoginUseCaseImpl(LoginUseCaseIf):
                 ip_address=req.client.host if req.client is not None else None,
             )
 
-            session_db: Session | None = await self.session_repo.create_session(session, session_db)
+            created_session: Session | None = await self.session_repo.create_session(
+                session, session_db
+            )
 
             return {
-                "session": session_db,
+                "session": created_session,
                 "user": user,
             }
 
@@ -134,7 +148,7 @@ class LoginUseCaseImpl(LoginUseCaseIf):
         except Exception as e:
             raise LoginTransactionError("予期しないエラーが発生しました", e)
 
-    async def auth_session(self, session: AsyncSession, req: Request) -> Session | None:
+    async def auth_session(self, session: AsyncSession, req: Request) -> User | None:
         """セッションを認証する
 
         Args:
@@ -147,7 +161,9 @@ class LoginUseCaseImpl(LoginUseCaseIf):
 
         try:
             # CookieまたはAuthorizationヘッダーからトークンを取得
-            token = req.cookies.get("session_token") or req.headers.get("Authorization", "").replace("Bearer ", "")
+            token = req.cookies.get("session_token") or req.headers.get(
+                "Authorization", ""
+            ).replace("Bearer ", "")
             session_db = await self.session_repo.get_session_by_token(session, token)
 
             if not session_db:

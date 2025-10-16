@@ -11,6 +11,7 @@ from repository.message_repository import (
 )
 from schema.channel_schema import ChannelGetResponse
 from schema.message_schema import MessageResponse
+from sqlalchemy.ext.asyncio import AsyncSession
 from usecase.base_exception import BaseMessageUseCaseError
 from utils.logger_utils import get_logger
 
@@ -44,7 +45,9 @@ class GetChannelMessagesUseCaseIf(ABC):
     """
 
     @inject
-    def __init__(self, channel_repo: ChannelRepositoryIf, message_repo: MessageRepositoryIf) -> None:
+    def __init__(
+        self, channel_repo: ChannelRepositoryIf, message_repo: MessageRepositoryIf
+    ) -> None:
         """コンストラクタ
 
         Args:
@@ -56,7 +59,9 @@ class GetChannelMessagesUseCaseIf(ABC):
         self.message_repo = message_repo
 
     @abstractmethod
-    async def execute(self, session, channel_id: str) -> ChannelGetResponse:
+    async def execute(
+        self, session: AsyncSession, channel_id: str
+    ) -> ChannelGetResponse:
         """チャネル取得処理の実行
 
         Args:
@@ -81,7 +86,9 @@ class GetChannelMessagesUseCaseImpl(GetChannelMessagesUseCaseIf):
         ChannelUseCaseIf (_type_): チャネルユースケースのインターフェース
     """
 
-    async def execute(self, session, channel_id: str) -> ChannelGetResponse:
+    async def execute(
+        self, session: AsyncSession, channel_id: str
+    ) -> ChannelGetResponse:
         """チャネル情報を取得する
 
         Args:
@@ -100,18 +107,28 @@ class GetChannelMessagesUseCaseImpl(GetChannelMessagesUseCaseIf):
         try:
             channel_db = await self.channel_repo.get_channel_by_id(session, channel_id)
             if channel_db is None:
-                error_msg = f"指定されたチャンネルが存在しません: channel_id={channel_id}"
+                error_msg = (
+                    f"指定されたチャンネルが存在しません: channel_id={channel_id}"
+                )
                 logger.warning(error_msg)
                 raise ChannelNotFoundError(error_msg)
-            logger.info(f"チャンネル基本情報を取得しました: channel_id={channel_id}, name={channel_db.name}")
+            logger.info(
+                f"チャンネル基本情報を取得しました: channel_id={channel_id}, name={channel_db.name}"
+            )
 
             # チャネルに属するメッセージ一覧を取得
-            message_list = await self.message_repo.get_message_by_channel_id(session, channel_id)
-            logger.info(f"メッセージ一覧を取得しました: channel_id={channel_id}, message_count={len(message_list)}")
+            message_list = await self.message_repo.get_message_by_channel_id(
+                session, channel_id
+            )
+            logger.info(
+                f"メッセージ一覧を取得しました: channel_id={channel_id}, message_count={len(message_list)}"
+            )
 
             # データ変換処理
             # メッセージリストをレスポンス形式に変換
-            message_response_data = [MessageResponse.model_validate(message) for message in message_list]
+            message_response_data = [
+                MessageResponse.model_validate(message) for message in message_list
+            ]
 
             # チャネル情報のレスポンスデータを構築
             channel_response_data = {
@@ -132,10 +149,14 @@ class GetChannelMessagesUseCaseImpl(GetChannelMessagesUseCaseIf):
             raise ChannelNotFoundError(str(e))
 
         except ChannelRepositoryError as e:
-            raise GetChannelMessageTransactionError("チャンネル取得中にエラーが発生しました", e)
+            raise GetChannelMessageTransactionError(
+                "チャンネル取得中にエラーが発生しました", e
+            )
 
         except MessageRepositoryError as e:
-            raise GetChannelMessageTransactionError("メッセージ取得中にエラーが発生しました", e)
+            raise GetChannelMessageTransactionError(
+                "メッセージ取得中にエラーが発生しました", e
+            )
 
         except Exception as e:
             # その他の予期しないエラー

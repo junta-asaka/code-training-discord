@@ -2,7 +2,10 @@ from abc import ABC, abstractmethod
 
 from domains import Guild, GuildMember, User
 from injector import inject, singleton
-from repository.guild_member_repository import GuildMemberRepositoryError, GuildMemberRepositoryIf
+from repository.guild_member_repository import (
+    GuildMemberRepositoryError,
+    GuildMemberRepositoryIf,
+)
 from repository.guild_repository import GuildRepositoryError, GuildRepositoryIf
 from repository.user_repository import UserRepositoryError, UserRepositoryIf
 from schema.user_schema import UserCreateRequest, UserResponse
@@ -36,7 +39,10 @@ class CreateUserUseCaseIf(ABC):
 
     @inject
     def __init__(
-        self, user_repo: UserRepositoryIf, guild_repo: GuildRepositoryIf, guild_member_repo: GuildMemberRepositoryIf
+        self,
+        user_repo: UserRepositoryIf,
+        guild_repo: GuildRepositoryIf,
+        guild_member_repo: GuildMemberRepositoryIf,
     ) -> None:
         """ユーザー作成ユースケース初期化
 
@@ -51,7 +57,9 @@ class CreateUserUseCaseIf(ABC):
         self.guild_member_repo: GuildMemberRepositoryIf = guild_member_repo
 
     @abstractmethod
-    async def execute(self, session: AsyncSession, req: UserCreateRequest) -> UserResponse:
+    async def execute(
+        self, session: AsyncSession, req: UserCreateRequest
+    ) -> UserResponse:
         """ユーザー作成ユースケース実行
 
         Args:
@@ -73,7 +81,9 @@ class CreateUserUseCaseImpl(CreateUserUseCaseIf):
         CreateUserUseCaseIf (_type_): ユーザー作成ユースケースインターフェース
     """
 
-    async def execute(self, session: AsyncSession, req: UserCreateRequest) -> UserResponse:
+    async def execute(
+        self, session: AsyncSession, req: UserCreateRequest
+    ) -> UserResponse:
         """ユーザー作成ユースケース実行
 
         Args:
@@ -132,7 +142,9 @@ class CreateUserUseCaseImpl(CreateUserUseCaseIf):
 
         except GuildMemberRepositoryError as e:
             await session.rollback()
-            raise CreateUserTransactionError("ギルドメンバー作成中にエラーが発生しました", e)
+            raise CreateUserTransactionError(
+                "ギルドメンバー作成中にエラーが発生しました", e
+            )
 
         except Exception as e:
             await session.rollback()

@@ -51,7 +51,9 @@ class TestGuildMemberRepository(unittest.IsolatedAsyncioTestCase):
     async def asyncTearDown(self):
         await self.engine.dispose()
 
-    async def create_test_user(self, name: str = "Test User", username: str = "testuser") -> User:
+    async def create_test_user(
+        self, name: str = "Test User", username: str = "testuser"
+    ) -> User:
         """テスト用ユーザーを作成"""
         user = User(
             name=name,
@@ -66,7 +68,9 @@ class TestGuildMemberRepository(unittest.IsolatedAsyncioTestCase):
             await session.refresh(user)
             return user
 
-    async def create_test_guild(self, owner_user_id: uuid.UUID, name: str = "Test Guild") -> Guild:
+    async def create_test_guild(
+        self, owner_user_id: uuid.UUID, name: str = "Test Guild"
+    ) -> Guild:
         """テスト用ギルドを作成"""
         guild = Guild(
             name=name,
@@ -137,7 +141,9 @@ class TestGuildMemberRepository(unittest.IsolatedAsyncioTestCase):
         # Then: 重複制約エラーが発生する
         with self.assertRaises(Exception):  # SQLAlchemy IntegrityError等
             async with self.AsyncSessionLocal() as session:
-                await self.repository.create_guild_member(session, duplicate_guild_member)
+                await self.repository.create_guild_member(
+                    session, duplicate_guild_member
+                )
 
 
 if __name__ == "__main__":

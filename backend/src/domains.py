@@ -2,11 +2,13 @@ import uuid
 
 from sqlalchemy import Column, DateTime, ForeignKey, String
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import declarative_base
+from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.schema import CheckConstraint, UniqueConstraint
 from sqlalchemy.sql import func
 
-Base = declarative_base()
+
+class Base(DeclarativeBase):
+    pass
 
 
 # モデル: ユーザー
@@ -28,7 +30,9 @@ class User(Base):
     # 削除日時
     deleted_at = Column(DateTime(timezone=True), nullable=True)
     # 作成日時
-    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    created_at = Column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
     # 更新日時
     updated_at = Column(
         DateTime(timezone=True),
@@ -46,7 +50,7 @@ class Session(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     # ユーザーID
     # 外部キー: users.id
-    user_id = Column(ForeignKey("users.id"), nullable=False)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
     # リフレッシュトークンハッシュ
     refresh_token_hash = Column(String, unique=True, nullable=False)
     # ユーザーエージェント
@@ -56,7 +60,9 @@ class Session(Base):
     # 失効日時
     revoked_at = Column(DateTime(timezone=True), nullable=True)
     # 作成日時
-    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    created_at = Column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
 
 
 # モデル: フレンド
@@ -73,14 +79,16 @@ class Friend(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     # ユーザーID
     # 外部キー: users.id
-    user_id = Column(ForeignKey("users.id"), nullable=False)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
     # 相手ユーザーID
     # 外部キー: users.id
-    related_user_id = Column(ForeignKey("users.id"), nullable=False)
+    related_user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
     # タイプ
     type = Column(String, nullable=False)
     # 作成日時
-    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    created_at = Column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
 
 
 # モデル: チャネル
@@ -90,23 +98,29 @@ class Channel(Base):
     # ID
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     # サーバーID
-    guild_id = Column(ForeignKey("guilds.id"), nullable=True)
+    guild_id = Column(UUID(as_uuid=True), ForeignKey("guilds.id"), nullable=True)
     # 相手サーバーID（DMチャネルのみ）
-    related_guild_id = Column(ForeignKey("guilds.id"), nullable=True)
+    related_guild_id = Column(
+        UUID(as_uuid=True), ForeignKey("guilds.id"), nullable=True
+    )
     # タイプ
     type = Column(String, nullable=False, default="text")
     # チャネル名
     name = Column(String, nullable=True, default="")
     # 管理者ユーザーID
     # 外部キー: users.id
-    owner_user_id = Column(ForeignKey("users.id"), nullable=False)
+    owner_user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
     # 最終メッセージID
     # 外部キー: messages.id
-    last_message_id = Column(ForeignKey("messages.id"), nullable=True)
+    last_message_id = Column(
+        UUID(as_uuid=True), ForeignKey("messages.id"), nullable=True
+    )
     # 削除日時
     deleted_at = Column(DateTime(timezone=True), nullable=True)
     # 作成日時
-    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    created_at = Column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
     # 更新日時
     updated_at = Column(
         DateTime(timezone=True),
@@ -124,21 +138,29 @@ class Message(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     # チャネルID
     # 外部キー: channels.id
-    channel_id = Column(ForeignKey("channels.id", ondelete="CASCADE"), nullable=False)
+    channel_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("channels.id", ondelete="CASCADE"),
+        nullable=False,
+    )
     # 作成者ユーザID
     # 外部キー: users.id
-    user_id = Column(ForeignKey("users.id"), nullable=False)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
     # タイプ
     type = Column(String, nullable=False)
     # 内容
     content = Column(String, nullable=True)
     # 返信先メッセージID
     # 外部キー: messages.id
-    referenced_message_id = Column(ForeignKey("messages.id"), nullable=True)
+    referenced_message_id = Column(
+        UUID(as_uuid=True), ForeignKey("messages.id"), nullable=True
+    )
     # 削除日時
     deleted_at = Column(DateTime(timezone=True), nullable=True)
     # 作成日時
-    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    created_at = Column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
     # 更新日時
     updated_at = Column(
         DateTime(timezone=True),
@@ -158,11 +180,13 @@ class Guild(Base):
     name = Column(String, nullable=False, default="@me")
     # 管理者ユーザーID
     # 外部キー: users.id
-    owner_user_id = Column(ForeignKey("users.id"), nullable=False)
+    owner_user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
     # 削除日時
     deleted_at = Column(DateTime(timezone=True), nullable=True)
     # 作成日時
-    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    created_at = Column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
     # 更新日時
     updated_at = Column(
         DateTime(timezone=True),
@@ -182,9 +206,9 @@ class GuildMember(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     # ギルドID
     # 外部キー: guilds.id
-    guild_id = Column(ForeignKey("guilds.id"), nullable=False)
+    guild_id = Column(UUID(as_uuid=True), ForeignKey("guilds.id"), nullable=False)
     # ユーザーID
     # 外部キー: users.id
-    user_id = Column(ForeignKey("users.id"), nullable=False)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
     # 役職
     role = Column(String, nullable=False, default="member")

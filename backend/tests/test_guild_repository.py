@@ -131,7 +131,9 @@ class TestGuildRepository(unittest.IsolatedAsyncioTestCase):
 
         # When: ユーザーIDとギルド名でギルドを検索
         async with self.AsyncSessionLocal() as session:
-            result = await self.repository.get_guild_by_user_id_name(session, str(user.id), "Test Guild")
+            result = await self.repository.get_guild_by_user_id_name(
+                session, str(user.id), "Test Guild"
+            )
 
         # Then: 対応するギルドが取得される
         self.assertIsNotNone(result)
