@@ -1,5 +1,3 @@
-from uuid import UUID
-
 from database import get_session
 from dependencies import get_injector
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -12,6 +10,7 @@ from schema.friend_schema import (
 from sqlalchemy.ext.asyncio import AsyncSession
 from usecase.friend import FriendTransactionError, FriendUseCaseIf
 from utils.logger_utils import get_logger
+from utils.validators import validate_user_id
 
 router = APIRouter(prefix="/api")
 
@@ -73,10 +72,12 @@ async def create_friend(
 
 
 @router.get(
-    "/friends", response_model=list[FriendGetResponse], status_code=status.HTTP_200_OK
+    "/friends/{user_id}",
+    response_model=list[FriendGetResponse],
+    status_code=status.HTTP_200_OK,
 )
 async def get_friends(
-    user_id: str,
+    user_id: str = Depends(validate_user_id),
     session: AsyncSession = Depends(get_session),
     usecase: FriendUseCaseIf = Depends(get_usecase),
 ) -> list[FriendGetResponse]:
@@ -90,13 +91,6 @@ async def get_friends(
     Returns:
         list[FriendGetResponse]: フレンド一覧レスポンス
     """
-
-    try:
-        UUID(user_id)
-    except ValueError:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="無効なユーザーIDです"
-        )
 
     try:
         response = await usecase.get_friend_all(session, user_id)

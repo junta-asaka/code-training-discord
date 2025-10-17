@@ -7,15 +7,12 @@ export const getFriendsApi = async (
   userId: string,
   accessToken: string
 ): Promise<FriendsResponse> => {
-  const response = await fetch(
-    `${API_BASE_URL}/api/friends?user_id=${userId}`,
-    {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    }
-  );
+  const response = await fetch(`${API_BASE_URL}/api/friends/${userId}`, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
 
   if (!response.ok) {
     const error = await response.json();

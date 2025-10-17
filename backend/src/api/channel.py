@@ -12,6 +12,7 @@ from usecase.get_channel_messages import (
 )
 from utils.api_utils import get_channel_access_checker
 from utils.logger_utils import get_logger
+from utils.validators import validate_channel_id
 
 # ロガーを取得
 logger = get_logger(__name__)
@@ -41,11 +42,28 @@ async def check_channel_access(
     status_code=status.HTTP_200_OK,
 )
 async def get_channel(
-    channel_id: str,
+    channel_id: str = Depends(validate_channel_id),
     session: AsyncSession = Depends(get_session),
     usecase: GetChannelMessagesUseCaseIf = Depends(get_usecase),
     _: None = Depends(check_channel_access),  # チャンネルアクセス権限チェック
 ) -> ChannelGetResponse:
+    """チャンネル情報取得エンドポイント
+
+    Args:
+        channel_id (str, optional): チャンネルID
+        session (AsyncSession, optional): データベースセッション
+        usecase (GetChannelMessagesUseCaseIf, optional): ユースケース
+        _ (None, optional): アクセス権限チェック
+
+    Raises:
+        HTTPException: チャンネルが見つかりません
+        HTTPException: チャンネル情報の取得中にエラーが発生しました
+        HTTPException: サーバー内部エラーが発生しました
+
+    Returns:
+        ChannelGetResponse: チャンネル情報
+    """
+
     try:
         response = await usecase.execute(session, channel_id)
         logger.info(
