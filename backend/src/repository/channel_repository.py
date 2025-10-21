@@ -171,7 +171,7 @@ class ChannelRepositoryImpl(ChannelRepositoryIf):
         )
 
         # 更新された行数をチェック
-        if result.rowcount == 0:
+        if result.rowcount == 0:  # type: ignore
             error_msg = f"指定されたチャンネルが存在しません: channel_id={channel_id}"
             logger.warning(error_msg)
             raise ChannelNotFoundError(error_msg)

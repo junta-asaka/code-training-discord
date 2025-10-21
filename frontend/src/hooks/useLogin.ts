@@ -37,7 +37,7 @@ export const useLogin = () => {
       // ログイン失敗時にtoast通知
       const errorMessage =
         error instanceof Error ? error.message : "不明なエラーが発生しました";
-      toast.error(`ログインに失敗しました -> ${errorMessage}`);
+      toast.error(`ログインに失敗しました: ${errorMessage}`);
     },
   });
 };

@@ -2,7 +2,7 @@ import os
 import sys
 import unittest
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 from dotenv import load_dotenv
 from injector import Injector
@@ -75,12 +75,19 @@ class TestSessionRepository(unittest.IsolatedAsyncioTestCase):
         """
 
         # Given
+        now = datetime.now(timezone.utc)
+        access_expires = now + timedelta(hours=1)
+        refresh_expires = now + timedelta(days=30)
+
         session_data = Session(
             user_id=self.test_user.id,
+            access_token_hash="access_token_hash",
             refresh_token_hash="refresh_token_hash",
             user_agent="Mozilla/5.0 Test Browser",
             ip_address="192.168.1.1",
             revoked_at=None,
+            access_token_expires_at=access_expires,
+            refresh_token_expires_at=refresh_expires,
         )
 
         # When
@@ -89,6 +96,7 @@ class TestSessionRepository(unittest.IsolatedAsyncioTestCase):
 
         # Then
         self.assertEqual(result.user_id, session_data.user_id)
+        self.assertEqual(result.access_token_hash, session_data.access_token_hash)
         self.assertEqual(result.refresh_token_hash, session_data.refresh_token_hash)
         self.assertEqual(result.user_agent, session_data.user_agent)
         self.assertEqual(result.ip_address, session_data.ip_address)
@@ -104,13 +112,20 @@ class TestSessionRepository(unittest.IsolatedAsyncioTestCase):
         """
 
         # Given
-        revoked_time = datetime.now(timezone.utc)
+        now = datetime.now(timezone.utc)
+        revoked_time = now
+        access_expires = now + timedelta(hours=1)
+        refresh_expires = now + timedelta(days=30)
+
         session_data = Session(
             user_id=self.test_user.id,
+            access_token_hash="access_token_hash_with_revoked",
             refresh_token_hash="refresh_token_hash_with_revoked",
             user_agent="Mozilla/5.0 Test Browser",
             ip_address="192.168.1.1",
             revoked_at=revoked_time,
+            access_token_expires_at=access_expires,
+            refresh_token_expires_at=refresh_expires,
         )
 
         # When
@@ -119,6 +134,7 @@ class TestSessionRepository(unittest.IsolatedAsyncioTestCase):
 
         # Then
         self.assertEqual(result.user_id, session_data.user_id)
+        self.assertEqual(result.access_token_hash, session_data.access_token_hash)
         self.assertEqual(result.refresh_token_hash, session_data.refresh_token_hash)
         self.assertEqual(result.user_agent, session_data.user_agent)
         self.assertEqual(result.ip_address, session_data.ip_address)
@@ -132,12 +148,19 @@ class TestSessionRepository(unittest.IsolatedAsyncioTestCase):
         """
 
         # Given - 1回目のセッション作成
+        now = datetime.now(timezone.utc)
+        access_expires = now + timedelta(hours=1)
+        refresh_expires = now + timedelta(days=30)
+
         session_data1 = Session(
             user_id=self.test_user.id,
+            access_token_hash="access_token_hash_duplicate",
             refresh_token_hash="refresh_token_hash_duplicate",
             user_agent="Mozilla/5.0 Test Browser",
             ip_address="192.168.1.1",
             revoked_at=None,
+            access_token_expires_at=access_expires,
+            refresh_token_expires_at=refresh_expires,
         )
 
         # 最初のセッション作成
@@ -148,10 +171,13 @@ class TestSessionRepository(unittest.IsolatedAsyncioTestCase):
         # 重要: 新しいSessionオブジェクトインスタンスを作成
         session_data2 = Session(
             user_id=self.test_user.id,
+            access_token_hash="access_token_hash_duplicate2",  # 異なるaccess_token_hash
             refresh_token_hash="refresh_token_hash_duplicate",  # 同じrefresh_token_hash（重複）
             user_agent="Mozilla/5.0 Test Browser",
             ip_address="192.168.1.1",
             revoked_at=None,
+            access_token_expires_at=access_expires,
+            refresh_token_expires_at=refresh_expires,
         )
 
         with self.assertRaises(SessionCreateError):
@@ -166,12 +192,19 @@ class TestSessionRepository(unittest.IsolatedAsyncioTestCase):
         """
 
         # Given
+        now = datetime.now(timezone.utc)
+        access_expires = now + timedelta(hours=1)
+        refresh_expires = now + timedelta(days=30)
+
         expected_session = Session(
             user_id=self.test_user.id,
-            refresh_token_hash="refresh_token_hash",
+            access_token_hash="access_token_hash_found",
+            refresh_token_hash="refresh_token_hash_found",
             user_agent="Mozilla/5.0 Test Browser",
             ip_address="192.168.1.1",
             revoked_at=None,
+            access_token_expires_at=access_expires,
+            refresh_token_expires_at=refresh_expires,
         )
 
         async with self.AsyncSessionLocal() as session:
@@ -182,13 +215,14 @@ class TestSessionRepository(unittest.IsolatedAsyncioTestCase):
         # When
         async with self.AsyncSessionLocal() as session:
             result = await self.repository.get_session_by_token(
-                session, "refresh_token_hash"
+                session, "refresh_token_hash_found"
             )
 
         # Then
         self.assertIsNotNone(result)
         self.assertEqual(result.id, created_session.id)  # type: ignore
         self.assertEqual(result.user_id, expected_session.user_id)  # type: ignore
+        self.assertEqual(result.access_token_hash, expected_session.access_token_hash)  # type: ignore
         self.assertEqual(result.refresh_token_hash, expected_session.refresh_token_hash)  # type: ignore
         self.assertEqual(result.user_agent, expected_session.user_agent)  # type: ignore
         self.assertEqual(result.ip_address, expected_session.ip_address)  # type: ignore
@@ -232,20 +266,30 @@ class TestSessionRepository(unittest.IsolatedAsyncioTestCase):
         """
 
         # Given - 複数のセッションを作成
+        now = datetime.now(timezone.utc)
+        access_expires = now + timedelta(hours=1)
+        refresh_expires = now + timedelta(days=30)
+
         session_data_1 = Session(
             user_id=self.test_user.id,
+            access_token_hash="access_token_hash_1",
             refresh_token_hash="refresh_token_hash_1",
             user_agent="Browser 1",
             ip_address="192.168.1.1",
             revoked_at=None,
+            access_token_expires_at=access_expires,
+            refresh_token_expires_at=refresh_expires,
         )
 
         session_data_2 = Session(
             user_id=self.test_user.id,
+            access_token_hash="access_token_hash_2",
             refresh_token_hash="refresh_token_hash_2",
             user_agent="Browser 2",
             ip_address="192.168.1.2",
             revoked_at=None,
+            access_token_expires_at=access_expires,
+            refresh_token_expires_at=refresh_expires,
         )
 
         async with self.AsyncSessionLocal() as session:
@@ -265,6 +309,7 @@ class TestSessionRepository(unittest.IsolatedAsyncioTestCase):
         # Then
         self.assertIsNotNone(result)
         self.assertEqual(result.id, created_session_2.id)  # type: ignore
+        self.assertEqual(result.access_token_hash, "access_token_hash_2")  # type: ignore
         self.assertEqual(result.refresh_token_hash, "refresh_token_hash_2")  # type: ignore
         self.assertEqual(result.user_agent, "Browser 2")  # type: ignore
         self.assertEqual(result.ip_address, "192.168.1.2")  # type: ignore
@@ -277,13 +322,20 @@ class TestSessionRepository(unittest.IsolatedAsyncioTestCase):
         """
 
         # Given
+        now = datetime.now(timezone.utc)
+        access_expires = now + timedelta(hours=1)
+        refresh_expires = now + timedelta(days=30)
+
         invalid_user_id = uuid.uuid4()  # 存在しないユーザーID
         session_data = Session(
             user_id=invalid_user_id,
-            refresh_token_hash="refresh_token_hash",
+            access_token_hash="access_token_hash_invalid",
+            refresh_token_hash="refresh_token_hash_invalid",
             user_agent="Mozilla/5.0 Test Browser",
             ip_address="192.168.1.1",
             revoked_at=None,
+            access_token_expires_at=access_expires,
+            refresh_token_expires_at=refresh_expires,
         )
 
         # When / Then

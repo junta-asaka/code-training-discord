@@ -12,6 +12,11 @@ const isAuthError = (querry: UseQueryResult<boolean, Error>) => {
 export const useAuthVerification = () => {
   const { accessToken, isAuthenticated, logout } = useAuthStore();
 
+  // 環境変数からキャッシュの有効期限を取得（デフォルト: 5分）
+  const authCacheStaleTime = Number(
+    import.meta.env.VITE_AUTH_CACHE_STALE_TIME || 300000
+  );
+
   // useQuery: データの取得とキャッシュ管理を行うためのフック
   // queryFn: 実際にデータ取得を行う関数
   const query = useQuery({
@@ -20,7 +25,7 @@ export const useAuthVerification = () => {
     enabled: isAuthenticated && !!accessToken,
     retry: false,
     refetchOnWindowFocus: false,
-    staleTime: 5 * 60 * 1000, // 5分間はキャッシュを使用
+    staleTime: authCacheStaleTime, // 環境変数から取得した値を使用
   });
 
   // useEffect: 副作用の処理（DOMの書き換え、変数代入、API通信などUI構築以外の処理）を行うためのフック
