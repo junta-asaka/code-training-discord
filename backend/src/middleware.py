@@ -30,6 +30,7 @@ async def auth_session(
     if req.method == "OPTIONS" or req.url.path in [
         "/api/login",
         "/api/user",
+        "/auth/refresh",
         "/docs",
         "/openapi.json",
     ]:
@@ -41,8 +42,8 @@ async def auth_session(
 
     async for session in get_session():
         result_auth = await usecase.auth_session(session, req)
-        if not session or (not result_auth):
-            return JSONResponse(status_code=401, content="Unauthorized")
+        if not result_auth:
+            return JSONResponse(status_code=401, content={"detail": "認証が必要です"})
 
         req.state.user = result_auth
 
