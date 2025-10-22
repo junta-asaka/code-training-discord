@@ -2,7 +2,7 @@ from contextlib import asynccontextmanager
 from typing import AsyncIterator
 
 import uvicorn
-from api.auth_verify import router as auth_router
+from api.auth import router as auth_router
 from api.channel import router as channel_router
 from api.friend import router as friend_router
 from api.login import router as login_router
