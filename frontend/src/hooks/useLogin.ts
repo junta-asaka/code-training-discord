@@ -26,7 +26,8 @@ export const useLogin = () => {
           name: response.name,
           username: response.username,
         },
-        response.access_token
+        response.access_token,
+        response.refresh_token
       );
 
       // ログイン成功後、元のページまたはTop画面に遷移
