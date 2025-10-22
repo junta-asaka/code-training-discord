@@ -1,17 +1,12 @@
 import type { FriendsResponse } from "../schemas/friendSchema";
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+import { authFetch } from "@/utils/authFetch";
 
 // getFriends: フレンド一覧取得APIを呼び出す関数
 export const getFriendsApi = async (
-  userId: string,
-  accessToken: string
+  userId: string
 ): Promise<FriendsResponse> => {
-  const response = await fetch(`${API_BASE_URL}/api/friends/${userId}`, {
+  const response = await authFetch(`/api/friends/${userId}`, {
     method: "GET",
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-    },
   });
 
   if (!response.ok) {
@@ -27,14 +22,12 @@ export const getFriendsApi = async (
 // createFriend: フレンド追加APIを呼び出す関数
 export const createFriendApi = async (
   username: string,
-  relatedUsername: string,
-  accessToken: string
+  relatedUsername: string
 ): Promise<void> => {
-  const response = await fetch(`${API_BASE_URL}/api/friend`, {
+  const response = await authFetch(`/api/friend`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${accessToken}`,
     },
     body: JSON.stringify({
       username,
