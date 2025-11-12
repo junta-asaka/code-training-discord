@@ -141,8 +141,8 @@ class LoginUseCaseImpl(LoginUseCaseIf):
             # sessionの保存
             session_db = Session(
                 user_id=user.id,
-                access_token_hash=access_token,
-                refresh_token_hash=refresh_token,
+                access_token=access_token,
+                refresh_token=refresh_token,
                 access_token_expires_at=access_expires_at,
                 refresh_token_expires_at=refresh_expires_at,
                 user_agent=req.headers.get("User-Agent"),

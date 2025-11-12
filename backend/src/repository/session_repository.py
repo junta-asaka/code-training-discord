@@ -54,7 +54,9 @@ class SessionRepositoryIf(ABC):
         pass
 
     @abstractmethod
-    async def get_session_by_token(self, session: AsyncSession, token: str) -> Session:
+    async def get_session_by_token(
+        self, session: AsyncSession, token: str
+    ) -> Session | None:
         """トークンからセッションを取得する
 
         Args:
@@ -62,7 +64,7 @@ class SessionRepositoryIf(ABC):
             token (str): セッショントークン
 
         Returns:
-            Session: 取得されたセッション
+            Session | None: 取得されたセッション（見つからない場合はNone）
         """
 
         pass
@@ -97,7 +99,9 @@ class SessionRepositoryImpl(SessionRepositoryIf):
         return session_data
 
     @handle_repository_errors(SessionQueryError, "セッション取得")
-    async def get_session_by_token(self, session: AsyncSession, token: str) -> Session:
+    async def get_session_by_token(
+        self, session: AsyncSession, token: str
+    ) -> Session | None:
         """トークンからセッションを取得する
 
         Args:
@@ -105,11 +109,11 @@ class SessionRepositoryImpl(SessionRepositoryIf):
             token (str): セッショントークン
 
         Returns:
-            Session: 取得されたセッション
+            Session | None: 取得されたセッション（見つからない場合はNone）
         """
 
         result = await session.execute(
-            select(Session).where(Session.refresh_token_hash == token)
+            select(Session).where(Session.refresh_token == token)
         )
 
         return result.scalars().first()

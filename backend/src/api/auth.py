@@ -104,7 +104,7 @@ async def refresh_access_token(
             update(Session)
             .where(Session.id == session_obj.id)
             .values(
-                access_token_hash=new_access_token,
+                access_token=new_access_token,
                 access_token_expires_at=current_time + access_token_expires,
             )
         )

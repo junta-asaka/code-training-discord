@@ -87,8 +87,8 @@ async def login(
         "id": user.id,
         "name": user.name,
         "username": user.username,
-        "access_token": session_obj.access_token_hash,  # 適切なフィールド名を使用
-        "refresh_token": session_obj.refresh_token_hash,  # リフレッシュトークンも含める
+        "access_token": session_obj.access_token,
+        "refresh_token": session_obj.refresh_token,
         "token_type": "bearer",
     }
 

@@ -51,10 +51,10 @@ class Session(Base):
     # ユーザーID
     # 外部キー: users.id
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
-    # アクセストークンハッシュ（短期間有効）
-    access_token_hash = Column(String, unique=True, nullable=False)
-    # リフレッシュトークンハッシュ（長期間有効）
-    refresh_token_hash = Column(String, unique=True, nullable=False)
+    # アクセストークン（短期間有効）
+    access_token = Column(String, unique=True, nullable=False)
+    # リフレッシュトークン（長期間有効）
+    refresh_token = Column(String, unique=True, nullable=False)
     # ユーザーエージェント
     user_agent = Column(String, nullable=True)
     # IPアドレス

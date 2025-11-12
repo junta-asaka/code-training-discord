@@ -81,8 +81,8 @@ class TestSessionRepository(unittest.IsolatedAsyncioTestCase):
 
         session_data = Session(
             user_id=self.test_user.id,
-            access_token_hash="access_token_hash",
-            refresh_token_hash="refresh_token_hash",
+            access_token="access_token_hash",
+            refresh_token="refresh_token_hash",
             user_agent="Mozilla/5.0 Test Browser",
             ip_address="192.168.1.1",
             revoked_at=None,
@@ -96,8 +96,8 @@ class TestSessionRepository(unittest.IsolatedAsyncioTestCase):
 
         # Then
         self.assertEqual(result.user_id, session_data.user_id)
-        self.assertEqual(result.access_token_hash, session_data.access_token_hash)
-        self.assertEqual(result.refresh_token_hash, session_data.refresh_token_hash)
+        self.assertEqual(result.access_token, session_data.access_token)
+        self.assertEqual(result.refresh_token, session_data.refresh_token)
         self.assertEqual(result.user_agent, session_data.user_agent)
         self.assertEqual(result.ip_address, session_data.ip_address)
         self.assertEqual(result.revoked_at, session_data.revoked_at)
@@ -119,8 +119,8 @@ class TestSessionRepository(unittest.IsolatedAsyncioTestCase):
 
         session_data = Session(
             user_id=self.test_user.id,
-            access_token_hash="access_token_hash_with_revoked",
-            refresh_token_hash="refresh_token_hash_with_revoked",
+            access_token="access_token_hash_with_revoked",
+            refresh_token="refresh_token_hash_with_revoked",
             user_agent="Mozilla/5.0 Test Browser",
             ip_address="192.168.1.1",
             revoked_at=revoked_time,
@@ -134,15 +134,15 @@ class TestSessionRepository(unittest.IsolatedAsyncioTestCase):
 
         # Then
         self.assertEqual(result.user_id, session_data.user_id)
-        self.assertEqual(result.access_token_hash, session_data.access_token_hash)
-        self.assertEqual(result.refresh_token_hash, session_data.refresh_token_hash)
+        self.assertEqual(result.access_token, session_data.access_token)
+        self.assertEqual(result.refresh_token, session_data.refresh_token)
         self.assertEqual(result.user_agent, session_data.user_agent)
         self.assertEqual(result.ip_address, session_data.ip_address)
         self.assertEqual(result.revoked_at, revoked_time)
 
     async def test_create_session_duplicate_refresh_token(self):
         """
-        Given: 既に存在するrefresh_token_hashでのセッション作成
+        Given: 既に存在するrefresh_tokenでのセッション作成
         When: create_sessionメソッドを呼び出す
         Then: 例外が発生すること
         """
@@ -154,8 +154,8 @@ class TestSessionRepository(unittest.IsolatedAsyncioTestCase):
 
         session_data1 = Session(
             user_id=self.test_user.id,
-            access_token_hash="access_token_hash_duplicate",
-            refresh_token_hash="refresh_token_hash_duplicate",
+            access_token="access_token_hash_duplicate",
+            refresh_token="refresh_token_hash_duplicate",
             user_agent="Mozilla/5.0 Test Browser",
             ip_address="192.168.1.1",
             revoked_at=None,
@@ -171,8 +171,8 @@ class TestSessionRepository(unittest.IsolatedAsyncioTestCase):
         # 重要: 新しいSessionオブジェクトインスタンスを作成
         session_data2 = Session(
             user_id=self.test_user.id,
-            access_token_hash="access_token_hash_duplicate2",  # 異なるaccess_token_hash
-            refresh_token_hash="refresh_token_hash_duplicate",  # 同じrefresh_token_hash（重複）
+            access_token="access_token_hash_duplicate2",  # 異なるaccess_token
+            refresh_token="refresh_token_hash_duplicate",  # 同じrefresh_token（重複）
             user_agent="Mozilla/5.0 Test Browser",
             ip_address="192.168.1.1",
             revoked_at=None,
@@ -198,8 +198,8 @@ class TestSessionRepository(unittest.IsolatedAsyncioTestCase):
 
         expected_session = Session(
             user_id=self.test_user.id,
-            access_token_hash="access_token_hash_found",
-            refresh_token_hash="refresh_token_hash_found",
+            access_token="access_token_hash_found",
+            refresh_token="refresh_token_hash_found",
             user_agent="Mozilla/5.0 Test Browser",
             ip_address="192.168.1.1",
             revoked_at=None,
@@ -222,8 +222,8 @@ class TestSessionRepository(unittest.IsolatedAsyncioTestCase):
         self.assertIsNotNone(result)
         self.assertEqual(result.id, created_session.id)  # type: ignore
         self.assertEqual(result.user_id, expected_session.user_id)  # type: ignore
-        self.assertEqual(result.access_token_hash, expected_session.access_token_hash)  # type: ignore
-        self.assertEqual(result.refresh_token_hash, expected_session.refresh_token_hash)  # type: ignore
+        self.assertEqual(result.access_token, expected_session.access_token)  # type: ignore
+        self.assertEqual(result.refresh_token, expected_session.refresh_token)  # type: ignore
         self.assertEqual(result.user_agent, expected_session.user_agent)  # type: ignore
         self.assertEqual(result.ip_address, expected_session.ip_address)  # type: ignore
         self.assertEqual(result.revoked_at, expected_session.revoked_at)  # type: ignore
@@ -272,8 +272,8 @@ class TestSessionRepository(unittest.IsolatedAsyncioTestCase):
 
         session_data_1 = Session(
             user_id=self.test_user.id,
-            access_token_hash="access_token_hash_1",
-            refresh_token_hash="refresh_token_hash_1",
+            access_token="access_token_hash_1",
+            refresh_token="refresh_token_hash_1",
             user_agent="Browser 1",
             ip_address="192.168.1.1",
             revoked_at=None,
@@ -283,8 +283,8 @@ class TestSessionRepository(unittest.IsolatedAsyncioTestCase):
 
         session_data_2 = Session(
             user_id=self.test_user.id,
-            access_token_hash="access_token_hash_2",
-            refresh_token_hash="refresh_token_hash_2",
+            access_token="access_token_hash_2",
+            refresh_token="refresh_token_hash_2",
             user_agent="Browser 2",
             ip_address="192.168.1.2",
             revoked_at=None,
@@ -309,8 +309,8 @@ class TestSessionRepository(unittest.IsolatedAsyncioTestCase):
         # Then
         self.assertIsNotNone(result)
         self.assertEqual(result.id, created_session_2.id)  # type: ignore
-        self.assertEqual(result.access_token_hash, "access_token_hash_2")  # type: ignore
-        self.assertEqual(result.refresh_token_hash, "refresh_token_hash_2")  # type: ignore
+        self.assertEqual(result.access_token, "access_token_hash_2")  # type: ignore
+        self.assertEqual(result.refresh_token, "refresh_token_hash_2")  # type: ignore
         self.assertEqual(result.user_agent, "Browser 2")  # type: ignore
         self.assertEqual(result.ip_address, "192.168.1.2")  # type: ignore
 
@@ -329,8 +329,8 @@ class TestSessionRepository(unittest.IsolatedAsyncioTestCase):
         invalid_user_id = uuid.uuid4()  # 存在しないユーザーID
         session_data = Session(
             user_id=invalid_user_id,
-            access_token_hash="access_token_hash_invalid",
-            refresh_token_hash="refresh_token_hash_invalid",
+            access_token="access_token_hash_invalid",
+            refresh_token="refresh_token_hash_invalid",
             user_agent="Mozilla/5.0 Test Browser",
             ip_address="192.168.1.1",
             revoked_at=None,

@@ -81,7 +81,7 @@ class TestLoginUseCaseImpl(unittest.IsolatedAsyncioTestCase):
         expected_session = Session(
             id=1,
             user_id=1,
-            refresh_token_hash="test_token",
+            refresh_token="test_token",
             user_agent="TestAgent",
             ip_address="127.0.0.1",
         )
@@ -243,7 +243,7 @@ class TestLoginUseCaseImpl(unittest.IsolatedAsyncioTestCase):
         expected_session = Session(
             id=1,
             user_id=1,
-            refresh_token_hash="test_token",
+            refresh_token="test_token",
             user_agent="TestAgent",
             ip_address=None,
         )
