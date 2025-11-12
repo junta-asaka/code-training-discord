@@ -291,7 +291,7 @@ class TestFriendAPI(unittest.IsolatedAsyncioTestCase):
         """
         Given: 無効なUUID形式のuser_idでリクエスト
         When: GET /api/friends にリクエスト
-        Then: 400でエラーが返る
+        Then: 422でバリデーションエラーが返る
         """
 
         # Given: 無効なUUID形式のuser_id
@@ -300,8 +300,8 @@ class TestFriendAPI(unittest.IsolatedAsyncioTestCase):
         # When: GET /api/friends にリクエスト
         response = await self.client.get(f"/api/friends/{invalid_user_id}")
 
-        # Then: 400でエラーが返る
-        self.assertEqual(response.status_code, 400)
+        # Then: 422でバリデーションエラーが返る
+        self.assertEqual(response.status_code, 422)
 
 
 if __name__ == "__main__":
