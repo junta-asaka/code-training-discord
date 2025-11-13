@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta, timezone
+from typing import cast
 
 from database import get_session
 from domains import Session
@@ -83,9 +84,17 @@ async def refresh_access_token(
 
         # リフレッシュトークンの有効期限確認
         current_time = datetime.now(timezone.utc)
-        # SQLAlchemyモデルの属性から実際の値を取得
-        expires_at = getattr(session_obj, "refresh_token_expires_at")
-        if expires_at and expires_at <= current_time:
+        expires_at = cast(datetime | None, session_obj.refresh_token_expires_at)
+        if not expires_at:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="リフレッシュトークンの有効期限情報が不正です",
+            )
+
+        # タイムゾーン情報がない場合はUTCとして扱う
+        if expires_at.tzinfo is None:
+            expires_at = expires_at.replace(tzinfo=timezone.utc)
+        if expires_at <= current_time:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="リフレッシュトークンの有効期限が切れています",
