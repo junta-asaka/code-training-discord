@@ -1,8 +1,7 @@
 from typing import Any, Awaitable, Callable
 
 from database import get_session
-from fastapi import Request
-from fastapi.responses import JSONResponse
+from fastapi import HTTPException, Request, status
 from repository.session_repository import SessionRepositoryImpl
 from repository.user_repository import UserRepositoryImpl
 from usecase.login import LoginUseCaseImpl
@@ -43,7 +42,10 @@ async def auth_session(
     async for session in get_session():
         result_auth = await usecase.auth_session(session, req)
         if not result_auth:
-            return JSONResponse(status_code=401, content={"detail": "認証が必要です"})
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="認証が必要です",
+            )
 
         req.state.user = result_auth
 
