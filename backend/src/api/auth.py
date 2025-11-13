@@ -72,7 +72,7 @@ async def refresh_access_token(
 
     # データベースでセッションを確認
     try:
-        session_obj = await session_repo.get_session_by_token(
+        session_obj = await session_repo.get_session_by_refresh_token(
             session, request.refresh_token
         )
         if not session_obj or session_obj.revoked_at is not None:

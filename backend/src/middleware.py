@@ -7,6 +7,25 @@ from repository.user_repository import UserRepositoryImpl
 from usecase.login import LoginUseCaseImpl
 from utils.utils import is_test_env
 
+# 認証不要のパスリスト
+EXEMPT_PATHS = [
+    "/api/login",
+    "/api/user",
+    "/auth/refresh",
+    "/docs",
+    "/openapi.json",
+]
+
+# DBを更新するリクエストのパスリスト
+# これらのパスはJWT検証+DBセッション状態確認を行う
+DB_MUTATION_PATHS = [
+    "/api/login",
+    "/api/user",
+    "/api/friend",
+    "/api/messages",
+    "/auth/refresh",
+]
+
 
 async def auth_session(
     req: Request, call_next: Callable[[Request], Awaitable[Any]]
@@ -26,13 +45,7 @@ async def auth_session(
         return await call_next(req)
 
     # プリフライトリクエスト（OPTIONS）や認証不要のパスをスキップ
-    if req.method == "OPTIONS" or req.url.path in [
-        "/api/login",
-        "/api/user",
-        "/auth/refresh",
-        "/docs",
-        "/openapi.json",
-    ]:
+    if req.method == "OPTIONS" or req.url.path in EXEMPT_PATHS:
         return await call_next(req)
 
     usecase = LoginUseCaseImpl(
@@ -40,7 +53,13 @@ async def auth_session(
     )
 
     async for session in get_session():
-        result_auth = await usecase.auth_session(session, req)
+        # DBを更新するリクエストの場合、JWT検証+DBセッション状態確認
+        if req.url.path in DB_MUTATION_PATHS:
+            result_auth = await usecase.auth_session(session, req)
+        else:
+            # DBを参照するリクエストの場合、JWT検証のみ
+            result_auth = await usecase.auth_jwt_only(session, req)
+
         if not result_auth:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,

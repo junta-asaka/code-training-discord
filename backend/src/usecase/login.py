@@ -75,14 +75,28 @@ class LoginUseCaseIf(ABC):
 
     @abstractmethod
     async def auth_session(self, session: AsyncSession, req: Request) -> User | None:
-        """セッションを認証する
+        """セッションを認証する（JWT検証+DBセッション状態確認）
 
         Args:
             session (AsyncSession): データベースセッション
             req (Request): HTTPリクエスト
 
         Returns:
-            Session | None: セッション情報
+            User | None: ユーザー情報
+        """
+
+        pass
+
+    @abstractmethod
+    async def auth_jwt_only(self, session: AsyncSession, req: Request) -> User | None:
+        """JWT検証のみを行う（DB参照リクエスト用）
+
+        Args:
+            session (AsyncSession): データベースセッション
+            req (Request): HTTPリクエスト
+
+        Returns:
+            User | None: ユーザー情報
         """
 
         pass
@@ -168,7 +182,7 @@ class LoginUseCaseImpl(LoginUseCaseIf):
             raise LoginTransactionError("予期しないエラーが発生しました", e)
 
     async def auth_session(self, session: AsyncSession, req: Request) -> User | None:
-        """セッションを認証する（JWT検証を活用してDB負荷を軽減）
+        """セッションを認証する（JWT検証+DBセッション状態確認）
 
         Args:
             session (AsyncSession): データベースセッション
@@ -187,7 +201,7 @@ class LoginUseCaseImpl(LoginUseCaseIf):
             if not token:
                 return None
 
-            # まずJWTトークンの検証（DB検索なし）
+            # まずJWTトークンの検証
             payload = verify_access_token(token)
             if not payload:
                 return None
@@ -196,7 +210,15 @@ class LoginUseCaseImpl(LoginUseCaseIf):
             if not username:
                 return None
 
-            # JWTが有効な場合のみ、ユーザー情報を取得
+            # DB上のセッション状態を確認（無効化されていないか確認）
+            session_db = await self.session_repo.get_session_by_access_token(
+                session, token
+            )
+            if not session_db or session_db.revoked_at is not None:
+                # セッションが存在しないか、無効化されている場合
+                return None
+
+            # JWTが有効で、かつセッションも有効な場合のみ、ユーザー情報を取得
             return await self.user_repo.get_user_by_username(session, username)
 
         except SessionRepositoryError as e:
@@ -204,3 +226,38 @@ class LoginUseCaseImpl(LoginUseCaseIf):
 
         except Exception as e:
             raise LoginTransactionError("予期しないエラーが発生しました", e)
+
+    async def auth_jwt_only(self, session: AsyncSession, req: Request) -> User | None:
+        """JWT検証のみを行う（DB参照リクエスト用）
+
+        Args:
+            session (AsyncSession): データベースセッション
+            req (Request): HTTPリクエスト
+
+        Returns:
+            User | None: ユーザー情報
+        """
+
+        try:
+            # CookieまたはAuthorizationヘッダーからトークンを取得
+            token = req.cookies.get("session_token") or req.headers.get(
+                "Authorization", ""
+            ).replace("Bearer ", "")
+
+            if not token:
+                return None
+
+            # JWTトークンの検証のみ
+            payload = verify_access_token(token)
+            if not payload:
+                return None
+
+            username = payload.get("sub")
+            if not username:
+                return None
+
+            # JWTが有効な場合、ユーザー情報を取得して返す
+            return await self.user_repo.get_user_by_username(session, username)
+
+        except Exception as e:
+            raise LoginTransactionError("JWT検証中にエラーが発生しました", e)
