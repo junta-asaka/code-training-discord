@@ -84,12 +84,7 @@ async def refresh_access_token(
 
         # リフレッシュトークンの有効期限確認
         current_time = datetime.now(timezone.utc)
-        expires_at = cast(datetime | None, session_obj.refresh_token_expires_at)
-        if not expires_at:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="リフレッシュトークンの有効期限情報が不正です",
-            )
+        expires_at = cast(datetime, session_obj.refresh_token_expires_at)
 
         # タイムゾーン情報がない場合はUTCとして扱う
         if expires_at.tzinfo is None:
