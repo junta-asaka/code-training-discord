@@ -11,8 +11,9 @@ from sqlalchemy import update
 from sqlalchemy.ext.asyncio import AsyncSession
 from utils.utils import (
     ACCESS_TOKEN_EXPIRE_MINUTES,
-    create_access_token,
-    verify_refresh_token,
+    create_token,
+    hash_token,
+    verify_token,
 )
 
 router = APIRouter(prefix="/auth", tags=["認証"])
@@ -57,7 +58,7 @@ async def refresh_access_token(
     """
 
     # リフレッシュトークンの検証
-    payload = verify_refresh_token(request.refresh_token)
+    payload = verify_token(request.refresh_token, token_type="refresh")
     if not payload:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -73,8 +74,9 @@ async def refresh_access_token(
 
     # データベースでセッションを確認
     try:
+        # トークンをハッシュ化して検索
         session_obj = await session_repo.get_session_by_refresh_token(
-            session, request.refresh_token
+            session, hash_token(request.refresh_token)
         )
         if not session_obj or session_obj.revoked_at is not None:
             raise HTTPException(
@@ -97,18 +99,20 @@ async def refresh_access_token(
 
         # 新しいアクセストークンを生成
         access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-        new_access_token = create_access_token(
-            data={"sub": username}, expires_delta=access_token_expires
+        new_access_token = create_token(
+            data={"sub": username},
+            token_type="access",
+            expires_delta=access_token_expires,
         )
 
         # SQLAlchemyオブジェクトの属性を更新（値を直接更新）
 
-        # セッションの更新
+        # セッションの更新（トークンをハッシュ化して保存）
         update_stmt = (
             update(Session)
             .where(Session.id == session_obj.id)
             .values(
-                access_token=new_access_token,
+                access_token=hash_token(new_access_token),
                 access_token_expires_at=current_time + access_token_expires,
             )
         )

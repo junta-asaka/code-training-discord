@@ -13,10 +13,10 @@ from utils.logger_utils import get_logger
 from utils.utils import (
     ACCESS_TOKEN_EXPIRE_MINUTES,
     REFRESH_TOKEN_EXPIRE_DAYS,
-    create_access_token,
-    create_refresh_token,
-    verify_access_token,
+    create_token,
+    hash_token,
     verify_password,
+    verify_token,
 )
 
 # ロガーを取得
@@ -141,22 +141,26 @@ class LoginUseCaseImpl(LoginUseCaseIf):
             access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
             refresh_token_expires = timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
 
-            access_token = create_access_token(
-                data={"sub": user.username}, expires_delta=access_token_expires
+            access_token = create_token(
+                data={"sub": user.username},
+                token_type="access",
+                expires_delta=access_token_expires,
             )
-            refresh_token = create_refresh_token(
-                data={"sub": user.username}, expires_delta=refresh_token_expires
+            refresh_token = create_token(
+                data={"sub": user.username},
+                token_type="refresh",
+                expires_delta=refresh_token_expires,
             )
 
             # 有効期限の計算
             access_expires_at = datetime.now(timezone.utc) + access_token_expires
             refresh_expires_at = datetime.now(timezone.utc) + refresh_token_expires
 
-            # sessionの保存
+            # トークンをハッシュ化してDBに保存
             session_db = Session(
                 user_id=user.id,
-                access_token=access_token,
-                refresh_token=refresh_token,
+                access_token=hash_token(access_token),
+                refresh_token=hash_token(refresh_token),
                 access_token_expires_at=access_expires_at,
                 refresh_token_expires_at=refresh_expires_at,
                 user_agent=req.headers.get("User-Agent"),
@@ -202,7 +206,7 @@ class LoginUseCaseImpl(LoginUseCaseIf):
                 return None
 
             # まずJWTトークンの検証
-            payload = verify_access_token(token)
+            payload = verify_token(token, token_type="access")
             if not payload:
                 return None
 
@@ -211,8 +215,9 @@ class LoginUseCaseImpl(LoginUseCaseIf):
                 return None
 
             # DB上のセッション状態を確認（無効化されていないか確認）
+            # トークンをハッシュ化して検索
             session_db = await self.session_repo.get_session_by_access_token(
-                session, token
+                session, hash_token(token)
             )
             if not session_db or session_db.revoked_at is not None:
                 # セッションが存在しないか、無効化されている場合
@@ -248,7 +253,7 @@ class LoginUseCaseImpl(LoginUseCaseIf):
                 return None
 
             # JWTトークンの検証のみ
-            payload = verify_access_token(token)
+            payload = verify_token(token, token_type="access")
             if not payload:
                 return None
 

@@ -45,86 +45,65 @@ async def verify_password(stored_password: str, provided_password: str) -> bool:
         return False
 
 
-def create_access_token(
-    data: dict, expires_delta: Union[timedelta, None] = None
+def hash_token(token: str) -> str:
+    """トークンをSHA-256でハッシュ化する
+
+    Args:
+        token (str): ハッシュ化するトークン
+
+    Returns:
+        str: ハッシュ化されたトークン（16進数文字列）
+    """
+
+    return hashlib.sha256(token.encode()).hexdigest()
+
+
+def create_token(
+    data: dict,
+    token_type: str = "access",
+    expires_delta: Union[timedelta, None] = None,
 ) -> str:
-    """アクセストークンを生成する（短期間有効）
+    """JWTトークンを生成する
 
     Args:
         data (dict): JWTペイロードに含めるデータ
+        token_type (str): トークンタイプ（"access" または "refresh"）。デフォルトは "access"
         expires_delta (Union[timedelta, None], optional): 有効期限の設定
 
     Returns:
-        str: JWTアクセストークン
+        str: JWTトークン
     """
     to_encode = data.copy()
     if expires_delta:
         expire = datetime.now(timezone.utc) + expires_delta
     else:
-        expire = datetime.now(timezone.utc) + timedelta(
-            minutes=ACCESS_TOKEN_EXPIRE_MINUTES
-        )
-    to_encode.update({"exp": expire, "type": "access"})
+        if token_type == "access":
+            expire = datetime.now(timezone.utc) + timedelta(
+                minutes=ACCESS_TOKEN_EXPIRE_MINUTES
+            )
+        else:  # refresh
+            expire = datetime.now(timezone.utc) + timedelta(
+                days=REFRESH_TOKEN_EXPIRE_DAYS
+            )
+    to_encode.update({"exp": expire, "type": token_type})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
 
-def create_refresh_token(
-    data: dict, expires_delta: Union[timedelta, None] = None
-) -> str:
-    """リフレッシュトークンを生成する（長期間有効）
-
-    Args:
-        data (dict): JWTペイロードに含めるデータ
-        expires_delta (Union[timedelta, None], optional): 有効期限の設定
-
-    Returns:
-        str: JWTリフレッシュトークン
-    """
-    to_encode = data.copy()
-    if expires_delta:
-        expire = datetime.now(timezone.utc) + expires_delta
-    else:
-        expire = datetime.now(timezone.utc) + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
-    to_encode.update({"exp": expire, "type": "refresh"})
-    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-    return encoded_jwt
-
-
-def verify_access_token(token: str) -> Optional[dict]:
-    """JWTアクセストークンを検証する
+def verify_token(token: str, token_type: str = "access") -> Optional[dict]:
+    """JWTトークンを検証する
 
     Args:
         token (str): JWTトークン
+        token_type (str): トークンタイプ（"access" または "refresh"）。デフォルトは "access"
 
     Returns:
         Optional[dict]: トークンが有効な場合はペイロード、無効な場合はNone
     """
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        # アクセストークンであることを確認
-        if payload.get("type") != "access":
-            return None
-        return payload
-    except jwt.ExpiredSignatureError:
-        return None
-    except jwt.InvalidTokenError:
-        return None
-
-
-def verify_refresh_token(token: str) -> Optional[dict]:
-    """JWTリフレッシュトークンを検証する
-
-    Args:
-        token (str): JWTリフレッシュトークン
-
-    Returns:
-        Optional[dict]: トークンが有効な場合はペイロード、無効な場合はNone
-    """
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        # リフレッシュトークンであることを確認
-        if payload.get("type") != "refresh":
+        # トークンタイプを確認
+        if payload.get("type") != token_type:
             return None
         return payload
     except jwt.ExpiredSignatureError:
