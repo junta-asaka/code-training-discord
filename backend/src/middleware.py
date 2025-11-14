@@ -1,3 +1,4 @@
+import os
 from typing import Any, Awaitable, Callable
 
 from database import get_session
@@ -7,24 +8,12 @@ from repository.user_repository import UserRepositoryImpl
 from usecase.login import LoginUseCaseImpl
 from utils.utils import is_test_env
 
-# 認証不要のパスリスト
-EXEMPT_PATHS = [
-    "/api/login",
-    "/api/user",
-    "/auth/refresh",
-    "/docs",
-    "/openapi.json",
-]
+# 認証不要のパスリスト（環境変数から取得、デフォルト値あり）
+EXEMPT_PATHS = os.getenv("EXEMPT_PATHS", "/login,/docs,/openapi.json").split(",")
 
-# DBを更新するリクエストのパスリスト
+# DBを更新するリクエストのパスリスト（環境変数から取得、デフォルト値あり）
 # これらのパスはJWT検証+DBセッション状態確認を行う
-DB_MUTATION_PATHS = [
-    "/api/login",
-    "/api/user",
-    "/api/friend",
-    "/api/messages",
-    "/auth/refresh",
-]
+DB_MUTATION_PATHS = os.getenv("DB_MUTATION_PATHS", "/register").split(",")
 
 
 async def auth_session(
