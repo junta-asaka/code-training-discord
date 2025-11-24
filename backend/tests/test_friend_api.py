@@ -225,7 +225,7 @@ class TestFriendAPI(unittest.IsolatedAsyncioTestCase):
         )
 
         # When: GET /api/friends にリクエスト
-        response = await self.client.get(f"/api/friends?user_id={self.user1['id']}")
+        response = await self.client.get(f"/api/friends/{self.user1['id']}")
 
         # Then: 200でフレンド一覧レスポンスが返る
         self.assertEqual(response.status_code, 200)
@@ -248,7 +248,7 @@ class TestFriendAPI(unittest.IsolatedAsyncioTestCase):
         await self._create_test_users()
 
         # When: GET /api/friends にリクエスト
-        response = await self.client.get(f"/api/friends?user_id={self.user1['id']}")
+        response = await self.client.get(f"/api/friends/{self.user1['id']}")
 
         # Then: 200で空のリストが返る
         self.assertEqual(response.status_code, 200)
@@ -266,7 +266,7 @@ class TestFriendAPI(unittest.IsolatedAsyncioTestCase):
         nonexistent_user_id = "00000000-0000-0000-0000-000000000000"
 
         # When: GET /api/friends にリクエスト
-        response = await self.client.get(f"/api/friends?user_id={nonexistent_user_id}")
+        response = await self.client.get(f"/api/friends/{nonexistent_user_id}")
 
         # Then: 200で空のリストが返る
         self.assertEqual(response.status_code, 200)
@@ -277,31 +277,31 @@ class TestFriendAPI(unittest.IsolatedAsyncioTestCase):
         """
         Given: user_idパラメータがないリクエスト
         When: GET /api/friends にリクエスト
-        Then: 422でバリデーションエラーが返る
+        Then: 404でエンドポイントが見つからないエラーが返る
         """
 
         # Given: user_idパラメータがないリクエスト
         # When: GET /api/friends にリクエスト
-        response = await self.client.get("/api/friends")
+        response = await self.client.get("/api/friends/")
 
-        # Then: 422でバリデーションエラーが返る
-        self.assertEqual(response.status_code, 422)
+        # Then: 404でエンドポイントが見つからないエラーが返る
+        self.assertEqual(response.status_code, 404)
 
     async def test_get_friends_invalid_uuid_format(self):
         """
         Given: 無効なUUID形式のuser_idでリクエスト
         When: GET /api/friends にリクエスト
-        Then: 400でエラーが返る
+        Then: 422でバリデーションエラーが返る
         """
 
         # Given: 無効なUUID形式のuser_id
         invalid_user_id = "invalid-uuid-format"
 
         # When: GET /api/friends にリクエスト
-        response = await self.client.get(f"/api/friends?user_id={invalid_user_id}")
+        response = await self.client.get(f"/api/friends/{invalid_user_id}")
 
-        # Then: 400でエラーが返る
-        self.assertEqual(response.status_code, 400)
+        # Then: 422でバリデーションエラーが返る
+        self.assertEqual(response.status_code, 422)
 
 
 if __name__ == "__main__":

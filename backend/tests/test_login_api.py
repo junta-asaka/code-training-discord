@@ -102,6 +102,7 @@ class TestLoginAPI(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(res_json["name"], "Test User")
         self.assertEqual(res_json["username"], "testuser")
         self.assertIn("access_token", res_json)
+        self.assertIn("refresh_token", res_json)
         self.assertEqual(res_json["token_type"], "bearer")
         self.assertIsNone(res_json["next"])
 
@@ -124,6 +125,7 @@ class TestLoginAPI(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(res_json["name"], "Test User")
         self.assertEqual(res_json["username"], "testuser")
         self.assertIn("access_token", res_json)
+        self.assertIn("refresh_token", res_json)
         self.assertEqual(res_json["token_type"], "bearer")
         self.assertEqual(res_json["next"], "/dashboard")
 

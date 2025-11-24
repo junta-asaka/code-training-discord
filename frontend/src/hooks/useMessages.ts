@@ -14,10 +14,10 @@ export const useMessages = (channelId: string | undefined) => {
   return useQuery<MessagesResponse>({
     queryKey: ["messages", channelId],
     queryFn: () => {
-      if (!channelId || !accessToken) {
-        throw new Error("チャネル情報またはアクセストークンがありません");
+      if (!channelId) {
+        throw new Error("チャネル情報がありません");
       }
-      return getMessagesApi(channelId, accessToken);
+      return getMessagesApi(channelId);
     },
     enabled: !!channelId && !!accessToken, // チャンネルIDとトークンがある場合のみクエリを実行
     staleTime: 5 * 60 * 1000, // 5分間キャッシュ
@@ -27,16 +27,12 @@ export const useMessages = (channelId: string | undefined) => {
 
 // メッセージ作成のカスタムフック
 export const useCreateMessage = () => {
-  const { accessToken } = useAuthStore();
   // useQueryClient: React Queryのクエリクライアントを取得するためのフック
   const queryClient = useQueryClient();
 
   return useMutation<MessageCreateResponse, Error, MessageCreateRequest>({
     mutationFn: (messageData) => {
-      if (!accessToken) {
-        throw new Error("アクセストークンがありません");
-      }
-      return createMessageApi(messageData, accessToken);
+      return createMessageApi(messageData);
     },
     onSuccess: (variables) => {
       // メッセージ送信成功時に、該当チャンネルのメッセージ一覧を更新

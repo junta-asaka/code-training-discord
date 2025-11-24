@@ -51,8 +51,10 @@ class Session(Base):
     # ユーザーID
     # 外部キー: users.id
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
-    # リフレッシュトークンハッシュ
-    refresh_token_hash = Column(String, unique=True, nullable=False)
+    # アクセストークンハッシュ（短期間有効）
+    access_token = Column(String, unique=True, nullable=False)
+    # リフレッシュトークンハッシュ（長期間有効）
+    refresh_token = Column(String, unique=True, nullable=False)
     # ユーザーエージェント
     user_agent = Column(String, nullable=True)
     # IPアドレス
@@ -63,6 +65,10 @@ class Session(Base):
     created_at = Column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
+    # アクセストークン有効期限
+    access_token_expires_at = Column(DateTime(timezone=True), nullable=False)
+    # リフレッシュトークン有効期限
+    refresh_token_expires_at = Column(DateTime(timezone=True), nullable=False)
 
 
 # モデル: フレンド

@@ -1,7 +1,7 @@
 from database import get_session
 from dependencies import get_injector
 from fastapi import APIRouter, Depends, HTTPException, Request, status
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from fastapi.security import OAuth2PasswordRequestForm
 from injector import Injector
 from schema.login_schema import LoginResponse
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -9,8 +9,6 @@ from usecase.login import LoginTransactionError, LoginUseCaseIf
 from utils.logger_utils import get_logger
 
 router = APIRouter(prefix="/api")
-
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/login")
 
 # ロガーを取得
 logger = get_logger(__name__)
@@ -89,7 +87,8 @@ async def login(
         "id": user.id,
         "name": user.name,
         "username": user.username,
-        "access_token": session_obj.refresh_token_hash,  # ここにアクセストークンが保存されている
+        "access_token": session_obj.access_token,
+        "refresh_token": session_obj.refresh_token,
         "token_type": "bearer",
     }
 
