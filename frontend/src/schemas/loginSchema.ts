@@ -22,6 +22,7 @@ export interface LoginResponse {
   name: string;
   username: string;
   access_token: string;
+  refresh_token: string;
   token_type: string;
   next?: string;
 }

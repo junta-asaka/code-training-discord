@@ -54,15 +54,33 @@ class SessionRepositoryIf(ABC):
         pass
 
     @abstractmethod
-    async def get_session_by_token(self, session: AsyncSession, token: str) -> Session:
-        """トークンからセッションを取得する
+    async def get_session_by_refresh_token(
+        self, session: AsyncSession, token: str
+    ) -> Session | None:
+        """リフレッシュトークンからセッションを取得する
 
         Args:
             session (AsyncSession): データベースセッション
             token (str): セッショントークン
 
         Returns:
-            Session: 取得されたセッション
+            Session | None: 取得されたセッション(見つからない場合はNone)
+        """
+
+        pass
+
+    @abstractmethod
+    async def get_session_by_access_token(
+        self, session: AsyncSession, access_token: str
+    ) -> Session | None:
+        """アクセストークンからセッションを取得する
+
+        Args:
+            session (AsyncSession): データベースセッション
+            access_token (str): アクセストークン
+
+        Returns:
+            Session | None: 取得されたセッション(見つからない場合はNone)
         """
 
         pass
@@ -97,19 +115,41 @@ class SessionRepositoryImpl(SessionRepositoryIf):
         return session_data
 
     @handle_repository_errors(SessionQueryError, "セッション取得")
-    async def get_session_by_token(self, session: AsyncSession, token: str) -> Session:
-        """トークンからセッションを取得する
+    async def get_session_by_refresh_token(
+        self, session: AsyncSession, token: str
+    ) -> Session | None:
+        """リフレッシュトークンからセッションを取得する
 
         Args:
             session (AsyncSession): データベースセッション
             token (str): セッショントークン
 
         Returns:
-            Session: 取得されたセッション
+            Session | None: 取得されたセッション（見つからない場合はNone）
         """
 
         result = await session.execute(
-            select(Session).where(Session.refresh_token_hash == token)
+            select(Session).where(Session.refresh_token == token)
+        )
+
+        return result.scalars().first()
+
+    @handle_repository_errors(SessionQueryError, "セッション取得")
+    async def get_session_by_access_token(
+        self, session: AsyncSession, access_token: str
+    ) -> Session | None:
+        """アクセストークンからセッションを取得する
+
+        Args:
+            session (AsyncSession): データベースセッション
+            access_token (str): アクセストークン
+
+        Returns:
+            Session | None: 取得されたセッション（見つからない場合はNone）
+        """
+
+        result = await session.execute(
+            select(Session).where(Session.access_token == access_token)
         )
 
         return result.scalars().first()

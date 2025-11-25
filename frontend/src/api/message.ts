@@ -3,19 +3,14 @@ import type {
   MessageCreateRequest,
   MessageCreateResponse,
 } from "@/schemas/messageSchema";
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+import { authFetch } from "@/utils/authFetch";
 
 // getMessages: メッセージ一覧取得APIを呼び出す関数
 export const getMessagesApi = async (
-  channelId: string,
-  accessToken: string
+  channelId: string
 ): Promise<MessagesResponse> => {
-  const response = await fetch(`${API_BASE_URL}/api/channels/${channelId}`, {
+  const response = await authFetch(`/api/channels/${channelId}`, {
     method: "GET",
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-    },
   });
 
   if (!response.ok) {
@@ -28,14 +23,12 @@ export const getMessagesApi = async (
 
 // createMessage: メッセージ作成APIを呼び出す関数
 export const createMessageApi = async (
-  messageData: MessageCreateRequest,
-  accessToken: string
+  messageData: MessageCreateRequest
 ): Promise<MessageCreateResponse> => {
-  const response = await fetch(`${API_BASE_URL}/api/messages`, {
+  const response = await authFetch(`/api/messages`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${accessToken}`,
     },
     body: JSON.stringify(messageData),
   });

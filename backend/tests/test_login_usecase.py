@@ -81,7 +81,7 @@ class TestLoginUseCaseImpl(unittest.IsolatedAsyncioTestCase):
         expected_session = Session(
             id=1,
             user_id=1,
-            refresh_token_hash="test_token",
+            refresh_token="test_token",
             user_agent="TestAgent",
             ip_address="127.0.0.1",
         )
@@ -219,10 +219,10 @@ class TestLoginUseCaseImpl(unittest.IsolatedAsyncioTestCase):
     @patch("usecase.login.UserRepositoryIf")
     @patch("usecase.login.SessionRepositoryIf")
     @patch("usecase.login.verify_password")
-    @patch("usecase.login.create_access_token")
+    @patch("usecase.login.create_token")
     async def test_create_session_with_no_client(
         self,
-        mock_create_access_token,
+        mock_create_token,
         mock_verify_password,
         mock_session_repository_class,
         mock_user_repository_class,
@@ -243,7 +243,7 @@ class TestLoginUseCaseImpl(unittest.IsolatedAsyncioTestCase):
         expected_session = Session(
             id=1,
             user_id=1,
-            refresh_token_hash="test_token",
+            refresh_token="test_token",
             user_agent="TestAgent",
             ip_address=None,
         )
@@ -264,7 +264,7 @@ class TestLoginUseCaseImpl(unittest.IsolatedAsyncioTestCase):
         mock_session_repository_class.return_value = mock_session_repo
 
         mock_verify_password.return_value = True
-        mock_create_access_token.return_value = "test_token"
+        mock_create_token.return_value = "test_token"
 
         self.use_case.user_repo = mock_user_repo
         self.use_case.session_repo = mock_session_repo
@@ -279,112 +279,148 @@ class TestLoginUseCaseImpl(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(result["session"].ip_address, None)
         self.assertEqual(result["user"], expected_user)
 
-    @patch("usecase.login.UserRepositoryIf")
     @patch("usecase.login.SessionRepositoryIf")
+    @patch("usecase.login.UserRepositoryIf")
+    @patch("usecase.login.verify_token")
+    @patch("usecase.login.hash_token")
     async def test_auth_session_success_with_cookie(
-        self, mock_session_repository_class, mock_user_repository_class
+        self,
+        mock_hash_token,
+        mock_verify_token,
+        mock_user_repository_class,
+        mock_session_repository_class,
     ):
         """
-        Given: 有効なセッショントークンをCookieに含むリクエスト
+        Given: 有効なJWTトークンをCookieに含むリクエスト
         When: auth_sessionメソッドを呼び出す
         Then: ユーザー情報が返されること
         """
 
         # Given
-        expected_session = Session(
-            id=1,
-            user_id=1,
-            refresh_token_hash="test_token",
-            user_agent="TestAgent",
-            ip_address="127.0.0.1",
-        )
         expected_user = User(
             id=1,
             username="testuser",
             email="test@example.com",
             password_hash="hashed_password",
         )
+        expected_session = Session(
+            id=1,
+            user_id=1,
+            access_token="valid_jwt_token",
+            refresh_token="test_refresh_token",
+            revoked_at=None,
+        )
 
-        request = self.create_mock_request(cookies={"session_token": "test_token"})
+        request = self.create_mock_request(cookies={"session_token": "valid_jwt_token"})
 
         # モックの設定
-        mock_session_repo = AsyncMock()
-        mock_session_repo.get_session_by_token.return_value = expected_session
-        mock_session_repository_class.return_value = mock_session_repo
+        mock_hash_token.return_value = "hashed_token"
+        mock_verify_token.return_value = {"sub": "testuser", "exp": 1635782400}
 
         mock_user_repo = AsyncMock()
-        mock_user_repo.get_user_by_id.return_value = expected_user
+        mock_user_repo.get_user_by_username.return_value = expected_user
         mock_user_repository_class.return_value = mock_user_repo
 
-        self.use_case.session_repo = mock_session_repo
+        mock_session_repo = AsyncMock()
+        mock_session_repo.get_session_by_access_token.return_value = expected_session
+        mock_session_repository_class.return_value = mock_session_repo
+
         self.use_case.user_repo = mock_user_repo
+        self.use_case.session_repo = mock_session_repo
 
         # When
         result = await self.use_case.auth_session(self.mock_session, request)
 
         # Then
         self.assertEqual(result, expected_user)
-        mock_session_repo.get_session_by_token.assert_called_once_with(
-            self.mock_session, "test_token"
+        mock_verify_token.assert_called_once_with(
+            "valid_jwt_token", token_type="access"
         )
-        mock_user_repo.get_user_by_id.assert_called_once_with(self.mock_session, "1")
+        mock_hash_token.assert_called_once_with("valid_jwt_token")
+        mock_session_repo.get_session_by_access_token.assert_called_once_with(
+            self.mock_session, "hashed_token"
+        )
+        mock_user_repo.get_user_by_username.assert_called_once_with(
+            self.mock_session, "testuser"
+        )
 
-    @patch("usecase.login.UserRepositoryIf")
     @patch("usecase.login.SessionRepositoryIf")
+    @patch("usecase.login.UserRepositoryIf")
+    @patch("usecase.login.verify_token")
+    @patch("usecase.login.hash_token")
     async def test_auth_session_success_with_authorization_header(
-        self, mock_session_repository_class, mock_user_repository_class
+        self,
+        mock_hash_token,
+        mock_verify_token,
+        mock_user_repository_class,
+        mock_session_repository_class,
     ):
         """
-        Given: 有効なセッショントークンをAuthorizationヘッダーに含むリクエスト
+        Given: 有効なJWTトークンをAuthorizationヘッダーに含むリクエスト
         When: auth_sessionメソッドを呼び出す
         Then: ユーザー情報が返されること
         """
 
         # Given
-        expected_session = Session(
-            id=1,
-            user_id=1,
-            refresh_token_hash="test_token",
-            user_agent="TestAgent",
-            ip_address="127.0.0.1",
-        )
         expected_user = User(
             id=1,
             username="testuser",
             email="test@example.com",
             password_hash="hashed_password",
+        )
+        expected_session = Session(
+            id=1,
+            user_id=1,
+            access_token="valid_jwt_token",
+            refresh_token="test_refresh_token",
+            revoked_at=None,
         )
 
         request = self.create_mock_request(
-            headers={"Authorization": "Bearer test_token"}
+            headers={"Authorization": "Bearer valid_jwt_token"}
         )
 
         # モックの設定
-        mock_session_repo = AsyncMock()
-        mock_session_repo.get_session_by_token.return_value = expected_session
-        mock_session_repository_class.return_value = mock_session_repo
+        mock_hash_token.return_value = "hashed_token"
+        mock_verify_token.return_value = {"sub": "testuser", "exp": 1635782400}
 
         mock_user_repo = AsyncMock()
-        mock_user_repo.get_user_by_id.return_value = expected_user
+        mock_user_repo.get_user_by_username.return_value = expected_user
         mock_user_repository_class.return_value = mock_user_repo
 
-        self.use_case.session_repo = mock_session_repo
+        mock_session_repo = AsyncMock()
+        mock_session_repo.get_session_by_access_token.return_value = expected_session
+        mock_session_repository_class.return_value = mock_session_repo
+
         self.use_case.user_repo = mock_user_repo
+        self.use_case.session_repo = mock_session_repo
 
         # When
         result = await self.use_case.auth_session(self.mock_session, request)
 
         # Then
         self.assertEqual(result, expected_user)
-        mock_session_repo.get_session_by_token.assert_called_once_with(
-            self.mock_session, "test_token"
+        mock_verify_token.assert_called_once_with(
+            "valid_jwt_token", token_type="access"
         )
-        mock_user_repo.get_user_by_id.assert_called_once_with(self.mock_session, "1")
+        mock_hash_token.assert_called_once_with("valid_jwt_token")
+        mock_session_repo.get_session_by_access_token.assert_called_once_with(
+            self.mock_session, "hashed_token"
+        )
+        mock_user_repo.get_user_by_username.assert_called_once_with(
+            self.mock_session, "testuser"
+        )
 
-    @patch("usecase.login.UserRepositoryIf")
     @patch("usecase.login.SessionRepositoryIf")
+    @patch("usecase.login.UserRepositoryIf")
+    @patch("usecase.login.verify_token")
+    @patch("usecase.login.hash_token")
     async def test_auth_session_cookie_priority_over_header(
-        self, mock_session_repository_class, mock_user_repository_class
+        self,
+        mock_hash_token,
+        mock_verify_token,
+        mock_user_repository_class,
+        mock_session_repository_class,
     ):
         """
         Given: CookieとAuthorizationヘッダーの両方にトークンが含まれるリクエスト
@@ -393,120 +429,111 @@ class TestLoginUseCaseImpl(unittest.IsolatedAsyncioTestCase):
         """
 
         # Given
-        expected_session = Session(
-            id=1,
-            user_id=1,
-            refresh_token_hash="cookie_token",
-            user_agent="TestAgent",
-            ip_address="127.0.0.1",
-        )
         expected_user = User(
             id=1,
             username="testuser",
             email="test@example.com",
             password_hash="hashed_password",
         )
+        expected_session = Session(
+            id=1,
+            user_id=1,
+            access_token="cookie_jwt_token",
+            refresh_token="test_refresh_token",
+            revoked_at=None,
+        )
 
         request = self.create_mock_request(
-            cookies={"session_token": "cookie_token"},
-            headers={"Authorization": "Bearer header_token"},
+            cookies={"session_token": "cookie_jwt_token"},
+            headers={"Authorization": "Bearer header_jwt_token"},
         )
 
         # モックの設定
-        mock_session_repo = AsyncMock()
-        mock_session_repo.get_session_by_token.return_value = expected_session
-        mock_session_repository_class.return_value = mock_session_repo
+        mock_hash_token.return_value = "hashed_cookie_token"
+        mock_verify_token.return_value = {"sub": "testuser", "exp": 1635782400}
 
         mock_user_repo = AsyncMock()
-        mock_user_repo.get_user_by_id.return_value = expected_user
+        mock_user_repo.get_user_by_username.return_value = expected_user
         mock_user_repository_class.return_value = mock_user_repo
 
-        self.use_case.session_repo = mock_session_repo
+        mock_session_repo = AsyncMock()
+        mock_session_repo.get_session_by_access_token.return_value = expected_session
+        mock_session_repository_class.return_value = mock_session_repo
+
         self.use_case.user_repo = mock_user_repo
+        self.use_case.session_repo = mock_session_repo
 
         # When
         result = await self.use_case.auth_session(self.mock_session, request)
 
         # Then
         self.assertEqual(result, expected_user)
-        mock_session_repo.get_session_by_token.assert_called_once_with(
-            self.mock_session, "cookie_token"
+        # Cookieのトークンが優先されることを確認
+        mock_verify_token.assert_called_once_with(
+            "cookie_jwt_token", token_type="access"
         )
-        mock_user_repo.get_user_by_id.assert_called_once_with(self.mock_session, "1")
+        mock_hash_token.assert_called_once_with("cookie_jwt_token")
+        mock_session_repo.get_session_by_access_token.assert_called_once_with(
+            self.mock_session, "hashed_cookie_token"
+        )
+        mock_user_repo.get_user_by_username.assert_called_once_with(
+            self.mock_session, "testuser"
+        )
 
-    @patch("usecase.login.SessionRepositoryIf")
-    async def test_auth_session_no_token(self, mock_session_repository_class):
+    async def test_auth_session_no_token(self):
         """
         Given: トークンが含まれないリクエスト
-        When: auth_sessionメソッドを呼び出す
-        Then: 空文字列でセッション検索が呼ばれること
-        """
-
-        # Given
-        request = self.create_mock_request()
-
-        # モックの設定
-        mock_session_repo = AsyncMock()
-        mock_session_repo.get_session_by_token.return_value = None
-        mock_session_repository_class.return_value = mock_session_repo
-
-        self.use_case.session_repo = mock_session_repo
-
-        # When
-        result = await self.use_case.auth_session(self.mock_session, request)
-
-        # Then
-        self.assertIsNone(result)
-        mock_session_repo.get_session_by_token.assert_called_once_with(
-            self.mock_session, ""
-        )
-
-    @patch("usecase.login.SessionRepositoryIf")
-    async def test_auth_session_invalid_token(self, mock_session_repository_class):
-        """
-        Given: 無効なセッショントークンを含むリクエスト
         When: auth_sessionメソッドを呼び出す
         Then: Noneが返されること
         """
 
         # Given
-        request = self.create_mock_request(cookies={"session_token": "invalid_token"})
-
-        # モックの設定
-        mock_session_repo = AsyncMock()
-        mock_session_repo.get_session_by_token.return_value = None
-        mock_session_repository_class.return_value = mock_session_repo
-
-        self.use_case.session_repo = mock_session_repo
+        request = self.create_mock_request()
 
         # When
         result = await self.use_case.auth_session(self.mock_session, request)
 
         # Then
         self.assertIsNone(result)
-        mock_session_repo.get_session_by_token.assert_called_once_with(
-            self.mock_session, "invalid_token"
+
+    @patch("usecase.login.verify_token")
+    async def test_auth_session_invalid_token(self, mock_verify_token):
+        """
+        Given: 無効なJWTトークンを含むリクエスト
+        When: auth_sessionメソッドを呼び出す
+        Then: Noneが返されること
+        """
+
+        # Given
+        request = self.create_mock_request(
+            cookies={"session_token": "invalid_jwt_token"}
         )
 
-    @patch("usecase.login.SessionRepositoryIf")
-    async def test_auth_session_malformed_authorization_header(
-        self, mock_session_repository_class
-    ):
+        # モックの設定 - 無効なトークンなのでNoneを返す
+        mock_verify_token.return_value = None
+
+        # When
+        result = await self.use_case.auth_session(self.mock_session, request)
+
+        # Then
+        self.assertIsNone(result)
+        mock_verify_token.assert_called_once_with(
+            "invalid_jwt_token", token_type="access"
+        )
+
+    @patch("usecase.login.verify_token")
+    async def test_auth_session_malformed_authorization_header(self, mock_verify_token):
         """
         Given: 不正な形式のAuthorizationヘッダーを含むリクエスト
         When: auth_sessionメソッドを呼び出す
-        Then: 適切にトークンが抽出されること
+        Then: 適切にトークンが抽出され、JWT検証が呼ばれること
         """
 
         # Given
         request = self.create_mock_request(headers={"Authorization": "Invalid token"})
 
-        # モックの設定
-        mock_session_repo = AsyncMock()
-        mock_session_repo.get_session_by_token.return_value = None
-        mock_session_repository_class.return_value = mock_session_repo
-
-        self.use_case.session_repo = mock_session_repo
+        # モックの設定 - 不正なトークンなのでNoneを返す
+        mock_verify_token.return_value = None
 
         # When
         result = await self.use_case.auth_session(self.mock_session, request)
@@ -514,8 +541,309 @@ class TestLoginUseCaseImpl(unittest.IsolatedAsyncioTestCase):
         # Then
         self.assertIsNone(result)
         # "Bearer "が含まれていないため、そのまま使用される
-        mock_session_repo.get_session_by_token.assert_called_once_with(
-            self.mock_session, "Invalid token"
+        mock_verify_token.assert_called_once_with("Invalid token", token_type="access")
+
+    @patch("usecase.login.UserRepositoryIf")
+    @patch("usecase.login.verify_token")
+    async def test_auth_session_jwt_missing_username(
+        self, mock_verify_token, mock_user_repository_class
+    ):
+        """
+        Given: 'sub'フィールドがないJWTトークンを含むリクエスト
+        When: auth_sessionメソッドを呼び出す
+        Then: Noneが返されること
+        """
+
+        # Given
+        request = self.create_mock_request(cookies={"session_token": "jwt_without_sub"})
+
+        # モックの設定 - 'sub'がないペイロード
+        mock_verify_token.return_value = {"exp": 1635782400}  # subがない
+
+        # When
+        result = await self.use_case.auth_session(self.mock_session, request)
+
+        # Then
+        self.assertIsNone(result)
+        mock_verify_token.assert_called_once_with(
+            "jwt_without_sub", token_type="access"
+        )
+
+    @patch("usecase.login.SessionRepositoryIf")
+    @patch("usecase.login.UserRepositoryIf")
+    @patch("usecase.login.verify_token")
+    @patch("usecase.login.hash_token")
+    async def test_auth_session_user_not_found(
+        self,
+        mock_hash_token,
+        mock_verify_token,
+        mock_user_repository_class,
+        mock_session_repository_class,
+    ):
+        """
+        Given: 有効なJWTだが、対応するユーザーが存在しないリクエスト
+        When: auth_sessionメソッドを呼び出す
+        Then: Noneが返されること
+        """
+
+        # Given
+        expected_session = Session(
+            id=1,
+            user_id=1,
+            access_token="valid_jwt_token",
+            refresh_token="test_refresh_token",
+            revoked_at=None,
+        )
+
+        request = self.create_mock_request(cookies={"session_token": "valid_jwt_token"})
+
+        # モックの設定
+        mock_hash_token.return_value = "hashed_token"
+        mock_verify_token.return_value = {
+            "sub": "nonexistent_user",
+            "exp": 1635782400,
+        }
+
+        mock_user_repo = AsyncMock()
+        mock_user_repo.get_user_by_username.return_value = (
+            None  # ユーザーが見つからない
+        )
+        mock_user_repository_class.return_value = mock_user_repo
+
+        mock_session_repo = AsyncMock()
+        mock_session_repo.get_session_by_access_token.return_value = expected_session
+        mock_session_repository_class.return_value = mock_session_repo
+
+        self.use_case.user_repo = mock_user_repo
+        self.use_case.session_repo = mock_session_repo
+
+        # When
+        result = await self.use_case.auth_session(self.mock_session, request)
+
+        # Then
+        self.assertIsNone(result)
+        mock_verify_token.assert_called_once_with(
+            "valid_jwt_token", token_type="access"
+        )
+        mock_hash_token.assert_called_once_with("valid_jwt_token")
+        mock_session_repo.get_session_by_access_token.assert_called_once_with(
+            self.mock_session, "hashed_token"
+        )
+        mock_user_repo.get_user_by_username.assert_called_once_with(
+            self.mock_session, "nonexistent_user"
+        )
+
+    @patch("usecase.login.SessionRepositoryIf")
+    @patch("usecase.login.verify_token")
+    @patch("usecase.login.hash_token")
+    async def test_auth_session_revoked_session(
+        self, mock_hash_token, mock_verify_token, mock_session_repository_class
+    ):
+        """
+        Given: 有効なJWTだが、セッションが無効化されているリクエスト
+        When: auth_sessionメソッドを呼び出す
+        Then: Noneが返されること
+        """
+
+        # Given
+        from datetime import datetime, timezone
+
+        revoked_session = Session(
+            id=1,
+            user_id=1,
+            access_token="valid_jwt_token",
+            refresh_token="test_refresh_token",
+            revoked_at=datetime.now(timezone.utc),  # 無効化済み
+        )
+
+        request = self.create_mock_request(cookies={"session_token": "valid_jwt_token"})
+
+        # モックの設定
+        mock_hash_token.return_value = "hashed_token"
+        mock_verify_token.return_value = {"sub": "testuser", "exp": 1635782400}
+
+        mock_session_repo = AsyncMock()
+        mock_session_repo.get_session_by_access_token.return_value = revoked_session
+        mock_session_repository_class.return_value = mock_session_repo
+
+        self.use_case.session_repo = mock_session_repo
+
+        # When
+        result = await self.use_case.auth_session(self.mock_session, request)
+
+        # Then
+        self.assertIsNone(result)
+        mock_verify_token.assert_called_once_with(
+            "valid_jwt_token", token_type="access"
+        )
+        mock_hash_token.assert_called_once_with("valid_jwt_token")
+        mock_session_repo.get_session_by_access_token.assert_called_once_with(
+            self.mock_session, "hashed_token"
+        )
+
+    @patch("usecase.login.SessionRepositoryIf")
+    @patch("usecase.login.verify_token")
+    @patch("usecase.login.hash_token")
+    async def test_auth_session_session_not_found(
+        self, mock_hash_token, mock_verify_token, mock_session_repository_class
+    ):
+        """
+        Given: 有効なJWTだが、DBにセッションが存在しないリクエスト
+        When: auth_sessionメソッドを呼び出す
+        Then: Noneが返されること
+        """
+
+        # Given
+        request = self.create_mock_request(cookies={"session_token": "valid_jwt_token"})
+
+        # モックの設定
+        mock_hash_token.return_value = "hashed_token"
+        mock_verify_token.return_value = {"sub": "testuser", "exp": 1635782400}
+
+        mock_session_repo = AsyncMock()
+        mock_session_repo.get_session_by_access_token.return_value = (
+            None  # セッションが見つからない
+        )
+        mock_session_repository_class.return_value = mock_session_repo
+
+        self.use_case.session_repo = mock_session_repo
+
+        # When
+        result = await self.use_case.auth_session(self.mock_session, request)
+
+        # Then
+        self.assertIsNone(result)
+        mock_verify_token.assert_called_once_with(
+            "valid_jwt_token", token_type="access"
+        )
+        mock_hash_token.assert_called_once_with("valid_jwt_token")
+        mock_session_repo.get_session_by_access_token.assert_called_once_with(
+            self.mock_session, "hashed_token"
+        )
+
+    @patch("usecase.login.UserRepositoryIf")
+    @patch("usecase.login.verify_token")
+    async def test_auth_jwt_only_success_with_cookie(
+        self,
+        mock_verify_token,
+        mock_user_repository_class,
+    ):
+        """
+        Given: 有効なJWTトークンをCookieに含むリクエスト
+        When: auth_jwt_onlyメソッドを呼び出す
+        Then: ユーザー情報が返されること（DBセッション確認なし）
+        """
+
+        # Given
+        expected_user = User(
+            id=1,
+            username="testuser",
+            email="test@example.com",
+            password_hash="hashed_password",
+        )
+
+        request = self.create_mock_request(cookies={"session_token": "valid_jwt_token"})
+
+        # モックの設定
+        mock_verify_token.return_value = {"sub": "testuser", "exp": 1635782400}
+
+        mock_user_repo = AsyncMock()
+        mock_user_repo.get_user_by_username.return_value = expected_user
+        mock_user_repository_class.return_value = mock_user_repo
+
+        self.use_case.user_repo = mock_user_repo
+
+        # When
+        result = await self.use_case.auth_jwt_only(self.mock_session, request)
+
+        # Then
+        self.assertEqual(result, expected_user)
+        mock_verify_token.assert_called_once_with(
+            "valid_jwt_token", token_type="access"
+        )
+        mock_user_repo.get_user_by_username.assert_called_once_with(
+            self.mock_session, "testuser"
+        )
+
+    @patch("usecase.login.verify_token")
+    async def test_auth_jwt_only_invalid_token(self, mock_verify_token):
+        """
+        Given: 無効なJWTトークンを含むリクエスト
+        When: auth_jwt_onlyメソッドを呼び出す
+        Then: Noneが返されること
+        """
+
+        # Given
+        request = self.create_mock_request(
+            cookies={"session_token": "invalid_jwt_token"}
+        )
+
+        # モックの設定 - 無効なトークンなのでNoneを返す
+        mock_verify_token.return_value = None
+
+        # When
+        result = await self.use_case.auth_jwt_only(self.mock_session, request)
+
+        # Then
+        self.assertIsNone(result)
+        mock_verify_token.assert_called_once_with(
+            "invalid_jwt_token", token_type="access"
+        )
+
+    @patch("usecase.login.verify_token")
+    async def test_auth_jwt_only_no_token(self, mock_verify_token):
+        """
+        Given: トークンが含まれないリクエスト
+        When: auth_jwt_onlyメソッドを呼び出す
+        Then: Noneが返されること
+        """
+
+        # Given
+        request = self.create_mock_request()
+
+        # When
+        result = await self.use_case.auth_jwt_only(self.mock_session, request)
+
+        # Then
+        self.assertIsNone(result)
+        mock_verify_token.assert_not_called()
+
+    @patch("usecase.login.UserRepositoryIf")
+    @patch("usecase.login.verify_token")
+    async def test_auth_jwt_only_user_not_found(
+        self, mock_verify_token, mock_user_repository_class
+    ):
+        """
+        Given: 有効なJWTだが、対応するユーザーが存在しないリクエスト
+        When: auth_jwt_onlyメソッドを呼び出す
+        Then: Noneが返されること
+        """
+
+        # Given
+        request = self.create_mock_request(cookies={"session_token": "valid_jwt_token"})
+
+        # モックの設定
+        mock_verify_token.return_value = {
+            "sub": "nonexistent_user",
+            "exp": 1635782400,
+        }
+
+        mock_user_repo = AsyncMock()
+        mock_user_repo.get_user_by_username.return_value = None
+        mock_user_repository_class.return_value = mock_user_repo
+
+        self.use_case.user_repo = mock_user_repo
+
+        # When
+        result = await self.use_case.auth_jwt_only(self.mock_session, request)
+
+        # Then
+        self.assertIsNone(result)
+        mock_verify_token.assert_called_once_with(
+            "valid_jwt_token", token_type="access"
+        )
+        mock_user_repo.get_user_by_username.assert_called_once_with(
+            self.mock_session, "nonexistent_user"
         )
 
 

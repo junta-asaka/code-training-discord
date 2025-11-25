@@ -73,17 +73,19 @@ async def create_friend(
 
 
 @router.get(
-    "/friends", response_model=list[FriendGetResponse], status_code=status.HTTP_200_OK
+    "/friends/{user_id}",
+    response_model=list[FriendGetResponse],
+    status_code=status.HTTP_200_OK,
 )
 async def get_friends(
-    user_id: str,
+    user_id: UUID,
     session: AsyncSession = Depends(get_session),
     usecase: FriendUseCaseIf = Depends(get_usecase),
 ) -> list[FriendGetResponse]:
     """フレンド一覧取得処理
 
     Args:
-        user_id (str): ユーザーID
+        user_id (UUID): ユーザーID
         session (_type_, optional): データベースセッション
         usecase (FriendUseCaseIf, optional): フレンドユースケース
 
@@ -92,14 +94,7 @@ async def get_friends(
     """
 
     try:
-        UUID(user_id)
-    except ValueError:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="無効なユーザーIDです"
-        )
-
-    try:
-        response = await usecase.get_friend_all(session, user_id)
+        response = await usecase.get_friend_all(session, str(user_id))
 
         return response
 

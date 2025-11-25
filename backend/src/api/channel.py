@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from database import get_session
 from dependencies import get_injector
 from fastapi import APIRouter, Depends, HTTPException, Request, status
@@ -26,13 +28,13 @@ def get_usecase(
 
 
 async def check_channel_access(
-    channel_id: str,
+    channel_id: UUID,
     request: Request,
     session: AsyncSession = Depends(get_session),
     access_checker: ChannelAccessCheckerUseCaseIf = Depends(get_channel_access_checker),
 ) -> None:
     """チャンネルアクセス権限をチェックする共通関数"""
-    await access_checker.execute(request, channel_id, session)
+    await access_checker.execute(request, str(channel_id), session)
 
 
 @router.get(
@@ -41,13 +43,30 @@ async def check_channel_access(
     status_code=status.HTTP_200_OK,
 )
 async def get_channel(
-    channel_id: str,
+    channel_id: UUID,
     session: AsyncSession = Depends(get_session),
     usecase: GetChannelMessagesUseCaseIf = Depends(get_usecase),
     _: None = Depends(check_channel_access),  # チャンネルアクセス権限チェック
 ) -> ChannelGetResponse:
+    """チャンネル情報取得エンドポイント
+
+    Args:
+        channel_id (UUID): チャンネルID
+        session (AsyncSession, optional): データベースセッション
+        usecase (GetChannelMessagesUseCaseIf, optional): ユースケース
+        _ (None, optional): アクセス権限チェック
+
+    Raises:
+        HTTPException: チャンネルが見つかりません
+        HTTPException: チャンネル情報の取得中にエラーが発生しました
+        HTTPException: サーバー内部エラーが発生しました
+
+    Returns:
+        ChannelGetResponse: チャンネル情報
+    """
+
     try:
-        response = await usecase.execute(session, channel_id)
+        response = await usecase.execute(session, str(channel_id))
         logger.info(
             f"チャンネル情報が正常に取得されました: channel_id={channel_id}, message_count={len(response.messages)}"
         )

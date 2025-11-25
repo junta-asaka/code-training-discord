@@ -224,7 +224,7 @@ describe("Login", () => {
       // Then
       await waitFor(() => {
         expect(mockedToast.error).toHaveBeenCalledWith(
-          `ログインに失敗しました -> ${errorMessage}`
+          `ログインに失敗しました: ${errorMessage}`
         );
       });
 
@@ -257,7 +257,7 @@ describe("Login", () => {
       // Then
       await waitFor(() => {
         expect(mockedToast.error).toHaveBeenCalledWith(
-          "ログインに失敗しました -> 不明なエラーが発生しました"
+          "ログインに失敗しました: 不明なエラーが発生しました"
         );
       });
     });

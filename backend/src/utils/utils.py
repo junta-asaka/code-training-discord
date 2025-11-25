@@ -13,6 +13,10 @@ load_dotenv()
 SECRET_KEY = os.environ["SECRET_KEY"]
 ALGORITHM = os.environ["ALGORITHM"]
 
+# トークン有効期限の設定（環境変数から取得、デフォルト値あり）
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "15"))
+REFRESH_TOKEN_EXPIRE_DAYS = int(os.getenv("REFRESH_TOKEN_EXPIRE_DAYS", "7"))
+
 
 async def hash_password(password: str, salt: Optional[bytes] = None) -> str:
     # パスワードをソルト付きでハッシュ化し、ソルトとハッシュを保存可能な文字列として返す
@@ -41,17 +45,71 @@ async def verify_password(stored_password: str, provided_password: str) -> bool:
         return False
 
 
-def create_access_token(
-    data: dict, expires_delta: Union[timedelta, None] = None
+def hash_token(token: str) -> str:
+    """トークンをSHA-256でハッシュ化する
+
+    Args:
+        token (str): ハッシュ化するトークン
+
+    Returns:
+        str: ハッシュ化されたトークン（16進数文字列）
+    """
+
+    return hashlib.sha256(token.encode()).hexdigest()
+
+
+def create_token(
+    data: dict,
+    token_type: str = "access",
+    expires_delta: Union[timedelta, None] = None,
 ) -> str:
+    """JWTトークンを生成する
+
+    Args:
+        data (dict): JWTペイロードに含めるデータ
+        token_type (str): トークンタイプ（"access" または "refresh"）。デフォルトは "access"
+        expires_delta (Union[timedelta, None], optional): 有効期限の設定
+
+    Returns:
+        str: JWTトークン
+    """
     to_encode = data.copy()
     if expires_delta:
         expire = datetime.now(timezone.utc) + expires_delta
     else:
-        expire = datetime.now(timezone.utc) + timedelta(minutes=15)
-    to_encode.update({"exp": expire})
+        if token_type == "access":
+            expire = datetime.now(timezone.utc) + timedelta(
+                minutes=ACCESS_TOKEN_EXPIRE_MINUTES
+            )
+        else:  # refresh
+            expire = datetime.now(timezone.utc) + timedelta(
+                days=REFRESH_TOKEN_EXPIRE_DAYS
+            )
+    to_encode.update({"exp": expire, "type": token_type})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
+
+
+def verify_token(token: str, token_type: str = "access") -> Optional[dict]:
+    """JWTトークンを検証する
+
+    Args:
+        token (str): JWTトークン
+        token_type (str): トークンタイプ（"access" または "refresh"）。デフォルトは "access"
+
+    Returns:
+        Optional[dict]: トークンが有効な場合はペイロード、無効な場合はNone
+    """
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        # トークンタイプを確認
+        if payload.get("type") != token_type:
+            return None
+        return payload
+    except jwt.ExpiredSignatureError:
+        return None
+    except jwt.InvalidTokenError:
+        return None
 
 
 async def is_test_env() -> bool:

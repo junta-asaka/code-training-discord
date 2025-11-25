@@ -2,6 +2,14 @@ import type { LoginFormData, LoginResponse } from "../schemas/loginSchema";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
+// リフレッシュトークンレスポンスの型定義
+export interface RefreshTokenResponse {
+  access_token: string;
+  refresh_token: string;
+  token_type: string;
+  expires_in: number;
+}
+
 // loginApi: ログインAPIを呼び出す関数
 export const loginApi = async (data: LoginFormData): Promise<LoginResponse> => {
   // FormData: フォームデータを簡単に構築・操作するためのWeb API
@@ -17,19 +25,30 @@ export const loginApi = async (data: LoginFormData): Promise<LoginResponse> => {
 
   if (!response.ok) {
     const error = await response.json();
-    throw new Error(error.detail.message);
+    throw new Error(
+      error.detail?.message || error.detail || "ログインに失敗しました"
+    );
   }
 
   return response.json();
 };
 
-export const verifySession = async (accessToken: string): Promise<boolean> => {
-  const response = await fetch(`${API_BASE_URL}/auth/verify`, {
-    method: "GET",
+// refreshTokenApi: リフレッシュトークンを使用して新しいアクセストークンを取得する関数
+export const refreshTokenApi = async (
+  refreshToken: string
+): Promise<RefreshTokenResponse> => {
+  const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
+    method: "POST",
     headers: {
-      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "application/json",
     },
+    body: JSON.stringify({ refresh_token: refreshToken }),
   });
 
-  return response.ok;
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.detail || "トークンのリフレッシュに失敗しました");
+  }
+
+  return response.json();
 };
